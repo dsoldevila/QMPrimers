@@ -33,9 +33,9 @@ class Matching:
         self.amplicon = amplicon
         
     def _misses2str(self, misses_loc):
-        array = "*" if misses_loc[0] else " "
+        array = " " if misses_loc[0] else "|"
         for i in range(1, len(misses_loc)):
-            char = "*" if misses_loc[i] else " "
+            char = " " if misses_loc[i] else "|"
             array +=char
         return array
         

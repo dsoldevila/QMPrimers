@@ -96,7 +96,7 @@ def compute_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, model=1):
             missr_array[j] = 1 if r else 0
             missr += r
             
-        con = missf < min_mf and missr < min_mr
+        con = missf <= min_mf and missr <= min_mr
         
         min_mf = missf if con else min_mf
         min_mr = missr if con else min_mr

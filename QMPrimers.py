@@ -51,7 +51,7 @@ class GUI(Frame):
         return
     
     def compute(self):
-        result = m.compute_matching(10, 10, self.primer_pairs, gen_record)
+        result = m.compute_matching(10, 10, self.primer_pairs, self.gen_record)
         print(result)
         return
     
