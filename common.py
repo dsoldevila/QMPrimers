@@ -27,10 +27,29 @@ class Matching:
         self.range_f = range_f
         self.range_r = range_r
         self.misses_f = misses_f
-        self.misses_f_loc = misses_f_loc
+        self.misses_f_loc = self._misses2str(misses_f_loc)
         self.misses_r = misses_r
-        self.misses_r_loc = misses_r_loc
+        self.misses_r_loc = self._misses2str(misses_r_loc)
         self.amplicon = amplicon
         
+    def _misses2str(self, misses_loc):
+        array = "*" if misses_loc[0] else " "
+        for i in range(1, len(misses_loc)):
+            char = "*" if misses_loc[i] else " "
+            array +=char
+        return array
+        
     def __str__(self):
-        pass
+        info = ("PRIME PAIR "+str(self.primer_pair.id)+"\n"+
+              "Forward's missmatches: "+str(self.misses_f)+"\n"+
+              "Backward's missmatches: "+str(self.misses_r)+"\n"+
+              "Pair's amplicon: "+str(self.amplicon)+"\n"+
+              "Forward's match "+ str(self.range_f)+"\n"+
+              " "+str(self.gen.seq[self.range_f[0]:self.range_f[1]])+"\n"+
+              " "+self.misses_f_loc+"\n"+
+              " "+str(self.primer_pair.f.seq) +"\n"+
+              "Backwards's match "+ str(self.range_r)+"\n"+
+              " "+str(self.gen.seq[self.range_r[0]:self.range_r[1]])+"\n"+
+              " "+self.misses_r_loc+"\n"+
+              " "+str(self.primer_pair.r.seq) +"\n")
+        return info

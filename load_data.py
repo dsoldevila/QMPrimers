@@ -60,7 +60,7 @@ def load_bio_file(file, file_format=None):
   
     
 
-if "__main__":
+if (__name__=="__main__"):
     gen_record = load_bio_file("species_bold_own_genbank.fasta")
     """for gen in gen_record_list:
         print(gen_record_list.get(gen).id)"""
@@ -69,3 +69,7 @@ if "__main__":
     example_list = [1,2,3]
     gen.features.append(example_feature)"""
     primer_pairs = load_csv_file("P&PP.csv")
+    
+    a = Seq("ATTG", IUPAC.unambiguous_dna)
+    b = Seq("ATTK", IUPAC.ambiguous_dna)
+    print(a)

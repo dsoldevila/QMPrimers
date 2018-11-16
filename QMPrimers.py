@@ -39,22 +39,24 @@ class GUI(Frame):
         self.label_g.config(text=input_file)
         print(input_file)
         self.gen_record = ld.load_bio_file(input_file, file_format=None)
-        print(self.gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD"))
+        print(self.gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD")+"\n")
         return
     
     def open_csv_file(self):
         input_file = self._open_file()
         self.label_p.config(text=input_file)
         print(input_file)
-        self.primer_list = ld.load_csv_file(input_file)
-        print(self.primer_list[0].f.seq)
+        self.primer_pairs = ld.load_csv_file(input_file)
+        print(self.primer_pairs[0].f.seq+"\n")
         return
     
     def compute(self):
-        pass
+        result = m.compute_matching(10, 10, self.primer_pairs, gen_record)
+        print(result)
+        return
     
 
-if "__main__":
+if (__name__=="__main__"):
     root = Tk()
     root.title("QMPrimers")
     main_window = GUI(root)

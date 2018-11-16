@@ -67,16 +67,48 @@ def compute_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, model=1):
     """for gen in gen_seqs:
         for primer_pair in primer_pairs:"""
     
-    pp = primer_pairs[0]
+    pp = primer_pairs[1]
     gen_seq = gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD")
-    alignments = pairwise2.align.globalxs(gen_seq.seq[0:int(len(gen_seq.seq)/8)], pp.f.seq, -1000, -1000)
-    print('Score',alignments[0][2])
-    print(format_alignment(*alignments[0]))
+    seq = gen_seq.seq
     
-    pass
 
-if "__main__":
+    
+    min_mf = pp.flen
+    min_mr = pp.rlen
+    i_f = 0
+    i_r = 0
+    range_max = len(seq)-pp.flen-pp.rlen-pp.max_amplicon
+    
+    missf_array = [0]*pp.flen
+    missr_array = [0]*pp.rlen
+    missf_loc = [0]*pp.flen
+    missr_loc = [0]*pp.rlen
+    
+    for i in range(0, range_max): #max and min amplicon are equal
+        missf = 0
+        missr = 0
+        for j in range(0, pp.flen-1): #primers don't have the same lenght
+            r = not(MATCH_TABLE[seq[i+j]][pp.f.seq[j]])
+            missf_array[j] = 1 if r else 0
+            missf += r
+        for j in range(0, pp.rlen):
+            r = not(MATCH_TABLE[seq[i+j+pp.max_amplicon+pp.flen]][pp.r.seq[j]])
+            missr_array[j] = 1 if r else 0
+            missr += r
+            
+        con = missf < min_mf and missr < min_mr
+        
+        min_mf = missf if con else min_mf
+        min_mr = missr if con else min_mr
+        i_f = i if con else i_f
+        i_r = i+pp.max_amplicon+pp.flen if con else i_r
+        missf_loc = missf_array.copy() if con else missf_loc
+        missr_loc = missr_array.copy() if con else missr_loc
+    
+    return Matching(gen_seq, pp, (i_f, i_f+pp.flen), (i_r, i_r+pp.rlen), min_mf, missf_loc, min_mr, missr_loc, pp.max_amplicon)
+
+if (__name__=="__main__"):
     gen_record = ld.load_bio_file("species_bold_own_genbank.fasta")
     primer_pairs = ld.load_csv_file("P&PP.csv")
-    
-    compute_matching(5, 5, primer_pairs, gen_record)
+    result = compute_matching(10, 10, primer_pairs, gen_record)
+    print(result)
