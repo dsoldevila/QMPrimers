@@ -77,7 +77,7 @@ def compute_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, model=1):
     min_mr = pp.rlen
     i_f = 0
     i_r = 0
-    range_max = len(seq)-pp.flen-pp.rlen-pp.max_amplicon
+    range_max = len(seq)-pp.flen-pp.rlen-pp.max_amplicon-1
     
     missf_array = [0]*pp.flen
     missr_array = [0]*pp.rlen
@@ -87,7 +87,7 @@ def compute_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, model=1):
     for i in range(0, range_max): #max and min amplicon are equal
         missf = 0
         missr = 0
-        for j in range(0, pp.flen-1): #primers don't have the same lenght
+        for j in range(0, pp.flen): #primers don't have the same lenght
             r = not(MATCH_TABLE[seq[i+j]][pp.f.seq[j]])
             missf_array[j] = 1 if r else 0
             missf += r

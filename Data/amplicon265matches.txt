@@ -1,0 +1,123 @@
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 360 with 14 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [35] with 11 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 345 with 12 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [50] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 339 with 12 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [56] with 12 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 297 with 13 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [98] with 12 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 291 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [104] with 11 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 236 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [159] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 230 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [165] with 12 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 192 with 11 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [203] with 11 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 161 with 14 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [234] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 156 with 12 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [239] with 12 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 146 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [249] with 12 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 144 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [251] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 123 with 13 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [272] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 108 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [287] with 11 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 105 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [290] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 96 with 14 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [299] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 90 with 14 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [305] with 11 mismatches
+	Amplimer length: 265 bp
+--
+	ATTCAACCAATCATAAAGATATTGG hits forward strand at 78 with 15 mismatches
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits reverse strand at [317] with 12 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 362 with 9 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [33] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 326 with 13 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [69] with 11 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 293 with 13 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [102] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 290 with 13 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [105] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 273 with 13 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [122] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 179 with 12 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [216] with 12 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 170 with 10 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [225] with 14 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 69 with 13 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [326] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 32 with 13 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [363] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 29 with 12 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [366] with 13 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 23 with 11 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [372] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 11 with 12 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [384] with 15 mismatches
+	Amplimer length: 265 bp
+--
+	CGTGGAAA[TAW]GCTATATC[TAW]GGTG hits forward strand at 2 with 10 mismatches
+	ATTCAACCAATCATAAAGATATTGG hits reverse strand at [393] with 15 mismatches
+	Amplimer length: 265 bp
