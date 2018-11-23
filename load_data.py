@@ -34,6 +34,8 @@ def load_csv_file(file, delimiter=";"):
             
             rprimer = Seq(row[pos["rPDNA"]])
             rprimer = SeqRecord(rprimer)
+            if(True):
+                rprimer = rprimer.reverse_complement()
             rprimer.id = row[pos["reversePrimer"]]
             
             primer_pair = PrimerPair(row[pos["id"]], fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
@@ -61,14 +63,14 @@ def load_bio_file(file, file_format=None):
     
 
 if (__name__=="__main__"):
-    gen_record = load_bio_file("species_bold_own_genbank.fasta")
+    gen_record = load_bio_file("Data/species_bold_own_genbank.fasta")
     """for gen in gen_record_list:
         print(gen_record_list.get(gen).id)"""
     """gen = gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD")
     example_feature = SeqFeature(FeatureLocation(5, 18), type="LCO1490", strand=1)
     example_list = [1,2,3]
     gen.features.append(example_feature)"""
-    primer_pairs = load_csv_file("P&PP.csv")
+    primer_pairs = load_csv_file("Data/P&PP.csv")
     
     a = Seq("ATTG", IUPAC.unambiguous_dna)
     b = Seq("ATTK", IUPAC.ambiguous_dna)

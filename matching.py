@@ -11,104 +11,87 @@ from common import *
 
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
+from Bio.Alphabet import IUPAC
 
 import load_data as ld
 
 
 #IUPACAmbiguousDNA
-MATCH_TABLE = {"A":{"A":1, "C":0, "G":0, "T":0, "U":0, "W":1, "S":0,"M":1,"K":0,"R":1,"Y":0,"B":0,"D":1,"H":1,"V":1,"N":1,"Z":0}, 
+MATCH_TABLE_old = {"A":{"A":1, "C":0, "G":0, "T":0, "U":0, "W":1, "S":0,"M":1,"K":0,"R":1,"Y":0,"B":0,"D":1,"H":1,"V":1,"N":1,"Z":0}, 
                "C":{"A":0, "C":1, "G":0, "T":0, "U":0, "W":0, "S":1,"M":1,"K":0,"R":0,"Y":1,"B":1,"D":0,"H":1,"V":1,"N":1,"Z":0}, 
                "G":{"A":0, "C":0, "G":1, "T":0, "U":0, "W":0, "S":1,"M":0,"K":1,"R":1,"Y":0,"B":1,"D":1,"H":0,"V":1,"N":1,"Z":0},
                "T":{"A":0, "C":0, "G":0, "T":1, "U":0, "W":1, "S":0,"M":0,"K":1,"R":0,"Y":1,"B":1,"D":1,"H":1,"V":0,"N":1,"Z":0}}
-        
-"""def _pcr_amp(max_miss_f, max_miss_r, pp, gen_seq, model):
-    
-    len_f = len(pp.f.seq) #es té en compte que els dos primers tenen la mateixa llargada
-    len_r = len(pp.r.seq)
-    amplicon = pp.min_amplicon
-    lim = len_f + len_r + amplicon
-    
-    min_miss_f = max_miss_f
-    min_miss_r = max_miss_r
-    
-    i_f = 0
-    i_r = 0
-    
-    
-    for i in range(len(gen_seq.seq)-lim-1):
-        miss_f = 0
-        miss_r = 0
-        j = 0
-        for j in range(len_f-1):
-            miss_f += MATCH_TABLE[gen_seq.seq[i+j]][pp.f.seq[j]]
-            miss_r += MATCH_TABLE[gen_seq.seq[i+lim-len_r+j]][pp.f.seq[j]]
-        
-        con = miss_f<min_miss_f and miss_r<min_miss_r
-        
-        min_miss_f = miss_f if con else min_miss_f
-        min_miss_r = miss_r if con else min_miss_r
-        i_f = i if con else i_f
-        i_r = i+lim-len_r if con else i_r    
-        
-    return Matching(gen_seq, pp, min_miss_f, min_miss_r, i_f, i_r, amplicon)
-"""        
 
-def compute_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, model=1):
-    """
-    @parameters:
-        max_miss_f: Maximum number of missmatches allowed in forward primer 
-        max_miss_r: Maximum number of missmatches allowed in reverse primer
-        primer_pairs: list of primer pairs
-        gen_seqs: genomic sequences
-        model: Using model 1 or 2
-        amplicon: required distance between primers
-    @return:
-    """
-    """for gen in gen_seqs:
-        for primer_pair in primer_pairs:"""
-    
-    pp = primer_pairs[1]
-    gen_seq = gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD")
-    seq = gen_seq.seq
-    
+MATCH_TABLE = {('A', 'A'): 1, ('A', 'C'): 0, ('A', 'G'): 0, ('A', 'T'): 0, ('A', 'U'): 0, ('A', 'W'): 1, ('A', 'S'): 0, ('A', 'M'): 1, 
+               ('A', 'K'): 0, ('A', 'R'): 1, ('A', 'Y'): 0, ('A', 'B'): 0, ('A', 'D'): 1, ('A', 'H'): 1, ('A', 'V'): 1, ('A', 'N'): 1, ('A', 'Z'): 0,
+               ('C', 'A'): 0, ('C', 'C'): 1, ('C', 'G'): 0, ('C', 'T'): 0, ('C', 'U'): 0, ('C', 'W'): 0, ('C', 'S'): 1, ('C', 'M'): 1, 
+               ('C', 'K'): 0, ('C', 'R'): 0, ('C', 'Y'): 1, ('C', 'B'): 1, ('C', 'D'): 0, ('C', 'H'): 1, ('C', 'V'): 1, ('C', 'N'): 1, ('C', 'Z'): 0, 
+               ('G', 'A'): 0, ('G', 'C'): 0, ('G', 'G'): 1, ('G', 'T'): 0, ('G', 'U'): 0, ('G', 'W'): 0, ('G', 'S'): 1, ('G', 'M'): 0,
+               ('G', 'K'): 1, ('G', 'R'): 1, ('G', 'Y'): 0, ('G', 'B'): 1, ('G', 'D'): 1, ('G', 'H'): 0, ('G', 'V'): 1, ('G', 'N'): 1, ('G', 'Z'): 0,
+               ('T', 'A'): 0, ('T', 'C'): 0, ('T', 'G'): 0, ('T', 'T'): 1, ('T', 'U'): 0, ('T', 'W'): 1, ('T', 'S'): 0, ('T', 'M'): 0,
+               ('T', 'K'): 1, ('T', 'R'): 0, ('T', 'Y'): 1, ('T', 'B'): 1, ('T', 'D'): 1, ('T', 'H'): 1, ('T', 'V'): 0, ('T', 'N'): 1, ('T', 'Z'): 0}
 
     
-    min_mf = pp.flen
-    min_mr = pp.rlen
-    i_f = 0
-    i_r = 0
-    range_max = len(seq)-pp.flen-pp.rlen-pp.max_amplicon-1
+def _compute_matching_pairwise2(max_miss_f, max_miss_r, pp, gen):
     
-    missf_array = [0]*pp.flen
-    missr_array = [0]*pp.rlen
-    missf_loc = [0]*pp.flen
-    missr_loc = [0]*pp.rlen
+    #for every genome
+    #for every pair
+    #compute forward matches
+    #compute backward matches
+    #select best pair match
+    gen = gen.seq
     
-    for i in range(0, range_max): #max and min amplicon are equal
-        missf = 0
-        missr = 0
-        for j in range(0, pp.flen): #primers don't have the same lenght
-            r = not(MATCH_TABLE[seq[i+j]][pp.f.seq[j]])
-            missf_array[j] = 1 if r else 0
-            missf += r
-        for j in range(0, pp.rlen):
-            r = not(MATCH_TABLE[seq[i+j+pp.max_amplicon+pp.flen]][pp.r.seq[j]])
-            missr_array[j] = 1 if r else 0
-            missr += r
+    max_score = 0
+    fpos = 0
+    rpos = 0
+    falignment = None
+    ralignment = None
+    
+    forward_alignments = pairwise2.align.localds(gen, pp.f.seq, MATCH_TABLE, -5, -5)
+    for falign in forward_alignments:
+        reverse_alignments = pairwise2.align.localds(gen[falign[3]+pp.flen+pp.min_amplicon:falign[3]+pp.flen+pp.max_amplicon+pp.rlen], pp.r.seq, MATCH_TABLE, -5, -5)
+        for ralign in reverse_alignments:
+            if(falign[2]+ralign[2] > max_score):
+                max_score = falign[2]+ralign[2]
+                fpos = falign[3]
+                rpos = ralign[3]
+                falignment = falign
+                ralignment = ralign
+    
+            #si forward + backward score < mínim, guarda el resultat
+        #a = tuple(align1, align2(----sequence----), score, begin, end)
+        #print(format_alignment(*a))
+    print("Forward's missmatches: %d at %d" % (pp.flen-falignment[2], fpos))
+    print("Reverse's missmatches: %d at %d" % (pp.rlen-ralignment[2], rpos))
+    print(format_alignment(*falignment))
+    print(format_alignment(*ralignment))
+    
+    amplicon = pp.min_amplicon+rpos
+    rpos_abs = amplicon + fpos + pp.flen
+    result = Matching(gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD"), pp, fpos, rpos_abs, pp.flen-falignment[2], pp.rlen-ralignment[2], amplicon)
+    print(result)
+    
+    return
+
+def compute_template_missmatches(fmaxm, rmaxm, primer_pairs, gen_record):
+    result = []
+    for gen in gen_record:
+        gen_matches = MatchingList(gen)
+        for pp in primer_pairs:
+            gen_matches.append(_compute_matching_pairwise2(fmaxm, rmaxm, pp, gen))
             
-        con = missf <= min_mf and missr <= min_mr
-        
-        min_mf = missf if con else min_mf
-        min_mr = missr if con else min_mr
-        i_f = i if con else i_f
-        i_r = i+pp.max_amplicon+pp.flen if con else i_r
-        missf_loc = missf_array.copy() if con else missf_loc
-        missr_loc = missr_array.copy() if con else missr_loc
+        result.append(gen_matches)
     
-    return Matching(gen_seq, pp, (i_f, i_f+pp.flen), (i_r, i_r+pp.rlen), min_mf, missf_loc, min_mr, missr_loc, pp.max_amplicon)
+    return result
 
 if (__name__=="__main__"):
-    gen_record = ld.load_bio_file("species_bold_own_genbank.fasta")
-    primer_pairs = ld.load_csv_file("P&PP.csv")
-    result = compute_matching(10, 10, primer_pairs, gen_record)
-    print(result)
+    gen_record = ld.load_bio_file("Data/species_bold_own_genbank.fasta")
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    _compute_matching_pairwise2(10, 10, primer_pairs, gen_record)
+
+    """
+    alignments = pairwise2.align.localms(gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD").seq, primer_pairs[1].f.seq, 1, 0, -5, -5)
+    for a in alignments:
+        #a = tuple(align1, align2(----sequence----), score, begin, end)
+        #print(format_alignment(*a))
+        print(a[4])"""
