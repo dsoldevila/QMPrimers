@@ -25,7 +25,7 @@ class Matching:
     Result of a match between a genomic sequence and a primer pair
     """
 
-    def __init__(self, gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon):
+    def __init__(self, gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
     
         """
         self.gen = genomic sequence
@@ -46,22 +46,25 @@ class Matching:
         self.rm = rmisses
         self.amplicon = amplicon
         
-        self.fm_loc, self.rm_loc = self._get_missmatch_location()
+        self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
         self.fm_type, self.rm_type = self._get_missmatch_type()
         
         return
     
-    def _get_missmatch_location(self):
+    def _get_missmatch_location(self, MATCH_TABLE):
         fm_loc = []
         rm_loc = []
         
         for i in range(self.primer_pair.flen):
-            if(self.gen.seq[self.fpos:i] != self.primer_pair.f.seq[i]):
+            if(MATCH_TABLE[self.gen.seq[self.fpos+i],self.primer_pair.f.seq[i]]!=1):
                 fm_loc.append(i)
                 
         for i in range(self.primer_pair.rlen):
-            if(self.gen.seq[self.rpos:i] != self.primer_pair.r.seq[i]):
-                rm_loc.append(i)
+            try:
+                if(MATCH_TABLE[self.gen.seq[self.rpos+i], self.primer_pair.r.seq[i]]!=1):
+                    rm_loc.append(i)
+            except:
+                print("Reverse primer has passed gen boundary")
                 
         return fm_loc, rm_loc
     
@@ -93,7 +96,7 @@ class Matching:
     
 class MatchingList:
     def __init__(self, gen):
-        self.gen
+        self.gen = gen
         self._match_list = []
         return
     
@@ -106,3 +109,9 @@ class MatchingList:
     
     def get_match(self, pair_id):
         pass
+    
+    def __str__(self):
+        info = "------------\nFOR: "+self.gen.id+"\n-------------\n"
+        for match in self._match_list:
+            info += str(match)
+        return info

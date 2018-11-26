@@ -72,6 +72,5 @@ if (__name__=="__main__"):
     gen.features.append(example_feature)"""
     primer_pairs = load_csv_file("Data/P&PP.csv")
     
-    a = Seq("ATTG", IUPAC.unambiguous_dna)
-    b = Seq("ATTK", IUPAC.ambiguous_dna)
-    print(a)
+    #a = Seq("ATTG", IUPAC.unambiguous_dna)
+    #b = Seq("ATTK", IUPAC.ambiguous_dna)
