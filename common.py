@@ -46,8 +46,8 @@ class Matching:
         self.rm = rmisses
         self.amplicon = amplicon
         
-        self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
-        self.fm_type, self.rm_type = self._get_missmatch_type()
+        #self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
+        #self.fm_type, self.rm_type = self._get_missmatch_type()
         
         return
     
@@ -60,11 +60,8 @@ class Matching:
                 fm_loc.append(i)
                 
         for i in range(self.primer_pair.rlen):
-            try:
-                if(MATCH_TABLE[self.gen.seq[self.rpos+i], self.primer_pair.r.seq[i]]!=1):
+            if(MATCH_TABLE[self.gen.seq[self.rpos+i], self.primer_pair.r.seq[i]]!=1):
                     rm_loc.append(i)
-            except:
-                print("Reverse primer has passed gen boundary")
                 
         return fm_loc, rm_loc
     
