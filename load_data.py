@@ -3,7 +3,7 @@
 """
 Created on Wed Nov  7 12:07:28 2018
 
-@author: david
+@author: David Soldevila
 """
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord

@@ -3,7 +3,7 @@
 """
 Created on Fri Nov  9 15:34:23 2018
 
-@author: david
+@author: David Soldevila
 """
 
 class PrimerPair:
@@ -46,8 +46,8 @@ class Matching:
         self.rm = rmisses
         self.amplicon = amplicon
         
-        #self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
-        #self.fm_type, self.rm_type = self._get_missmatch_type()
+        self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
+        self.fm_type, self.rm_type = self._get_missmatch_type()
         
         return
     
@@ -70,10 +70,10 @@ class Matching:
         rm_type = []
     
         for m in self.fm_loc:
-            fm_type.append(self.gen.seq[m+self.fpos]+self.primer_pair.f.seq[m])
+            fm_type.append(self.gen.seq[self.fpos+m]+self.primer_pair.f.seq[m])
           
         for m in self.rm_loc:
-            rm_type.append(self.gen.seq[self.rpos]+self.primer_pair.r.seq[m])
+            rm_type.append(self.gen.seq[self.rpos+m]+self.primer_pair.r.seq[m])
             
             
         return fm_type, rm_type
@@ -81,14 +81,18 @@ class Matching:
     def __str__(self):
         info = ("PRIME PAIR "+str(self.primer_pair.id)+"\n"+
               "Forward's missmatches: "+str(self.fm)+"\n"+
-              "Backward's missmatches: "+str(self.rm)+"\n"+
+              "Reverse's missmatches: "+str(self.rm)+"\n"+
               "Pair's amplicon: "+str(self.amplicon)+"\n"+
               "Forward's match at "+ str(self.fpos)+"\n"+
               " "+str(self.gen.seq[self.fpos:self.fpos+self.primer_pair.flen])+"\n"+
               " "+str(self.primer_pair.f.seq) +"\n"+
-              "Backwards's match at "+ str(self.rpos)+"\n"+
+              "Forward's missmatch Loc: "+ str(self.fm_loc)+"\n"+
+              "Forward's missmatch Type: "+ str(self.fm_type)+"\n"+
+              "Reverse's match at "+ str(self.rpos)+"\n"+
               " "+str(self.gen.seq[self.rpos:self.rpos+self.primer_pair.rlen])+"\n"+
-              " "+str(self.primer_pair.r.seq) +"\n")
+              " "+str(self.primer_pair.r.seq) +"\n"+
+              "Reverse's missmatch Loc: "+ str(self.rm_loc)+"\n"+
+              "Reverse's missmatch Type: "+ str(self.rm_type)+"\n")
         return info
     
 class MatchingList:

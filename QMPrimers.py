@@ -3,7 +3,7 @@
 """
 Created on Thu Nov  8 15:30:29 2018
 
-@author: david
+@author: David Soldevila
 """
 
 import load_data as ld
