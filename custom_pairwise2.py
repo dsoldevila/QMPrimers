@@ -434,11 +434,12 @@ def _align(sequenceA, sequenceB, match_fn, gap_A_fn, gap_B_fn,
     starts = _find_start(score_matrix, align_globally)
     # Find the highest score.
     """best_score = max([_[0] for _ in starts])""" """EDITED"""
-    best_score = 2 
+    min_score = 2 
 
     # If they only want the score, then return it.
     if score_only:
-        return best_score
+        """return best_score""" """EDITED"""
+        return min_score
 
     tolerance = 0  # XXX do anything with this?
     # Now find all the positions within some tolerance of the best
@@ -448,7 +449,7 @@ def _align(sequenceA, sequenceB, match_fn, gap_A_fn, gap_B_fn,
               if rint(abs(score - best_score)) <= rint(tolerance)]
     """ """EDITED"""
     starts = [(score, pos) for score, pos in starts
-              if rint(abs(score)) >= rint(best_score)] 
+              if rint(score) >= rint(min_score)] 
     
     # Recover the alignments and return them.
     alignments = _recover_alignments(sequenceA, sequenceB, starts,
