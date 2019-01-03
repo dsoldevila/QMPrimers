@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#DEPRECATED
 
 #This code is a slightly modified version of Pairwise2 from Biopython module.
 #TODO:Instead of returning the optimal match, it returns all the matches that don't exceed a maximum number of missmatches
@@ -1062,12 +1063,12 @@ def format_alignment(align1, align2, score, begin, end):
 # then throw a warning and use the pure Python implementations.
 # The redefinition is deliberate, thus the no quality assurance
 # flag for when using flake8:
-try:
+"""try:
     from Bio.cpairwise2 import rint, _make_score_matrix_fast  # noqa
 except ImportError:
     warnings.warn('Import of C module failed. Falling back to pure Python ' +
                   'implementation. This may be slooow...', BiopythonWarning)
-
+"""
 if __name__ == "__main__":
     from Bio._utils import run_doctest
     run_doctest()

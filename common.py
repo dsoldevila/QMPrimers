@@ -5,6 +5,8 @@ Created on Fri Nov  9 15:34:23 2018
 
 @author: David Soldevila
 """
+import numpy as np
+import pandas as pd
 
 class PrimerPair:
     def __init__(self, pair_id, fprimer, rprimer, min_amplicon, max_amplicon):
@@ -40,8 +42,8 @@ class Matching:
         """
         self.gen = gen
         self.primer_pair = primer_pair
-        self.fpos = fpos
-        self.rpos = rpos
+        self.fpos = int(fpos) #it seems Biopython seqrecord does not support numpy.int32
+        self.rpos = int(rpos)
         self.fm = fmisses
         self.rm = rmisses
         self.amplicon = amplicon
@@ -56,11 +58,11 @@ class Matching:
         rm_loc = []
         
         for i in range(self.primer_pair.flen):
-            if(MATCH_TABLE[self.gen.seq[self.fpos+i],self.primer_pair.f.seq[i]]!=1):
+            if(MATCH_TABLE.loc[self.gen[self.fpos+i],self.primer_pair.f.seq[i]]!=1):
                 fm_loc.append(i)
                 
         for i in range(self.primer_pair.rlen):
-            if(MATCH_TABLE[self.gen.seq[self.rpos+i], self.primer_pair.r.seq[i]]!=1):
+            if(MATCH_TABLE.loc[self.gen.seq[self.rpos+i], self.primer_pair.r.seq[i]]!=1):
                     rm_loc.append(i)
                 
         return fm_loc, rm_loc
@@ -102,7 +104,10 @@ class MatchingList:
         return
     
     def append(self, match):
-        self._match_list.append(match)
+        if(type(match)==list):
+            self._match_list.extend(match)
+        else:
+            self._match_list.append(match)
         return
     
     def get_list(self):
