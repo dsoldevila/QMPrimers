@@ -78,7 +78,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
     best_score = 0
     
     alignments = []
-    result = MatchingList(gen)
+    result = AlignmentList(primer, gen)
     
     forward = string2numpy(primer.f)
     forward_matchings = _compute_primer_matching(max_miss_f, forward, primer.flen, gen[0:-search_limit]) #compute forward primer matching
@@ -102,21 +102,27 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
             fm = al[0]
             rm= al[1]
             amplicon = primer.min_amplicon+rm[0]
-            result.append(Matching(gen, primer, fm[1], start+rm[1], primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
+            result.append(Alignment(gen, primer, fm[1], start+rm[1], primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
             
     return result
 
-def compute_gen_alignments(max_miss_f, max_miss_r, primer_pairs, gen):
-    result = MatchingList(gen)
-    for primer in primer_pairs:
-        result.append(compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen))
-    pass
+def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record):
+    gen_matching_list = []
+    for gen_key in gen_record:
+        print(gen_key)
+        gen = gen_record[gen_key]
+        gen_matching = GenMatching(gen)
+        for primer in primer_pairs:
+            alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen)
+            gen_matching.append(alignment_list)
+        gen_matching_list.append(gen_matching)
+    return gen_matching_list
 
 if(__name__=="__main__"):
     gen_record = ld.load_bio_file("Data/species_bold_own_genbank.fasta")
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     gen = gen_record.get("ACEA563-14_Aphis_gossypii_BOLD")
     primer = primer_pairs[4]
-    result = compute_primer_pair_best_alignment(5, 5, primer, gen)
-    
-    print(result)
+    #result = compute_primer_pair_best_alignment(5, 5, primer, gen)
+    result = compute_gen_matching(5, 5, primer_pairs, gen_record)
+    print(result[1])

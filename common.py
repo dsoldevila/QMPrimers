@@ -22,9 +22,9 @@ class PrimerPair:
     def __str__(self):
         pass
     
-class Matching:
+class Alignment:
     """
-    Result of a match between a genomic sequence and a primer pair
+    Alignment info between a genomic sequence and a primer pair
     """
 
     def __init__(self, gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
@@ -97,27 +97,46 @@ class Matching:
               "Reverse's missmatch Type: "+ str(self.rm_type)+"\n")
         return info
     
-class MatchingList:
-    def __init__(self, gen):
+class AlignmentList:
+    """
+    It's plausible that a primer pair aligns in more than one place in the sequence, a list is needed
+    """
+    def __init__(self, primer_pair, gen):
+        self.primer_pair = primer_pair
         self.gen = gen
-        self._match_list = []
+        self._alignment_list = []
         return
     
     def append(self, match):
         if(type(match)==list):
-            self._match_list.extend(match)
+            self._alignment_list.extend(match)
         else:
-            self._match_list.append(match)
+            self._alignment_list.append(match)
         return
     
-    def get_list(self):
+    def get_alignment_list(self):
         return self._match_list
     
-    def get_match(self, pair_id):
+    def get_next_alignment(self, pair_id):
         pass
     
     def __str__(self):
-        info = "------------\nFOR: "+self.gen.id+"\n-------------\n"
-        for match in self._match_list:
-            info += str(match)
+        info = ""
+        for al in self._alignment_list:
+            info += str(al)
+        return info
+    
+class GenMatching:
+    def __init__(self, gen):
+        self.gen = gen
+        self._matching_list = []
+        return
+    
+    def append(self, alignment_list):
+        self._matching_list.append(alignment_list)
+    
+    def __str__(self):
+        info = info = "------------\nFOR: "+self.gen.id+"\n-------------\n"
+        for m in self._matching_list:
+            info += str(m)
         return info
