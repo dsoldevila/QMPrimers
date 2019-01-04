@@ -60,7 +60,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
     n_results = is_score_valid.sum()
     result_raw = is_score_valid*result_raw #if score valid =score else =0
     
-    result = np.zeros(n_results, dtype=[('score', '>i4'), ('start', '>i4'), ('end', '>i4')]) #TODO integer 32 too much?
+    result = np.zeros(n_results, dtype=[('score', '>i4'), ('start', '>i4'), ('end', '>i4')]) #TODO integer 32 too much / enough?
     
     j = 0
     for i in range(result_max_len):
@@ -71,7 +71,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
     return result
 
 def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
-    search_limit = primer.rlen+primer.max_amplicon
+    search_limit = primer.rlen+primer.max_amplicon #TODO that's not true, it should be min_amplicon
     if(primer.flen+search_limit>len(gen)): #If primer pair (plus amplicon) is larger than the genomic sequence, abort
         return None
     
@@ -92,17 +92,20 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
         for rm in reverse_matchings: #get the best or bests matche(s) with this primer pair (alingments)
             score = fm[0] + rm[0]
             if (score > best_score): #if the score is better, erase the previous bests results
+                rm[1] +=start #abs location
+                rm[2] +=start
                 alignments = [(fm, rm)]
                 best_score = score
             elif (score == best_score):
                 ralignments.append((fm, rm))
                 
                 
-        for al in alignments:
-            fm = al[0]
-            rm= al[1]
-            amplicon = primer.min_amplicon+rm[0]
-            result.append(Alignment(gen, primer, fm[1], start+rm[1], primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
+    for al in alignments:
+        fm = al[0]
+        rm= al[1]
+        amplicon = primer.min_amplicon+rm[0]
+        a = rm[1]
+        result.append(Alignment(gen, primer, fm[1], rm[1], primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
             
     return result
 

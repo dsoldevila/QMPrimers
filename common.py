@@ -114,8 +114,8 @@ class AlignmentList:
             self._alignment_list.append(match)
         return
     
-    def get_alignment_list(self):
-        return self._match_list
+    def get_list(self):
+        return self._alignment_list
     
     def get_next_alignment(self, pair_id):
         pass

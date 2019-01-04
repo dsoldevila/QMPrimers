@@ -86,7 +86,7 @@ class GUI(Frame):
         return
     
     def compute(self):
-        result = m.compute_template_missmatches(10, 10, self.primer_pairs, self.gen_record)
+        result = m.compute_gen_matching(10, 10, self.primer_pairs, self.gen_record)
         print(result[0])
         return
     
