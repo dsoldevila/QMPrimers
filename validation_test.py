@@ -11,6 +11,9 @@ import load_data as ld
 from common import *
 from matching import *
 
+import cProfile
+import pstats
+
 target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],157,[2,5]),
         ("FBARB265-11_Clubiona_leucaspis_BOLD", 0,[0,12],157,[2,5,14,18]),
         ("ACEA902-14_Myzus_persicae_BOLD", 0,[13,15],157,[2,17,21]),
@@ -88,8 +91,13 @@ def test1(gen_record, primer_pairs):
         print("TEST FAILED")
     return
 
+def performance_test(gen_record, primer_pairs):
+    cProfile.run('compute_gen_matching(5, 5, primer_pairs, gen_record)', 'myFunction.profile')
+    stats = pstats.Stats('myFunction.profile')
+    stats.strip_dirs().sort_stats('time').print_stats()
+
 if(__name__=="__main__"):
     gen_record = ld.load_bio_file("Data/species_bold_own_genbank.fasta")
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    test1(gen_record, primer_pairs)
+    performance_test(gen_record, primer_pairs)
     #print(compute_primer_pair_best_alignment(6, 4, primer_pairs[4], gen_record.get("GBBSP1961-15_Platnickina_tincta_BOLD")))

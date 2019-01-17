@@ -54,6 +54,8 @@ def load_bio_file(file, file_format=None):
         if(file_format==None): #if format not specified, use extension
             extension = path.splitext(file)[1]
             file_format = extension[1:]
+            #TODO change this patch
+            if(file_format == "fna"): file_format = "fasta"
             
         if(file_format in SeqIO._FormatToIterator): #if format supported by biopython
             seq_record = SeqIO.index(file, file_format, alphabet=IUPAC.ambiguous_dna)

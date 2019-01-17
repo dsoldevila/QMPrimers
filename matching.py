@@ -122,10 +122,16 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record):
     return gen_matching_list
 
 if(__name__=="__main__"):
-    gen_record = ld.load_bio_file("Data/species_bold_own_genbank.fasta")
+    gen_record = ld.load_bio_file("Data/mitochondrion.2.1.genomic.fna")
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    
+    """
     gen = gen_record.get("ACEA563-14_Aphis_gossypii_BOLD")
     primer = primer_pairs[4]
     #result = compute_primer_pair_best_alignment(5, 5, primer, gen)
+    """
+    import time
+    start_time = time.time()
     result = compute_gen_matching(5, 5, primer_pairs, gen_record)
     print(result[1])
+    print("--- %s seconds ---" % (time.time() - start_time))

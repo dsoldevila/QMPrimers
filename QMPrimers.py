@@ -63,25 +63,25 @@ class GUI(Frame):
         return
         
     def _open_file(self):
-        file_name = filedialog.askopenfilename(initialdir=self.current_directory, title = "Select file")
-        if(file_name): self.current_directory = os.path.dirname(file_name)
-        return file_name
+        file_names = filedialog.askopenfilenames(initialdir=self.current_directory, title = "Select file")
+        if(file_names): self.current_directory = os.path.dirname(file_names[0])
+        return file_names
     
-    def open_bio_file(self, input_file):
-        if(input_file): #is not None
+    def open_bio_file(self, input_files):
+        if(input_files): #is not None
             self.entry_g.delete(0, END)
-            self.entry_g.insert(0, input_file)
-            print(input_file)
-            self.gen_record = ld.load_bio_file(input_file, file_format=None)
+            self.entry_g.insert(0, str(input_files))
+            print(input_files)
+            self.gen_record = ld.load_bio_file(input_files[0], file_format=None)
             print(self.gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD")+"\n")
         return
     
-    def open_csv_file(self, input_file):
-        if(input_file): #is not None
+    def open_csv_file(self, input_files):
+        if(input_files): #is not None
             self.entry_p.delete(0, END)
-            self.entry_p.insert(0, input_file)
-            print(input_file)
-            self.primer_pairs = ld.load_csv_file(input_file)
+            self.entry_p.insert(0, str(input_files))
+            print(input_files)
+            self.primer_pairs = ld.load_csv_file(input_files[0])
             print(self.primer_pairs[0].f.seq+"\n")
         return
     
