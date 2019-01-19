@@ -46,7 +46,9 @@ target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],157,[2,5]),
         ("NLARA078-12_Platnickina_tincta_BOLD", 0, [0,12,13], 157, [23]),
         ("GBBSP1961-15_Platnickina_tincta_BOLD", 0, [0,12,13], 157, [23])]
 
-def test1(gen_record, primer_pairs):
+def test1():
+    gen_record = ld.load_bio_file("Data/species_bold_own_genbank.fasta")
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     primer = primer_pairs[4] #Zeale
     
     gen_matching_list = []
@@ -91,13 +93,56 @@ def test1(gen_record, primer_pairs):
         print("TEST FAILED")
     return
 
+def print_match():
+    gen_record = ld.load_bio_file("Data/mitochondrion.1.1.genomic.fna")
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    gen_record = {"ref|NC_012975.1|": gen_record["ref|NC_012975.1|"]}
+    result = compute_gen_matching(5, 5, [primer_pairs[2]], gen_record)
+    for gen in result:
+        print(gen)
+    gen = gen_record["ref|NC_012975.1|"]
+    print(gen[5480:5505])
+    print(gen[5632:5661])
+    return
+    
+def test_all_pairs():
+    check = {"amplicon": 1}
+    gen_record = ld.load_bio_file("Data/mitochondrion.1.1.genomic.fna")
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    gen_record = {"ref|NC_012975.1|": gen_record["ref|NC_012975.1|"]}
+    gen_matching_list = compute_gen_matching(5, 5, primer_pairs, gen_record)
+    """for gen in gen_matching_list:
+        print(gen)"""
+    
+    for gm in gen_matching_list:
+        matching_list = gm.get_matching_list()
+        for al_list in matching_list:
+            print("PRIMER PAIR: ", al_list.primer_pair.id)
+            alignments = al_list.get_list()
+            for al in alignments:
+                pp = primer_pairs[int(al.primer_pair.id)-1]
+                if(al.amplicon < pp.min_amplicon or al.amplicon > pp.max_amplicon):   
+                        check["amplicon"] = 0
+                        print(al.amplicon, pp.min_amplicon, pp.max_amplicon)
+    sum_check = 0
+    for c in check:
+        sum_check += check[c]
+    if(sum_check == len(check)):
+        print("SUCCESS!")
+    else:
+        print("TEST FAILED")
+            
+    return
+
 def performance_test(gen_record, primer_pairs):
     cProfile.run('compute_gen_matching(5, 5, primer_pairs, gen_record)', 'myFunction.profile')
     stats = pstats.Stats('myFunction.profile')
     stats.strip_dirs().sort_stats('time').print_stats()
 
 if(__name__=="__main__"):
-    gen_record = ld.load_bio_file("Data/species_bold_own_genbank.fasta")
+    #gen_record = ld.load_bio_file("Data/species_bold_own_genbank.fasta")
+    gen_record = ld.load_bio_file("Data/mitochondrion.1.1.genomic.fna")
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    performance_test(gen_record, primer_pairs)
-    #print(compute_primer_pair_best_alignment(6, 4, primer_pairs[4], gen_record.get("GBBSP1961-15_Platnickina_tincta_BOLD")))
+    gen_record = {"ref|NC_012975.1|": gen_record["ref|NC_012975.1|"]}
+    #performance_test(gen_record, primer_pairs)
+    print_match()

@@ -92,8 +92,8 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
         for rm in reverse_matchings: #get the best or bests matche(s) with this primer pair (alingments)
             score = fm[0] + rm[0]
             if (score > best_score): #if the score is better, erase the previous bests results
-                rm[1] +=start #abs location
-                rm[2] +=start
+                #rm[1] +=start #abs location
+                #rm[2] +=start
                 alignments = [(fm, rm)]
                 best_score = score
             elif (score == best_score):
@@ -103,9 +103,8 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
     for al in alignments:
         fm = al[0]
         rm= al[1]
-        amplicon = primer.min_amplicon+rm[0]
-        a = rm[1]
-        result.append(Alignment(gen, primer, fm[1], rm[1], primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
+        amplicon = primer.min_amplicon+rm[1]
+        result.append(Alignment(gen, primer, fm[1], rm[1]+amplicon+fm[2], primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
             
     return result
 

@@ -127,10 +127,16 @@ class AlignmentList:
         return info
     
 class GenMatching:
+    """
+    List of AlignmentList
+    """
     def __init__(self, gen):
         self.gen = gen
         self._matching_list = []
         return
+    
+    def get_matching_list(self):
+        return self._matching_list
     
     def append(self, alignment_list):
         self._matching_list.append(alignment_list)
