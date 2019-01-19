@@ -44,35 +44,28 @@ def load_csv_file(file, delimiter=";"):
             
     return primer_list
 
-def load_bio_file(file, file_format=None):
+def load_bio_files(files, file_format=None):
     """
     This function loads any file whose format is supported by Biopython.
     @return: Dictionary with genomic sequences
     """
+    #TODO check all files, not only de first one
     seq_record = {}
-    if(path.isfile(file)):
+    if(path.isfile(files[0])):
         if(file_format==None): #if format not specified, use extension
-            extension = path.splitext(file)[1]
+            extension = path.splitext(files[0])[1]
             file_format = extension[1:]
             #TODO change this patch
             if(file_format == "fna"): file_format = "fasta"
-            
+            #TODO is the next line acceptable?
         if(file_format in SeqIO._FormatToIterator): #if format supported by biopython
-            seq_record = SeqIO.index(file, file_format, alphabet=IUPAC.ambiguous_dna)
+            seq_record = SeqIO.index_db(":memory:", files, file_format)
+            #seq_record = SeqIO.index(file, file_format, alphabet=IUPAC.ambiguous_dna)
     
     return seq_record
   
     
 
 if (__name__=="__main__"):
-    gen_record = load_bio_file("Data/species_bold_own_genbank.fasta")
-    """for gen in gen_record_list:
-        print(gen_record_list.get(gen).id)"""
-    """gen = gen_record.get("ACEA1016-14_Aphis_spiraecola_BOLD")
-    example_feature = SeqFeature(FeatureLocation(5, 18), type="LCO1490", strand=1)
-    example_list = [1,2,3]
-    gen.features.append(example_feature)"""
-    primer_pairs = load_csv_file("Data/P&PP.csv")
-    
-    #a = Seq("ATTG", IUPAC.unambiguous_dna)
-    #b = Seq("ATTK", IUPAC.ambiguous_dna)
+    gen_record = SeqIO.index_db(":memory:", ["Data/mitochondrion.1.1.genomic.fna"], "fasta")
+    print(gen_record["ref|NC_012975.1|"])

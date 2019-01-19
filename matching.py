@@ -41,6 +41,7 @@ def is_valid(score, min_score):
 def string2numpy(string):
    return np.array(list(string))
 
+
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
     result_matrix = MATCH_TABLE.loc[primer,gen] #get match table
     result_max_len = len(gen)-len_primer+1
@@ -110,8 +111,11 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
 
 def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record):
     gen_matching_list = []
+    size = len(gen_record)
+    i = 0
     for gen_key in gen_record:
-        print(gen_key)
+        print(gen_key, "{0:.2f}".format(i/size*100)+"%")
+        i +=1
         gen = gen_record[gen_key]
         gen_matching = GenMatching(gen)
         for primer in primer_pairs:
@@ -121,7 +125,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record):
     return gen_matching_list
 
 if(__name__=="__main__"):
-    gen_record = ld.load_bio_file("Data/mitochondrion.2.1.genomic.fna")
+    gen_record = ld.load_bio_files("Data/mitochondrion.2.1.genomic.fna")
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     
     """
