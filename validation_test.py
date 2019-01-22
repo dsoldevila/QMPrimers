@@ -47,7 +47,7 @@ target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],157,[2,5]),
         ("GBBSP1961-15_Platnickina_tincta_BOLD", 0, [0,12,13], 157, [23])]
 
 def test1():
-    gen_record = ld.load_bio_files("Data/species_bold_own_genbank.fasta")
+    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     primer = primer_pairs[4] #Zeale
     
@@ -100,7 +100,6 @@ def print_match():
     result = compute_gen_matching(5, 5, [primer_pairs[2]], gen_record)
     for gen in result:
         print(gen)
-    gen = gen_record["ref|NC_012975.1|"]
     return
     
 def test_all_pairs():
@@ -109,8 +108,8 @@ def test_all_pairs():
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     gen_record = {"ref|NC_012975.1|": gen_record["ref|NC_012975.1|"]}
     gen_matching_list = compute_gen_matching(5, 5, primer_pairs, gen_record)
-    """for gen in gen_matching_list:
-        print(gen)"""
+    for gen in gen_matching_list:
+        print(gen)
     
     for gm in gen_matching_list:
         matching_list = gm.get_matching_list()
@@ -139,6 +138,9 @@ def performance_test(primer_pairs, gen_record):
     stats.strip_dirs().sort_stats('cumtime').print_stats()
 
 if(__name__=="__main__"):
-    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) #species_bold_own_genbank
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    performance_test(primer_pairs, gen_record)
+    compute_gen_matching(5, 5, primer_pairs, gen_record)        
+    #performance_test(primer_pairs, gen_record)
+    
+    

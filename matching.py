@@ -33,6 +33,7 @@ SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
 MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
 
+#TODO this func is currently unused, ~line 68
 def is_valid(score, min_score):
     score = np.asarray(score)
     min_score = np.asarray(min_score)
@@ -42,10 +43,11 @@ def string2numpy(string):
    return np.array(list(string))
 
 
+
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
     result_matrix = MATCH_TABLE.loc[primer,gen] #get match table
     result_max_len = len(gen)-len_primer+1
-    result_raw = np.zeros(result_max_len, dtype='i4') #TODO integer 32 too much?
+    result_raw = np.zeros(result_max_len, dtype='uint8') #TODO integer 8 enough?
     """
     offset=0
     dooooooo
@@ -54,21 +56,29 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
     ooodoooo...
     """
     #TODO: Vectorize this for
+    """
     for i in range(result_max_len):
-        result_raw[i] = np.sum((np.diagonal(result_matrix, offset=i))) #get scores of all diagonals
+        result_raw[i] = np.sum((np.diagonal(result_matrix, offset=i))) #get scores of all diagonals, deprecated, too slow
         
+    """
+    result_matrix = result_matrix.values
+    for i in range(len_primer):
+        result_raw = np.add(result_raw, result_matrix[i,i:result_max_len+i]) #Speedup try n2, SpeedUp = 168/26 = 6,4x
+    
     is_score_valid = (result_raw>=len_primer-max_misses)
     n_results = is_score_valid.sum()
     result_raw = is_score_valid*result_raw #if score valid =score else =0
     
-    result = np.zeros(n_results, dtype=[('score', '>i4'), ('start', '>i4'), ('end', '>i4')]) #TODO integer 32 too much / enough?
+    result = np.zeros(n_results, dtype=[('score', 'uint8'), ('start', '>i4'), ('end', '>i4')]) #TODO integer 32 too much / enough?
     
     j = 0
     for i in range(result_max_len):
         #result[j] = (result_raw[i], i, i+len_primer) if result_raw[i] else result[j]
+        
         if result_raw[i]:
             result[j] = (result_raw[i], i, i+len_primer)
             j=j+1
+
     return result
 
 def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
