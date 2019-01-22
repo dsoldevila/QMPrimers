@@ -13,6 +13,7 @@ from common import *
 from tkinter import filedialog
 from tkinter import *
 import os
+import sys
 
 class GUI(Frame):
     def __init__(self, parent=Frame):
@@ -88,11 +89,43 @@ class GUI(Frame):
         result = m.compute_gen_matching(10, 10, self.primer_pairs, self.gen_record)
         print(result[0])
         return
-    
+
+def get_help():
+    print("QMPrimers help page")
+    return
+
+def compute_from_cmd(parameters):
+    gen_record = ld.load_bio_files([parameters["-gf"]],parameters["-gformat"])
+    primer_pairs = ld.load_csv_file(parameters["-pf"])
+    result = m.compute_gen_matching(int(parameters["-mf"]), int(parameters["-mr"]), primer_pairs, gen_record)
+
+    return result
 
 if (__name__=="__main__"):
-    root = Tk()
-    root.title("QMPrimers")
-    main_window = GUI(root)
-    root.mainloop()
+    
+    parameters = {"--help": False, "-mf": 10, "-mr": 10, "-gf": None, "-gformat": None, "-pf": None, "--nogui": False}
+    
+    i = 1
+    nargs = len(sys.argv)
+    
+    while i < nargs:
+        if(sys.argv[i] not in parameters):
+            print("Parameter "+str(sys.argv[i])+" unknown")
+            exit();
+        if(sys.argv[i][:2]=="--"):
+            parameters[sys.argv[i]] = True
+        elif(sys.argv[i][0]=="-"):
+             parameters[sys.argv[i]] = sys.argv[i+1]
+             i+=1
+        i+=1  
+        
+    if(parameters["--help"]):
+        get_help()
+    elif(parameters["--nogui"]):
+        compute_from_cmd(parameters)
+    else:
+        root = Tk()
+        root.title("QMPrimers")
+        main_window = GUI(root)
+        root.mainloop()
     
