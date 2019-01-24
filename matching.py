@@ -28,7 +28,7 @@ SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
                         [1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                         [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
                         [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
 MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
@@ -42,6 +42,10 @@ def is_valid(score, min_score):
 def string2numpy(string):
    return np.array(list(string))
 
+def append_zeros(gen_record, max_miss_f, max_miss_r):
+    for gen in gen_record:
+        gen_record[gen].seq = Seq("Z"*max_miss_f+str(gen_record[gen].seq)+"Z"*max_miss_r)
+    return gen_record
 
 
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
@@ -81,7 +85,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 
     return result
 
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
+def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers):
     search_limit = primer.rlen+primer.max_amplicon #TODO that's not true, it should be min_amplicon
     if(primer.flen+search_limit>len(gen)): #If primer pair (plus amplicon) is larger than the genomic sequence, abort
         return None
@@ -115,11 +119,15 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen):
         fm = al[0]
         rm= al[1]
         amplicon = primer.min_amplicon+rm[1]
-        result.append(Alignment(gen, primer, fm[1], rm[1]+amplicon+fm[2], primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
+        result.append(Alignment(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
+                                primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
             
     return result
 
-def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record):
+def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hanging_primers=False):
+    if(hanging_primers):
+        gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
+        
     gen_matching_list = []
     size = len(gen_record)
     i = 0
@@ -129,7 +137,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record):
         gen = gen_record[gen_key]
         gen_matching = GenMatching(gen)
         for primer in primer_pairs:
-            alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen)
+            alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers)
             gen_matching.append(alignment_list)
         gen_matching_list.append(gen_matching)
     return gen_matching_list

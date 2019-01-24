@@ -103,7 +103,7 @@ def compute_from_cmd(parameters):
 
 if (__name__=="__main__"):
     
-    parameters = {"--help": False, "-mf": 10, "-mr": 10, "-gf": None, "-gformat": None, "-pf": None, "--nogui": False}
+    parameters = {"--help": False, "-mf": 10, "-mr": 10, "-gf": None, "-gformat": None, "-pf": None, "--nogui": False, "--hanging-primers": False}
     
     i = 1
     nargs = len(sys.argv)

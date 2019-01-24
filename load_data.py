@@ -44,7 +44,7 @@ def load_csv_file(file, delimiter=";"):
             
     return primer_list
 
-def load_bio_files(files, file_format=None):
+def load_bio_files(files, file_format=None, writable=False):
     """
     This function loads any file whose format is supported by Biopython.
     @return: Dictionary with genomic sequences
@@ -59,13 +59,26 @@ def load_bio_files(files, file_format=None):
             if(file_format == "fna"): file_format = "fasta"
             #TODO is the next line acceptable?
         if(file_format in SeqIO._FormatToIterator): #if format supported by biopython
-            seq_record = SeqIO.index_db(":memory:", files, file_format)
-            #seq_record = SeqIO.index(file, file_format, alphabet=IUPAC.ambiguous_dna)
+            if(writable): #if they need to be writable, store in memory
+                for file in files:
+                    seq_record.update(SeqIO.to_dict(SeqIO.parse(file, file_format)))
+            else: #create read_only database
+                seq_record = SeqIO.index_db(":memory:", files, file_format) #TODO specify alphabet?
     
     return seq_record
-  
+
+def store_matching_results(output_file, gen_matching_list):
+    with open(output_file, 'w', newline='') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_NONE)
+        for gm in gen_matching_list:
+            gm.write2file(filewriter)   
+    return
     
 
 if (__name__=="__main__"):
-    gen_record = SeqIO.index_db(":memory:", ["Data/mitochondrion.1.1.genomic.fna"], "fasta")
-    print(gen_record["ref|NC_012975.1|"])
+    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"], writable=True)
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    gen_record = append_zeros(gen_record, 5, 5)
+    result = compute_gen_matching(5, 5, primer_pairs, gen_record)
+    for r in result:
+        print(r)

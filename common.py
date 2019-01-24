@@ -27,12 +27,15 @@ class Alignment:
     Alignment info between a genomic sequence and a primer pair
     """
 
-    def __init__(self, gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
+    def __init__(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
     
         """
         self.gen = genomic sequence
         self.primer_pair = primer pair used for matching, instance of PrimerPair class
         self.fpos = starting position of the forward primer in the genomic sequence, starting at 0
+        señf.real_fpos --> gen: ZZAGTAC...   real_fpos = -2, the primer is hanging
+                            pr: AGAGT        fpos = 0
+                    
         self.rpos = starting position of the reverse primer in the genomic sequence, starting at the end of genomic sequence
         self.fm = number of missmatches on the forward primer
         self.fm_loc = array of the missmatch locations of the forward primer
@@ -43,7 +46,9 @@ class Alignment:
         self.gen = gen
         self.primer_pair = primer_pair
         self.fpos = int(fpos) #it seems Biopython seqrecord does not support numpy.int32
+        self.real_fpos = int(real_fpos)
         self.rpos = int(rpos)
+        self.real_rpos = int(real_rpos)
         self.fm = fmisses
         self.rm = rmisses
         self.amplicon = amplicon
@@ -80,22 +85,16 @@ class Alignment:
             
         return fm_type, rm_type
     
-    def __str__(self):
+    def __str__(self):        
         info = ("PRIME PAIR "+str(self.primer_pair.id)+"\n"+
-              "Forward's missmatches: "+str(self.fm)+"\n"+
-              "Reverse's missmatches: "+str(self.rm)+"\n"+
-              "Pair's amplicon: "+str(self.amplicon)+"\n"+
-              "Forward's match at "+ str(self.fpos)+"\n"+
-              " "+str(self.gen.seq[self.fpos:self.fpos+self.primer_pair.flen])+"\n"+
-              " "+str(self.primer_pair.f.seq) +"\n"+
-              "Forward's missmatch Loc: "+ str(self.fm_loc)+"\n"+
-              "Forward's missmatch Type: "+ str(self.fm_type)+"\n"+
-              "Reverse's match at "+ str(self.rpos)+"\n"+
-              " "+str(self.gen.seq[self.rpos:self.rpos+self.primer_pair.rlen])+"\n"+
-              " "+str(self.primer_pair.r.seq) +"\n"+
-              "Reverse's missmatch Loc: "+ str(self.rm_loc)+"\n"+
-              "Reverse's missmatch Type: "+ str(self.rm_type)+"\n")
+              "Forward's at: "+str(self.real_fpos)+" with "+str(self.fm)+" misses "+ str(self.fm_loc)+" "+str(self.fm_type)+"\n"+
+              "Reverse's at: "+str(self.real_rpos)+" with "+str(self.rm)+" misses "+ str(self.rm_loc)+" "+str(self.rm_type)+"\n"+
+              "Amplicon: "+str(self.amplicon)+"\n")
         return info
+    
+    def write2file(self, filewriter):
+        filewriter.writerow([self.fm]+[self.real_fpos]+[self.amplicon]+[self.rm]+[self.real_rpos])
+        return
     
 class AlignmentList:
     """
@@ -126,6 +125,12 @@ class AlignmentList:
             info += str(al)
         return info
     
+    def write2file(self, filewriter):
+        filewriter.writerow([self.primer_pair.id]+[len(self._alignment_list)])
+        for a in self._alignment_list:
+            a.write2file(filewriter)
+        return
+    
 class GenMatching:
     """
     List of AlignmentList
@@ -140,9 +145,17 @@ class GenMatching:
     
     def append(self, alignment_list):
         self._matching_list.append(alignment_list)
+        return
     
     def __str__(self):
         info = info = "------------\nFOR: "+self.gen.id+"\n-------------\n"
-        for m in self._matching_list:
-            info += str(m)
+        for al_list in self._matching_list:
+            info += str(al_list)
         return info
+    
+    def write2file(self, filewriter):
+        filewriter.writerow([self.gen.id])
+        for al_list in self._matching_list:
+            al_list.write2file(filewriter)
+            
+        return
