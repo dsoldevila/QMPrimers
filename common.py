@@ -92,9 +92,10 @@ class Alignment:
               "Amplicon: "+str(self.amplicon)+"\n")
         return info
     
-    def write2file(self, filewriter):
-        filewriter.writerow([self.fm]+[self.real_fpos]+[self.amplicon]+[self.rm]+[self.real_rpos])
-        return
+    def get_csv(self):
+        info =[ str(self.real_fpos), str(self.fm), str(self.fm_loc), str(self.fm_type), str(self.real_rpos), str(self.rm), str(self.rm_loc),
+               str(self.rm_type), str(self.amplicon)]
+        return info
     
 class AlignmentList:
     """
@@ -128,7 +129,7 @@ class AlignmentList:
     def write2file(self, filewriter):
         filewriter.writerow([self.primer_pair.id]+[len(self._alignment_list)])
         for a in self._alignment_list:
-            a.write2file(filewriter)
+            filewriter.writerow(a.get_csv())
         return
     
 class GenMatching:

@@ -50,7 +50,7 @@ class GUI(Frame):
         self.check_frame = Frame(self.main_frame)
         self.check_frame.pack(expand=YES, fill=X)
         self.check_list = []
-        self.check_list_names = ["R is reverse complement", "option2", "option3"]
+        self.check_list_names = ["R is in reverse complement", "Hanging Primers", "option3"]
         for i in range(len(self.check_list_names)):
             check = Checkbutton(self.check_frame,text=self.check_list_names[i])
             check.pack(side=LEFT, expand=YES, fill=X)
@@ -65,11 +65,18 @@ class GUI(Frame):
         return
         
     def _open_file(self):
+        """
+        Open file from the filedialog
+        @return Tuple of strings
+        """
         file_names = filedialog.askopenfilenames(initialdir=self.current_directory, title = "Select file")
         if(file_names): self.current_directory = os.path.dirname(file_names[0])
         return file_names
     
     def open_bio_files(self, input_files):
+        """
+        Loads input genomes 
+        """
         if(input_files): #is not None
             self.entry_g.delete(0, END)
             self.entry_g.insert(0, str(input_files))
@@ -77,6 +84,9 @@ class GUI(Frame):
         return
     
     def open_csv_file(self, input_files):
+        """
+        Loads input primer pairs, stored in csv format
+        """
         if(input_files): #is not None
             self.entry_p.delete(0, END)
             self.entry_p.insert(0, str(input_files))
@@ -91,13 +101,27 @@ class GUI(Frame):
         return
 
 def get_help():
-    print("QMPrimers help page")
+    parameters_help = {"--help": "Display this list", "-mf <number>": "Maximum number of missmatches allowed in the forward primer", 
+                       "-mr <number>": "Maximum number of missmatches allowed in the reverse primer", "-gf <path/to/file>": "Location of the genome file",
+                       "-gformat <string>": "Format of the genome file (fasta, etc)", 
+                       "-pf </path/to/file>": "Location of the primer pairs, the following format must be followed, the order does not matter: \
+                           id;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength", 
+                           "--nogui": "GUI is not loaded", "--hanging-primers": "Primer pairs are allowed to match between [0-mf,len(genome)+mr] instead of just \
+                           between the length of the genome"}
+
+    print("QMPRIMERS HELP PAGE")
+
+    for param in parameters_help:
+        print(param, ": ", parameters_help[param])
     return
 
 def compute_from_cmd(parameters):
-    gen_record = ld.load_bio_files([parameters["-gf"]],parameters["-gformat"])
+    """
+    Manages the program in terminal mode
+    """
+    gen_record = ld.load_bio_files([parameters["-gf"]],parameters["-gformat"], writable=parameters["--hanging-primers"])
     primer_pairs = ld.load_csv_file(parameters["-pf"])
-    result = m.compute_gen_matching(int(parameters["-mf"]), int(parameters["-mr"]), primer_pairs, gen_record)
+    result = m.compute_gen_matching(int(parameters["-mf"]), int(parameters["-mr"]), primer_pairs, gen_record, hanging_primers=parameters["--hanging-primers"])
 
     return result
 

@@ -9,7 +9,7 @@ The purpose of this code is to check if this program is working properly
 """
 import load_data as ld
 from common import *
-from matching import *
+import matching_dask as m
 
 import cProfile
 import pstats
@@ -60,7 +60,7 @@ def test1():
         gen = gen_record.get(t[0])
         gen_matching = GenMatching(gen)
 
-        alignment_list = compute_primer_pair_best_alignment(6, 4, primer, gen, hanging_primers=True)
+        alignment_list = m.compute_primer_pair_best_alignment(6, 4, primer, gen, hanging_primers=True)
         al= alignment_list.get_list()
         if (len(al)==1):
             al = al[0]
@@ -95,22 +95,28 @@ def test1():
     return
 
 def print_match():
-    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=True)
+    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    gen_record = {"ref|NC_012975.1|": gen_record["ref|NC_012975.1|"]}
-    result = compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=True)
+    
+    gen = {"ACEA563-14_Aphis_gossypii_BOLD": gen_record["ACEA563-14_Aphis_gossypii_BOLD"]}
+    result = m.compute_gen_matching(5, 5, primer_pairs, gen, hanging_primers=False)
+    
     for gen in result:
         print(gen)
-    #ld.store_matching_results("test_output.csv", result)
+    """
+    ld.store_matching_results("test_output.csv", result)
+    """
     return
     
 def test_all_pairs():
     check = {"amplicon": 1}
-    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"], writable=True)
-    primer_pairs = ld.load_csv_file("hanging_primer.csv")
-    gen_matching_list = compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=True)
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=False)
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    gen_matching_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=False)
+    """
     for gen in gen_matching_list:
         print(gen)
+    """
     """
     for gm in gen_matching_list:
         matching_list = gm.get_matching_list()
@@ -132,6 +138,52 @@ def test_all_pairs():
     """
     return
 
+def partial_test():
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) #species_bold_own_genbank
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    
+    partial_gen_record = {}
+    len_gen = len(gen_record)
+    i = 0
+    for gen in gen_record:
+        partial_gen_record.update({gen: gen_record[gen]})
+        i+=1
+        if(i>len_gen/10):
+            break
+    m.compute_gen_matching(5, 5, primer_pairs, partial_gen_record) 
+    return
+
+def pandas_scalability_test():
+    gen_record_large = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"])
+    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    
+    max_len = 0
+    key = None
+    for gen_key in gen_record_large:
+        leng = len(gen_record_large[gen_key])
+        if (leng>max_len):
+            max_len = leng
+            key = gen_key
+            
+    primer = primer_pairs[4].f
+    #largest_matrix len= 2M*primer_len
+    gen = gen_record_large[key]
+    time1 = time.time()
+    result_matrix = m.MATCH_TABLE.loc[gen, primer]
+    elapsedTime_l = ((time.time()-time1))
+    
+    #len = 658*primer_len
+    gen = gen_record["ACEA563-14_Aphis_gossypii_BOLD"]
+    len_s = len(gen)
+    time1 = time.time()
+    result_matrix = m.MATCH_TABLE.loc[gen, primer]
+    elapsedTime_s = ((time.time()-time1))
+    
+    print(int(elapsedTime_l*(10**9)/max_len), int(elapsedTime_s*(10**9)/len_s))
+    
+    return
+
 def performance_test(primer_pairs, gen_record):
     
     cProfile.run('compute_gen_matching(5, 5, primer_pairs, gen_record)', 'temp.profile')
@@ -142,14 +194,19 @@ if(__name__=="__main__"):
     """
     gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) #species_bold_own_genbank
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    """
+    #compute_gen_matching(5, 5, primer_pairs, gen_record) 
     
-    
+    """
     time1 = time.time()
-    compute_gen_matching(5, 5, primer_pairs, gen_record)       
+    compute_gen_matching(5, 5, primer_pairs, gen_record) 
     elapsedTime = time.time()-time1
     print('Finished in {} min'.format(int(elapsedTime/60)))
     """
+    time1 = time.time()
     test_all_pairs()
+    elapsedTime = time.time()-time1
+    print('Finished in {} s'.format(int(elapsedTime)))
     #performance_test(primer_pairs, gen_record)
     
     

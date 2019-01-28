@@ -11,6 +11,7 @@ from common import *
 
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 
 import load_data as ld
 
@@ -33,6 +34,7 @@ SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
 MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
+MATCH_TABLE = dd.from_pandas(MATCH_TABLE, npartitions=1)
 
 #TODO this func is currently unused, ~line 68
 def is_valid(score, min_score):
@@ -57,16 +59,17 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
     @returns: Numpy matrix of arrays (score, start_pos, end_pos).
     """
     #result_matrix = MATCH_TABLE.loc[primer,gen] 
-    result_matrix = MATCH_TABLE.loc[gen, primer] #get match table
+    result_matrix = MATCH_TABLE.loc[list(gen.seq), primer] #get match table
     #result_matrix = MATCH_TABLE.reindex(gen).reindex(columns=primer) SpeedUp only in small datasets,
     result_max_len = len(gen)-len_primer+1
     result_raw = np.zeros(result_max_len, dtype='uint8') #TODO 0-255 should be enough, but better to not hardcode this
-
-    result_matrix = result_matrix.values #get numpy matrix, raw indexes are faster than labels
+    #result_matrix = result_matrix.values #get numpy matrix, raw indexes are faster than labels
+    result_matrix = result_matrix.to_dask_array(lengths=(len(gen),))
+    print(result_matrix)
     for i in range(len_primer):
         result_raw = np.add(result_raw, result_matrix[i:result_max_len+i, i]) #Speedup try n3, 0,02x (from n2)
         #result_raw = np.add(result_raw, result_matrix[i,i:result_max_len+i]) #Speedup try n2, SpeedUp = 168/26 = 6,4x
-    
+    print(result_matrix[i:result_max_len, 0])
     is_score_valid = (result_raw>=len_primer-max_misses)
     n_results = is_score_valid.sum()
     result_raw = is_score_valid*result_raw #if score valid =score else =0
@@ -80,6 +83,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
             j=j+1
 
     return result
+
 
 def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers):
     """
@@ -148,7 +152,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
     return gen_matching_list
 
 if(__name__=="__main__"):
-    gen_record = ld.load_bio_files("Data/mitochondrion.2.1.genomic.fna")
+    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     
     """
@@ -159,5 +163,4 @@ if(__name__=="__main__"):
     import time
     start_time = time.time()
     result = compute_gen_matching(5, 5, primer_pairs, gen_record)
-    print(result[1])
     print("--- %s seconds ---" % (time.time() - start_time))
