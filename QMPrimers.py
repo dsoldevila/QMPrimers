@@ -14,6 +14,7 @@ from tkinter import filedialog
 from tkinter import *
 import os
 import sys
+import _thread
 
 class GUI(Frame):
     def __init__(self, parent=Frame):
@@ -96,7 +97,7 @@ class GUI(Frame):
         return
     
     def compute(self):
-        result = m.compute_gen_matching(10, 10, self.primer_pairs, self.gen_record)
+        result = m.compute_gen_matching(5, 5, self.primer_pairs, self.gen_record)
         print(result[0])
         return
 

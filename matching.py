@@ -11,7 +11,6 @@ from common import *
 
 import numpy as np
 import pandas as pd
-
 import load_data as ld
 
 #This matrix tells the algorithm whether 2 nucleotides match or don't
@@ -19,18 +18,18 @@ SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
                         [0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0],
                         [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0],
                         [0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0],
-                        [1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-                        [1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-                        [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-                        [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        [1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+                        [1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+                        [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
 MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
 
@@ -47,25 +46,24 @@ def append_zeros(gen_record, max_miss_f, max_miss_r):
         genome AGATTCATT, primer TCTAGA scores 2 at pos 1
         genome ZZZAGATTCATTZZZ, primer TCTAGA scores 3 at pos -3
     """
-    for gen in gen_record:
-        gen_record[gen].seq = Seq("Z"*max_miss_f+str(gen_record[gen].seq)+"Z"*max_miss_r)
+    for gen_key in gen_record:
+        gen_record[gen_key].seq = Seq("Z"*max_miss_f+str(gen_record[gen_key].seq)+"Z"*max_miss_r)
     return gen_record
+
 
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
     """
     Computes the best matches between a genome and a primer.
     @returns: Numpy matrix of arrays (score, start_pos, end_pos).
     """
-    #result_matrix = MATCH_TABLE.loc[primer,gen] 
-    result_matrix = MATCH_TABLE.loc[gen, primer] #get match table
+    result_matrix = MATCH_TABLE.loc[primer, gen] #get match table
     #result_matrix = MATCH_TABLE.reindex(gen).reindex(columns=primer) SpeedUp only in small datasets,
     result_max_len = len(gen)-len_primer+1
     result_raw = np.zeros(result_max_len, dtype='uint8') #TODO 0-255 should be enough, but better to not hardcode this
 
     result_matrix = result_matrix.values #get numpy matrix, raw indexes are faster than labels
     for i in range(len_primer):
-        result_raw = np.add(result_raw, result_matrix[i:result_max_len+i, i]) #Speedup try n3, 0,02x (from n2)
-        #result_raw = np.add(result_raw, result_matrix[i,i:result_max_len+i]) #Speedup try n2, SpeedUp = 168/26 = 6,4x
+        result_raw = np.add(result_raw, result_matrix[i,i:result_max_len+i]) #Speedup try n2, SpeedUp = 168/26 = 6,4x
     
     is_score_valid = (result_raw>=len_primer-max_misses)
     n_results = is_score_valid.sum()
@@ -84,7 +82,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers):
     """
     Returns the best alignments between a genome and a primer pair
-    @returns: AlignmentList instance
+    @returns: PrimerAlignment instance
     """
     max_amplicon = primer.max_amplicon
     search_limit = primer.rlen+max_amplicon
@@ -98,7 +96,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
     best_score = 0
     
     alignments = []
-    result = AlignmentList(primer, gen)
+    result = PrimerAlignment(primer, gen)
     
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f, primer.flen, gen[0:-search_limit]) #compute forward primer best matches
     
@@ -128,29 +126,30 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
 def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hanging_primers=False):
     """
     Computes the best alignments between each genome and each primer
-    @returns: List of GenMatching instances
+    @returns: List of GenAlignment instances
     """
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
         
-    gen_matching_list = []
+    gen_alignment_list = []
     size = len(gen_record)
     i = 0
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")
         i +=1
         gen = gen_record[gen_key]
-        gen_matching = GenMatching(gen)
+        gen_alignment = GenAlignment(gen)
         for primer in primer_pairs:
             alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers)
-            gen_matching.append(alignment_list)
-        gen_matching_list.append(gen_matching)
-    return gen_matching_list
+            gen_alignment.append(alignment_list)
+        gen_alignment_list.append(gen_alignment)
+    return gen_alignment_list
 
 if(__name__=="__main__"):
-    gen_record = ld.load_bio_files("Data/mitochondrion.2.1.genomic.fna")
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     
+    gen_record = ld.load_bio_files(["Data/mitochondrion.2.1.genomic.fna"])
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+
     """
     gen = gen_record.get("ACEA563-14_Aphis_gossypii_BOLD")
     primer = primer_pairs[4]
@@ -161,3 +160,4 @@ if(__name__=="__main__"):
     result = compute_gen_matching(5, 5, primer_pairs, gen_record)
     print(result[1])
     print("--- %s seconds ---" % (time.time() - start_time))
+    

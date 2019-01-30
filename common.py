@@ -33,10 +33,10 @@ class Alignment:
         self.gen = genomic sequence
         self.primer_pair = primer pair used for matching, instance of PrimerPair class
         self.fpos = starting position of the forward primer in the genomic sequence, starting at 0
-        señf.real_fpos --> gen: ZZAGTAC...   real_fpos = -2, the primer is hanging
-                            pr: AGAGT        fpos = 0
-                    
+        self.real_fpos --> gen:    ZZAGTAC...     real_fpos = -2, the primer is hanging
+                           primer: AGAGT          fpos = 0
         self.rpos = starting position of the reverse primer in the genomic sequence, starting at the end of genomic sequence
+        self.real_rpos = reverse's position depends on forward's position
         self.fm = number of missmatches on the forward primer
         self.fm_loc = array of the missmatch locations of the forward primer
         self.rm = number of missmatches on the reverse primer
@@ -97,9 +97,9 @@ class Alignment:
                str(self.rm_type), str(self.amplicon)]
         return info
     
-class AlignmentList:
+class PrimerAlignment:
     """
-    It's plausible that a primer pair aligns in more than one place in the sequence, a list is needed
+    List of alignments, it's plausible that a primer pair aligns in more than one place in the sequence.
     """
     def __init__(self, primer_pair, gen):
         self.primer_pair = primer_pair
@@ -132,9 +132,9 @@ class AlignmentList:
             filewriter.writerow(a.get_csv())
         return
     
-class GenMatching:
+class GenAlignment:
     """
-    List of AlignmentList
+    List of PrimerAlignments
     """
     def __init__(self, gen):
         self.gen = gen

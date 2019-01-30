@@ -9,56 +9,57 @@ The purpose of this code is to check if this program is working properly
 """
 import load_data as ld
 from common import *
-import matching_dask as m
+import matching as m
 
 import cProfile
 import pstats
 import time
 
-target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],157,[2,5]),
-        ("FBARB265-11_Clubiona_leucaspis_BOLD", 0,[0,12],157,[2,5,14,18]),
-        ("ACEA902-14_Myzus_persicae_BOLD", 0,[13,15],157,[2,17,21]),
-        ("ACEA563-14_Aphis_gossypii_BOLD", 0,[13,15],157,[5,21]),
-        ("ACEA640-14_Aphis_craccivora_BOLD", 0,[13,15],157,[21]),
-        ("ACEA833-14_Aphis_spiraecola_BOLD", 0,[13,15],157,[2,21]),
-        ("ACEA589-14_Aphis_spiraecola_BOLD", 0,[13,15],157,[2,21]),
-        ("GBBSP293-15_Philodromus_cespitum_BOLD", 0,[0,12],157,[2,5]),
-        ("NLARA172-12_Philodromus_cespitum_BOLD", 0,[0,12],157,[2]),
-        ("NLARA068-12_Philodromus_cespitum_BOLD", 0,[0,3,12],157,[2]),
-        ("GBBSP2126-16_Philodromus_cespitum_BOLD", 0,[0,12],157,[2]),
-        ("XXX-99_Pilophorus_perplexus_OWN", 11,[0,4,12,15],157,[2]),
-        ("SPSLO262-12_Macaroeris_nidicolens_BOLD", 0,[2,12],157,[2]),
-        ("GCOL11562-16_Scymnus_interruptus_BOLD", 0,[9,13,18],157,[5,14,23]),
-        ("SPSLO172-12_Theridion_pinastri_BOLD", 0,[12,13,15],157,[11,20]),
-        ("SPSLO351-13_Theridion_pinastri_BOLD", 0,[12,13,15],157,[11,20]),
-        ("FBARB426-11_Theridion_varians_BOLD", 0,[0,6,12,13,15],157,[2]),
-        ("SPSLO173-12_Theridion_varians_BOLD", 0,[0,6,12,13,15,18],157,[2,5]),
-        ("XXX-99_Theridion_OWN", 18, [0,6,12,13,15,18], 157, [2,5]),
-        ("XXX-99_Chrysoperla_OWN", 8, [0,18], 157, [5]),
-        ("XXX-99_Rodolia_cardinalis_OWN", 11, [9,13], 157, [2,14,23]),
-        ("XXX-99_Thripidae_OWN", 11, [2], 157, [5]),
-        ("XXX-99_Scymnus_subvillosus_OWN", 11, [13], 157, [23]),
-        ("XXX-99_Trichopsocus_clarus_OWN", 18, [], 157, [8]),
-        ("XXX-99_Ceratitis_capitata_OWN", 11, [], 157, []),
-        ("GCOL10228-16_Adalia_decempunctata_BOLD", 0, [13,15], 157, []),
-        ("XXX-99_Adalia_decempunctata_OWN", 26, [13,15], 157, []),
-        ("GBBSP350-15_Platnickina_tincta_BOLD", 0, [0,12,13], 157, [23]),
-        ("TURAR1541-10_Platnickina_tincta_BOLD", 0, [0,12,13], 157, [23]),
-        ("NLARA078-12_Platnickina_tincta_BOLD", 0, [0,12,13], 157, [23]),
-        ("GBBSP1961-15_Platnickina_tincta_BOLD", 0, [0,12,13], 157, [23])]
+"Name, forward starting pos, forward's missmatches loc, reverse's missmatches loc"
+target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],[2,5]),
+        ("FBARB265-11_Clubiona_leucaspis_BOLD", 0,[0,12],[2,5,14,18]),
+        ("ACEA902-14_Myzus_persicae_BOLD", 0,[13,15],[2,17,21]),
+        ("ACEA563-14_Aphis_gossypii_BOLD", 0,[13,15],[5,21]),
+        ("ACEA640-14_Aphis_craccivora_BOLD", 0,[13,15],[21]),
+        ("ACEA833-14_Aphis_spiraecola_BOLD", 0,[13,15],[2,21]),
+        ("ACEA589-14_Aphis_spiraecola_BOLD", 0,[13,15],[2,21]),
+        ("GBBSP293-15_Philodromus_cespitum_BOLD", 0,[0,12],[2,5]),
+        ("NLARA172-12_Philodromus_cespitum_BOLD", 0,[0,12],[2]),
+        ("NLARA068-12_Philodromus_cespitum_BOLD", 0,[0,3,12],[2]),
+        ("GBBSP2126-16_Philodromus_cespitum_BOLD", 0,[0,12],[2]),
+        ("XXX-99_Pilophorus_perplexus_OWN", 11,[0,4,12,15],[2]),
+        ("SPSLO262-12_Macaroeris_nidicolens_BOLD", 0,[2,12],[2]),
+        ("GCOL11562-16_Scymnus_interruptus_BOLD", 0,[9,13,18],[5,14,23]),
+        ("SPSLO172-12_Theridion_pinastri_BOLD", 0,[12,13,15],[11,20]),
+        ("SPSLO351-13_Theridion_pinastri_BOLD", 0,[12,13,15],[11,20]),
+        ("FBARB426-11_Theridion_varians_BOLD", 0,[0,6,12,13,15],[2]),
+        ("SPSLO173-12_Theridion_varians_BOLD", 0,[0,6,12,13,15,18],[2,5]),
+        ("XXX-99_Theridion_OWN", 18, [0,6,12,13,15,18], [2,5]),
+        ("XXX-99_Chrysoperla_OWN", 8, [0,18], [5]),
+        ("XXX-99_Rodolia_cardinalis_OWN", 11, [9,13], [2,14,23]),
+        ("XXX-99_Thripidae_OWN", 11, [2], [5]),
+        ("XXX-99_Scymnus_subvillosus_OWN", 11, [13], [23]),
+        ("XXX-99_Trichopsocus_clarus_OWN", 18, [], [8]),
+        ("XXX-99_Ceratitis_capitata_OWN", 11, [], []),
+        ("GCOL10228-16_Adalia_decempunctata_BOLD", 0, [13,15], []),
+        ("XXX-99_Adalia_decempunctata_OWN", 26, [13,15], []),
+        ("GBBSP350-15_Platnickina_tincta_BOLD", 0, [0,12,13], [23]),
+        ("TURAR1541-10_Platnickina_tincta_BOLD", 0, [0,12,13], [23]),
+        ("NLARA078-12_Platnickina_tincta_BOLD", 0, [0,12,13], [23]),
+        ("GBBSP1961-15_Platnickina_tincta_BOLD", 0, [0,12,13], [23])]
 
-def test1():
+def validation_test1():
     gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"], writable=True)
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     primer = primer_pairs[4] #Zeale
     
-    gen_matching_list = []
+    gen_alignment_list = []
     
     test_passed = 1
     for t in target1:
         print(t[0])
         gen = gen_record.get(t[0])
-        gen_matching = GenMatching(gen)
+        gen_alignment = GenAlignment(gen)
 
         alignment_list = m.compute_primer_pair_best_alignment(6, 4, primer, gen, hanging_primers=True)
         al= alignment_list.get_list()
@@ -71,11 +72,11 @@ def test1():
             if(t[2]!=al.fm_loc):
                 print(t[2],al.fm_loc)
                 check = 0
-            if(t[1]+t[3]+21!=al.rpos):
-                print(t[1]+t[3]+21,al.rpos)
+            if(t[1]+primer.min_amplicon+primer.flen!=al.rpos):
+                print(t[1]+primer.min_amplicon+primer.flen,al.rpos)
                 check = 0
-            if(t[4]!=al.rm_loc):
-                print(t[4], al.rm_loc)
+            if(t[3]!=al.rm_loc):
+                print(t[3], al.rm_loc)
                 check = 0
             
             if(check==1):
@@ -112,13 +113,13 @@ def test_all_pairs():
     check = {"amplicon": 1}
     gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=False)
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    gen_matching_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=False)
+    gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=False)
     """
-    for gen in gen_matching_list:
+    for gen in gen_alignment_list:
         print(gen)
     """
     """
-    for gm in gen_matching_list:
+    for gm in gen_alignment_list:
         matching_list = gm.get_matching_list()
         for al_list in matching_list:
             print("PRIMER PAIR: ", al_list.primer_pair.id)
@@ -148,7 +149,7 @@ def partial_test():
     for gen in gen_record:
         partial_gen_record.update({gen: gen_record[gen]})
         i+=1
-        if(i>len_gen/10):
+        if(i>len_gen/30):
             break
     m.compute_gen_matching(5, 5, primer_pairs, partial_gen_record) 
     return
@@ -191,11 +192,11 @@ def performance_test(primer_pairs, gen_record):
     stats.strip_dirs().sort_stats('cumtime').print_stats()
 
 if(__name__=="__main__"):
-    """
-    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) #species_bold_own_genbank
+
+    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"]) #species_bold_own_genbank
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    """
-    #compute_gen_matching(5, 5, primer_pairs, gen_record) 
+
+    m.compute_gen_matching(10, 10, primer_pairs, gen_record) 
     
     """
     time1 = time.time()
@@ -203,10 +204,11 @@ if(__name__=="__main__"):
     elapsedTime = time.time()-time1
     print('Finished in {} min'.format(int(elapsedTime/60)))
     """
+    """
     time1 = time.time()
-    test_all_pairs()
+    validation_test1()
     elapsedTime = time.time()-time1
     print('Finished in {} s'.format(int(elapsedTime)))
     #performance_test(primer_pairs, gen_record)
-    
+    """
     
