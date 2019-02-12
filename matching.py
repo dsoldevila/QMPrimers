@@ -99,7 +99,6 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
     result = PrimerAlignment(primer, gen)
     
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f, primer.flen, gen[0:-search_limit]) #compute forward primer best matches
-    
     for fm in forward_matchings: #for each match with forward primer, compute reverse matchings
         ralignments = []
         start = fm[2]+primer.min_amplicon #forward match start + len(forward) + min amplicon

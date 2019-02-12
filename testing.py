@@ -185,6 +185,19 @@ def pandas_scalability_test():
     
     return
 
+def check_if_multiple_alignments_are_frequent():
+    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"]) 
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+
+    gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record) 
+    for gm in gen_alignment_list:
+       matching_list = gm.get_matching_list()
+       for al_list in matching_list:
+           alignments = al_list.get_list()
+           if(len(alignments>1)):
+               print(al_list.gen.id, al_list.primer_pair.id, len(alignments))
+    return
+
 def performance_test(primer_pairs, gen_record):
     
     cProfile.run('compute_gen_matching(5, 5, primer_pairs, gen_record)', 'temp.profile')
@@ -192,12 +205,12 @@ def performance_test(primer_pairs, gen_record):
     stats.strip_dirs().sort_stats('cumtime').print_stats()
 
 if(__name__=="__main__"):
-
+    """
     gen_record = ld.load_bio_files(["Data/sbog_test.fasta"]) #species_bold_own_genbank
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
 
-    m.compute_gen_matching(10, 10, primer_pairs, gen_record) 
-    
+    m.compute_gen_matching(5, 5, primer_pairs, gen_record) 
+    """
     """
     time1 = time.time()
     compute_gen_matching(5, 5, primer_pairs, gen_record) 
@@ -211,4 +224,4 @@ if(__name__=="__main__"):
     print('Finished in {} s'.format(int(elapsedTime)))
     #performance_test(primer_pairs, gen_record)
     """
-    
+    check_if_multiple_alignments_are_frequent()
