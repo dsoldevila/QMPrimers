@@ -14,6 +14,10 @@ import matching as m
 import cProfile
 import pstats
 import time
+import csv
+import pandas as pd
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 "Name, forward starting pos, forward's missmatches loc, reverse's missmatches loc"
 target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],[2,5]),
@@ -95,66 +99,148 @@ def validation_test1():
         print("TEST FAILED")
     return
 
-def print_match():
-    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+def split(gen_record, percent):
     
-    gen = {"ACEA563-14_Aphis_gossypii_BOLD": gen_record["ACEA563-14_Aphis_gossypii_BOLD"]}
-    result = m.compute_gen_matching(5, 5, primer_pairs, gen, hanging_primers=False)
-    
-    for gen in result:
-        print(gen)
-    """
-    ld.store_matching_results("test_output.csv", result)
-    """
-    return
+    partial_gen_record = {}
+    max_gens=len(gen_record)*percent
+    i = 0
+    for gen in gen_record:
+        partial_gen_record.update({gen: gen_record[gen]})
+        i+=1
+        if(i>max_gens):
+            break
+    return partial_gen_record
     
 def test_all_pairs():
-    check = {"amplicon": 1}
+    #"primerPair","id","fastaid","organism","subgrup","primerF","primerR","mismFT","mismRT","mismTT","mismF3","mismR3","mismT3","long"
+    trusted_results = pd.read_csv("Test_data/mismatches_allPrimers_allMitochondria.csv", sep=',')
+    global_check = {"amplicon": 1, "missf": 1, "missr":1}
+    check = {"amplicon": 1, "missf": 1, "missr":1}
     gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=False)
+    #gen_record = split(gen_record, 0.005)
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    
     gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=False)
-    """
-    for gen in gen_alignment_list:
-        print(gen)
-    """
-    """
+    
+    header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_type", "R_pos", "mismRT_type"]
+    better_alignment_list = []
+    #ld.store_matching_results("Data/output_test.csv", gen_alignment_list, header)
+    
+    info = {"total_gens": len(gen_record), "gens_skipped":0, "alignments_processed": 0, "multiple_alignment_cases":0, "better_alignments":0}
+
     for gm in gen_alignment_list:
         matching_list = gm.get_matching_list()
         for al_list in matching_list:
-            print("PRIMER PAIR: ", al_list.primer_pair.id)
-            alignments = al_list.get_list()
-            for al in alignments:
+            if(al_list.len>1):
+                print (gm.gen.id)
+                print("PRIMER PAIR: ", al_list.primer_pair.id)
+                print("multiple alignments")
+                info["multiple_alignment_cases"]+=1
+            elif(al_list.len!=0):
+                #print("PRIMER PAIR: ", al_list.primer_pair.id)
+                al = al_list.get_list()
+                al = al[0]
                 pp = primer_pairs[int(al.primer_pair.id)-1]
-                if(al.amplicon < pp.min_amplicon or al.amplicon > pp.max_amplicon):   
-                        check["amplicon"] = 0
-                        print(al.amplicon, pp.min_amplicon, pp.max_amplicon)
+                target = trusted_results.loc[trusted_results['fastaid'] == gm.gen.description]
+                if(target.empty):
+                    #print("Target empty, skipping this gen...")
+                    info["gens_skipped"]+=1
+                    break
+                else:
+                    target = target.loc[target['primerPair']==al.primer_pair.id]
+                    if(not target.empty):
+                        info["alignments_processed"]+=1
+                        #amplicon
+                        if(al.amplicon < pp.min_amplicon or al.amplicon > pp.max_amplicon):  
+                            print (gm.gen.id)
+                            print("PRIMER PAIR: ", al_list.primer_pair.id)
+                            print("Amplicon outside range")
+                            print(al.amplicon, pp.min_amplicon, pp.max_amplicon)
+                            global_check["amplicon"]=0
+                            check["amplicon"]=0
+                        if(al.amplicon != target['long'].iat[0]):
+                            print (gm.gen.id)
+                            print("PRIMER PAIR: ", al_list.primer_pair.id)
+                            print("Amplicon not matching")
+                            global_check["amplicon"]=0
+                            check["amplicon"]=0
+                            
+                        fm = target['mismFT'].iat[0]
+                        rm = target['mismRT'].iat[0]
+                        #fm
+                        if(al.fm > target['mismFT'].iat[0]):
+                            print (gm.gen.id)
+                            print("PRIMER PAIR: ", al_list.primer_pair.id)
+                            print("Bad forward matching")
+                            global_check["missf"]=0
+                            check["missf"]=0
+                        #rm
+                        if(al.rm > rm):
+                            print (gm.gen.id)
+                            print("PRIMER PAIR: ", al_list.primer_pair.id)
+                            print("Bad reverse matching")
+                            global_check["missr"]=0
+                            check["missr"]=0
+                        if 0 not in check.values(): #if everything is correct check if the result found is better
+                            if(al.fm+al.rm < fm+rm):
+                                info["better_alignments"]+=1
+                                better_alignment_list.append(al)
+                            
+    for info_key in info:
+        print(info_key, info[info_key])
     sum_check = 0
-    for c in check:
+    
+    for c in global_check:
         sum_check += check[c]
     if(sum_check == len(check)):
         print("SUCCESS!")
     else:
         print("TEST FAILED")
-    """
+        
+    store_results("Data/better_alignments.csv", better_alignment_list, header)
+    ld.store_matching_results("Data/full_alignments.csv", gen_alignment_list, header)
+
     return
 
-def partial_test():
-    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) #species_bold_own_genbank
+def check_better_alignments():
+    gen_keys = ["ref|NC_022449.1|","ref|NC_022472.1|","ref|NC_022671.1|","ref|NC_022680.1|","ref|NC_022682.1|","ref|NC_022710.1|",
+                "ref|NC_022922.1|","ref|NC_023088.1|"]
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    pp = primer_pairs[4]
     
-    partial_gen_record = {}
-    len_gen = len(gen_record)
-    i = 0
-    for gen in gen_record:
-        partial_gen_record.update({gen: gen_record[gen]})
-        i+=1
-        if(i>len_gen/30):
-            break
-    m.compute_gen_matching(5, 5, primer_pairs, partial_gen_record) 
+    gen = gen_record[gen_keys[0]]
+    print(gen.seq[1496:1496+pp.flen])
+    print(pp.f.seq)
+    print(gen.seq[1496+pp.flen+pp.max_amplicon:1496+pp.flen+pp.max_amplicon+pp.rlen])
+    print(pp.r.seq)
+    
+    return
+
+def check_multiple_alignment():
+    fprimer = Seq("ATCG")
+    fprimer = SeqRecord(fprimer)
+    rprimer = Seq("ACGT")
+    rprimer = SeqRecord(rprimer)
+    pp = PrimerPair(1, fprimer, rprimer, 4, 4)
+    primer_pairs = [pp]
+    
+    gen = Seq("ATCGWACTACGTATCGWACTACGT")
+    gen = SeqRecord(gen)
+    gen.id = "gen"
+    gen_record={"gen": gen}
+    
+    result = m.compute_gen_matching(1, 1, primer_pairs, gen_record)
+    for gm in result:
+        matching_list = gm.get_matching_list()
+        for al_list in matching_list:
+            print(al_list)
     return
 
 def pandas_scalability_test():
+    """
+    @brief: check if time is linearly proportional to matrix size
+    """
     gen_record_large = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"])
     gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
@@ -185,8 +271,23 @@ def pandas_scalability_test():
     
     return
 
+def store_results(output_file, alignment_list, header=None):
+    """
+    Stores alignment results
+    @param gen_matching_list list of GenMatching instances
+    @return None
+    """
+    with open(output_file, 'w', newline='') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+        if(header):
+            filewriter.writerow(header)
+        for a in alignment_list:
+            filewriter.writerow(a.get_csv())   
+    return
+    
+
 def check_if_multiple_alignments_are_frequent():
-    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"]) 
+    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"]) 
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
 
     gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record) 
@@ -199,29 +300,16 @@ def check_if_multiple_alignments_are_frequent():
     return
 
 def performance_test(primer_pairs, gen_record):
-    
     cProfile.run('compute_gen_matching(5, 5, primer_pairs, gen_record)', 'temp.profile')
     stats = pstats.Stats('temp.profile')
     stats.strip_dirs().sort_stats('cumtime').print_stats()
+    
+    
+
+
 
 if(__name__=="__main__"):
-    """
-    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"]) #species_bold_own_genbank
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-
-    m.compute_gen_matching(5, 5, primer_pairs, gen_record) 
-    """
-    """
     time1 = time.time()
-    compute_gen_matching(5, 5, primer_pairs, gen_record) 
-    elapsedTime = time.time()-time1
-    print('Finished in {} min'.format(int(elapsedTime/60)))
-    """
-    """
-    time1 = time.time()
-    validation_test1()
-    elapsedTime = time.time()-time1
-    print('Finished in {} s'.format(int(elapsedTime)))
-    #performance_test(primer_pairs, gen_record)
-    """
-    check_if_multiple_alignments_are_frequent()
+    test_all_pairs()
+    elapsedTime = ((time.time()-time1))
+    print(int(elapsedTime)/60)

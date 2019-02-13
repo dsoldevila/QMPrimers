@@ -34,11 +34,11 @@ def load_csv_file(file, delimiter=";"):
             
             rprimer = Seq(row[pos["rPDNA"]])
             rprimer = SeqRecord(rprimer)
-            if(True):
+            if(True): #TODO
                 rprimer = rprimer.reverse_complement()
             rprimer.id = row[pos["reversePrimer"]]
             
-            primer_pair = PrimerPair(row[pos["id"]], fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
+            primer_pair = PrimerPair(int(row[pos["id"]]), fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
 
             primer_list.append(primer_pair)
             
@@ -67,14 +67,16 @@ def load_bio_files(files, file_format=None, writable=False):
     
     return seq_record
 
-def store_matching_results(output_file, gen_matching_list):
+def store_matching_results(output_file, gen_matching_list, header=None):
     """
     Stores alignment results
     @param gen_matching_list list of GenMatching instances
     @return None
     """
     with open(output_file, 'w', newline='') as csvfile:
-        filewriter = csv.writer(csvfile, delimiter=';', quoting=csv.QUOTE_NONE)
+        filewriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+        if(header):
+            filewriter.writerow(header)
         for gm in gen_matching_list:
             gm.write2file(filewriter)   
     return

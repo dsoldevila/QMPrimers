@@ -84,23 +84,22 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
     """
+    result = PrimerAlignment(primer, gen)
     max_amplicon = primer.max_amplicon
     search_limit = primer.rlen+max_amplicon
     len_gen = len(gen)
     if(primer.flen+search_limit>len_gen): #If primer pair plus max_amplicon is larger than the genomic sequence, check if with min_amplicon the same happens
         if(primer.flen+primer.rlen+primer.min_amplicon>len_gen): #If primer pair plus min_amplicon is larger than the genomic sequence, abort
-            return None
+            return result
         else: #else modify max_amplicon to keep the primer_pair within the limits
             max_amplicon = len_gen - (primer.flen + primer.rlen)
     
     best_score = 0
     
     alignments = []
-    result = PrimerAlignment(primer, gen)
     
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f, primer.flen, gen[0:-search_limit]) #compute forward primer best matches
     for fm in forward_matchings: #for each match with forward primer, compute reverse matchings
-        ralignments = []
         start = fm[2]+primer.min_amplicon #forward match start + len(forward) + min amplicon
         end = fm[2]+max_amplicon+primer.rlen #f match start + len(f) + max amplicon + len(r)
         reverse_matchings = _compute_primer_matching(max_miss_r, primer.r, primer.rlen, gen[start:end])
@@ -110,7 +109,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
                 alignments = [(fm, rm)]
                 best_score = score
             elif (score == best_score): #elif the score is equaly good, get this alignment too
-                ralignments.append((fm, rm))
+                alignments.append((fm, rm))
                 
                 
     for al in alignments:

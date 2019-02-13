@@ -93,8 +93,8 @@ class Alignment:
         return info
     
     def get_csv(self):
-        info =[ str(self.real_fpos), str(self.fm), str(self.fm_loc), str(self.fm_type), str(self.real_rpos), str(self.rm), str(self.rm_loc),
-               str(self.rm_type), str(self.amplicon)]
+        info= [self.primer_pair.id, self.gen.id, self.primer_pair.f.id, self.primer_pair.r.id, self.fm, self.rm, 
+               self.amplicon, self.real_fpos, str(self.fm_type), self.real_rpos, str(self.rm_type)]
         return info
     
 class PrimerAlignment:
@@ -105,13 +105,16 @@ class PrimerAlignment:
         self.primer_pair = primer_pair
         self.gen = gen
         self._alignment_list = []
+        self.len = 0
         return
     
     def append(self, match):
         if(type(match)==list):
             self._alignment_list.extend(match)
+            self.len+=len(match)
         else:
             self._alignment_list.append(match)
+            self.len+=1
         return
     
     def get_list(self):
@@ -127,7 +130,6 @@ class PrimerAlignment:
         return info
     
     def write2file(self, filewriter):
-        filewriter.writerow([self.primer_pair.id]+[len(self._alignment_list)])
         for a in self._alignment_list:
             filewriter.writerow(a.get_csv())
         return
@@ -149,13 +151,12 @@ class GenAlignment:
         return
     
     def __str__(self):
-        info = info = "------------\nFOR: "+self.gen.id+"\n-------------\n"
+        info = "------------\nFOR: "+self.gen.id+"\n-------------\n"
         for al_list in self._matching_list:
             info += str(al_list)
         return info
     
     def write2file(self, filewriter):
-        filewriter.writerow([self.gen.id])
         for al_list in self._matching_list:
             al_list.write2file(filewriter)
             
