@@ -50,14 +50,13 @@ def append_zeros(gen_record, max_miss_f, max_miss_r):
         gen_record[gen_key].seq = Seq("Z"*max_miss_f+str(gen_record[gen_key].seq)+"Z"*max_miss_r)
     return gen_record
 
-
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
     """
     Computes the best matches between a genome and a primer.
     @returns: Numpy matrix of arrays (score, start_pos, end_pos).
     """
     result_matrix = MATCH_TABLE.loc[primer, gen] #get match table
-    #result_matrix = MATCH_TABLE.reindex(gen).reindex(columns=primer) SpeedUp only in small datasets,
+
     result_max_len = len(gen)-len_primer+1
     result_raw = np.zeros(result_max_len, dtype='uint8') #TODO 0-255 should be enough, but better to not hardcode this
 
@@ -145,17 +144,14 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
 
 if(__name__=="__main__"):
     
-    gen_record = ld.load_bio_files(["Data/mitochondrion.2.1.genomic.fna"])
+    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
 
-    """
-    gen = gen_record.get("ACEA563-14_Aphis_gossypii_BOLD")
-    primer = primer_pairs[4]
-    #result = compute_primer_pair_best_alignment(5, 5, primer, gen)
-    """
-    import time
-    start_time = time.time()
+
+    import time 
+    time1 = time.time()
     result = compute_gen_matching(5, 5, primer_pairs, gen_record)
-    print(result[1])
-    print("--- %s seconds ---" % (time.time() - start_time))
+    elapsedTime = ((time.time()-time1))
+    print(int(elapsedTime))
+
     

@@ -111,19 +111,49 @@ def split(gen_record, percent):
             break
     return partial_gen_record
     
+def single_test():
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=True)
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    gen_alignment_list = []
+    with open("Test_data/multiple_alignment_cases.txt") as f:
+        content = f.readlines()
+        content = [x.strip() for x in content]
+    i=0
+    while i < len(content):
+        gen = {content[i]:gen_record[content[i]]}
+        pp = primer_pairs[int(content[i+1])-1]
+        gen_alignment_list.extend(m.compute_gen_matching(5, 5, [pp], gen, hanging_primers=True))
+        i = i+3
+        
+    multiple_alignment_list = []
+    for gm in gen_alignment_list:
+        matching_list = gm.get_matching_list()
+        for al_list in matching_list: 
+            al = al_list.get_list()
+            for a in al:
+                multiple_alignment_list.append(a)
+                
+    header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_type", "R_pos", "mismRT_type"]
+    store_results("Test_data/multiple_alignments.csv", multiple_alignment_list, header)          
+        
+    return
+
 def test_all_pairs():
     #"primerPair","id","fastaid","organism","subgrup","primerF","primerR","mismFT","mismRT","mismTT","mismF3","mismR3","mismT3","long"
     trusted_results = pd.read_csv("Test_data/mismatches_allPrimers_allMitochondria.csv", sep=',')
     global_check = {"amplicon": 1, "missf": 1, "missr":1}
     check = {"amplicon": 1, "missf": 1, "missr":1}
-    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=False)
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=True)
     #gen_record = split(gen_record, 0.005)
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     
-    gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=False)
+    gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=True)
     
     header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_type", "R_pos", "mismRT_type"]
+    
     better_alignment_list = []
+    correct_alignment_list = []
+    not_tested_alignment_list = []
     #ld.store_matching_results("Data/output_test.csv", gen_alignment_list, header)
     
     info = {"total_gens": len(gen_record), "gens_skipped":0, "alignments_processed": 0, "multiple_alignment_cases":0, "better_alignments":0}
@@ -136,7 +166,7 @@ def test_all_pairs():
                 print("PRIMER PAIR: ", al_list.primer_pair.id)
                 print("multiple alignments")
                 info["multiple_alignment_cases"]+=1
-            elif(al_list.len!=0):
+            if(al_list.len!=0):
                 #print("PRIMER PAIR: ", al_list.primer_pair.id)
                 al = al_list.get_list()
                 al = al[0]
@@ -145,6 +175,7 @@ def test_all_pairs():
                 if(target.empty):
                     #print("Target empty, skipping this gen...")
                     info["gens_skipped"]+=1
+                    not_tested_alignment_list.append(al)
                     break
                 else:
                     target = target.loc[target['primerPair']==al.primer_pair.id]
@@ -168,7 +199,7 @@ def test_all_pairs():
                         fm = target['mismFT'].iat[0]
                         rm = target['mismRT'].iat[0]
                         #fm
-                        if(al.fm > target['mismFT'].iat[0]):
+                        if(al.fm > fm):
                             print (gm.gen.id)
                             print("PRIMER PAIR: ", al_list.primer_pair.id)
                             print("Bad forward matching")
@@ -185,11 +216,13 @@ def test_all_pairs():
                             if(al.fm+al.rm < fm+rm):
                                 info["better_alignments"]+=1
                                 better_alignment_list.append(al)
+                            else:
+                                correct_alignment_list.append(al)
                             
     for info_key in info:
         print(info_key, info[info_key])
+        
     sum_check = 0
-    
     for c in global_check:
         sum_check += check[c]
     if(sum_check == len(check)):
@@ -197,8 +230,10 @@ def test_all_pairs():
     else:
         print("TEST FAILED")
         
-    store_results("Data/better_alignments.csv", better_alignment_list, header)
-    ld.store_matching_results("Data/full_alignments.csv", gen_alignment_list, header)
+    store_results("Test_data/better_alignments.csv", better_alignment_list, header)
+    store_results("Test_data/correct_alignments.csv", correct_alignment_list, header)
+    store_results("Test_data/not_tested_alignments.csv", not_tested_alignment_list, header)
+    ld.store_matching_results("Test_data/full_alignments.csv", gen_alignment_list, header)
 
     return
 
@@ -310,6 +345,7 @@ def performance_test(primer_pairs, gen_record):
 
 if(__name__=="__main__"):
     time1 = time.time()
-    test_all_pairs()
+    #test_all_pairs()
+    single_test()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
