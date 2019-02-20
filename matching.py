@@ -50,19 +50,29 @@ def append_zeros(gen_record, max_miss_f, max_miss_r):
         gen_record[gen_key].seq = Seq("Z"*max_miss_f+str(gen_record[gen_key].seq)+"Z"*max_miss_r)
     return gen_record
 
+def _new_matching(primer, len_primer, gen):
+    
+    match_matrix = np.empty((len_primer, gen.shape[0]))
+    for i in range(len_primer):
+        match_matrix[i] = gen==primer[i]
+    return match_matrix
+    
+
+    #match_matrix = [np.where(gen==primer[i]) for i in range(len(primer))]
+    return match_matrix
+
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
     """
     Computes the best matches between a genome and a primer.
     @returns: Numpy matrix of arrays (score, start_pos, end_pos).
     """
-    result_matrix = MATCH_TABLE.loc[primer, gen] #get match table
+    result_matrix = _new_matching(primer, len_primer, gen)
 
     result_max_len = len(gen)-len_primer+1
     result_raw = np.zeros(result_max_len, dtype='uint8') #TODO 0-255 should be enough, but better to not hardcode this
 
-    result_matrix = result_matrix.values #get numpy matrix, raw indexes are faster than labels
     for i in range(len_primer):
-        result_raw = np.add(result_raw, result_matrix[i,i:result_max_len+i]) #Speedup try n2, SpeedUp = 168/26 = 6,4x
+        result_raw = np.add(result_raw, result_matrix[i][i:result_max_len+i]) #Speedup try n2, SpeedUp = 168/26 = 6,4x
     
     is_score_valid = (result_raw>=len_primer-max_misses)
     n_results = is_score_valid.sum()
@@ -78,7 +88,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 
     return result
 
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers):
+def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, bio_gen, gen, hanging_primers):
     """
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
@@ -115,7 +125,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         fm = al[0]
         rm= al[1]
         amplicon = primer.min_amplicon+rm[1]
-        result.append(Alignment(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
+        result.append(Alignment(bio_gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
                                 primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
             
     return result
@@ -136,8 +146,9 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
         i +=1
         gen = gen_record[gen_key]
         gen_alignment = GenAlignment(gen)
+        numpy_gen = np.array(list(gen.seq))
         for primer in primer_pairs:
-            alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers)
+            alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, numpy_gen, hanging_primers)
             gen_alignment.append(alignment_list)
         gen_alignment_list.append(gen_alignment)
     return gen_alignment_list
@@ -147,11 +158,10 @@ if(__name__=="__main__"):
     gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
 
-
+    #result = compute_gen_matching(5, 5, primer_pairs, gen_record)
+    
     import time 
     time1 = time.time()
     result = compute_gen_matching(5, 5, primer_pairs, gen_record)
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime))
-
-    

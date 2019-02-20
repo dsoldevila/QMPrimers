@@ -144,7 +144,7 @@ def test_all_pairs():
     global_check = {"amplicon": 1, "missf": 1, "missr":1}
     check = {"amplicon": 1, "missf": 1, "missr":1}
     gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=True)
-    #gen_record = split(gen_record, 0.005)
+    gen_record = split(gen_record, 0.005)
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     
     gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=True)
@@ -230,10 +230,10 @@ def test_all_pairs():
     else:
         print("TEST FAILED")
         
-    store_results("Test_data/better_alignments.csv", better_alignment_list, header)
-    store_results("Test_data/correct_alignments.csv", correct_alignment_list, header)
-    store_results("Test_data/not_tested_alignments.csv", not_tested_alignment_list, header)
-    ld.store_matching_results("Test_data/full_alignments.csv", gen_alignment_list, header)
+    #store_results("Test_data/better_alignments.csv", better_alignment_list, header)
+    #store_results("Test_data/correct_alignments.csv", correct_alignment_list, header)
+    #store_results("Test_data/not_tested_alignments.csv", not_tested_alignment_list, header)
+    ld.store_matching_results("Test_data/test.csv", gen_alignment_list, header)
 
     return
 
@@ -334,9 +334,9 @@ def check_if_multiple_alignments_are_frequent():
                print(al_list.gen.id, al_list.primer_pair.id, len(alignments))
     return
 
-def performance_test(primer_pairs, gen_record):
-    cProfile.run('compute_gen_matching(5, 5, primer_pairs, gen_record)', 'temp.profile')
-    stats = pstats.Stats('temp.profile')
+def performance_test(primer_pairs, gen_record, o_file):
+    cProfile.run('m.compute_gen_matching(5, 5, primer_pairs, gen_record)', o_file)
+    stats = pstats.Stats(o_file)
     stats.strip_dirs().sort_stats('cumtime').print_stats()
     
     
@@ -344,8 +344,19 @@ def performance_test(primer_pairs, gen_record):
 
 
 if(__name__=="__main__"):
-    time1 = time.time()
-    #test_all_pairs()
-    single_test()
-    elapsedTime = ((time.time()-time1))
-    print(int(elapsedTime)/60)
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) 
+    
+    counter = 0
+    gcounter = 0
+    for gkey in gen_record:
+        gen = gen_record[gkey]
+        gcounter +=1
+        for char in gen:
+            counter += not(char=="A" or char=="T" or char=="G" or char=="C")
+    print(gcounter, counter, counter/gcounter)
+            
+    """
+    gen_record = split(gen_record, 0.2)
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    performance_test(primer_pairs, gen_record, "test.profile")
+    """
