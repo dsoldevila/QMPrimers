@@ -21,7 +21,7 @@ def load_csv_file(file, delimiter=";"):
     @returns: List of PrimerPair instances
     """
     pos = {"id": 0, "forwardPrimer": 0, "reversePrimer": 0, "fPDNA": 0, "rPDNA": 0,"ampliconMinLength": 0, "ampiconMaxLength": 0}
-    primer_list = []
+    primer_pairs = {}
     with open(file, newline='') as csvfile:
         csvreader = csv.reader(csvfile, delimiter=delimiter)
         headers = next(csvreader)
@@ -38,11 +38,12 @@ def load_csv_file(file, delimiter=";"):
                 rprimer = rprimer.reverse_complement()
             rprimer.id = row[pos["reversePrimer"]]
             
-            primer_pair = PrimerPair(int(row[pos["id"]]), fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
+            ppid = row[pos["id"]]        
+            primer_pair = PrimerPair(ppid, fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
 
-            primer_list.append(primer_pair)
+            primer_pairs[ppid] = primer_pair
             
-    return primer_list
+    return primer_pairs
 
 def load_bio_files(files, file_format=None, writable=False):
     """

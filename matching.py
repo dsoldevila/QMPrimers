@@ -48,7 +48,10 @@ def _compute_matching_chunk(primer, len_primer, gen, start, end, matching_matrix
     return
 
 
-def compute_forward_matching(max_misses, primer_pairs, gen, chunk_size, max_row_size, data_type='uint8'):
+def _compute_forward_matching(max_misses, primer_pairs, gen, chunk_size, max_row_size, data_type='uint8'):
+    """
+    @brief: Computes all forward primers at once for a given genomic sequence
+    """
     start = 0
     end = chunk_size
     len_gen = gen.shape[0]
@@ -72,34 +75,21 @@ def compute_forward_matching(max_misses, primer_pairs, gen, chunk_size, max_row_
         for pp in primer_pairs:
             _compute_matching_chunk(pp.f, pp.flen, gen, start, len_gen, matching_matrix, rr_dict[pp.id])
      
-    return process_matching(rr_dict, primer_pairs, max_misses, data_type)
+    return _process_forward_matching(rr_dict, primer_pairs, max_misses, data_type)
 
-def compute_reverse_matching(max_misses, primer_pairs, gen, chunk_size, max_row_size, pr_dict, data_type='uint8'):
-    start = 0
-    end = chunk_size
-    len_gen = gen.shape[0]
-    if end > len_gen or end < start:
-        end = len_gen
-        
-    
-    return
-
-def compute_matching(max_misses_f, max_misses_r, primer_pairs, gen_record, chunk_size, pr_dict, data_type='uint8'):
-    
-    return
-
-def process_matching(rr_dict, primer_pairs, max_misses, data_type):
-    
+def _process_forward_matching(rr_dict, primer_pairs, max_misses, data_type):
+    """
+    @brief: Transforms _compute_forward_matching result into something readable
+    """
     pr_dict = {} # processed result dictionary
     
     for pp in primer_pairs:
         flen = pp.flen
         raw_result = rr_dict[pp.id]
-        raw_result = raw_result
         is_result_valid = raw_result >= (flen-max_misses)
         n_results = is_result_valid.sum()
         raw_result = is_result_valid*raw_result
-        pro_result = np.empty(n_results, dtype=[('misses', data_type), ('start', '>i4'), ('end', '>i4')])
+        pro_result = np.empty(n_results, dtype=[('mf', data_type), ('start', '>i4'), ('end', '>i4'), ('reverse_search', None)]) #TODO Use a pandas Dataframe instead?
         
         j=0
         for i in range(len(raw_result)):        
@@ -109,7 +99,78 @@ def process_matching(rr_dict, primer_pairs, max_misses, data_type):
         pr_dict[pp.id] = pro_result
         
     return  pr_dict
+
+
+def _compute_reverse_matching(max_misses, primer_pairs, gen, max_row_size, pr_dict, data_type='uint8'):
+    """
+    @brief: Computes all forward primers at once for a given genomic sequence, given forward results
+    """
+    start = 0
+    end = chunk_size
+    len_gen = gen.shape[0]
+    if end > len_gen or end < start:
+        end = len_gen
     
+    matching_request = []
+    max_diff = 0
+    for pp in primer_pairs: # for each primer_pair in primer_pairs
+        min_range = pp.min_amplicon #range to search relative to the forward primer
+        max_range = pp.max_amplicon+pp.rlen
+        diff = max_range-min_range
+        max_diff = diff if diff > max_diff else max_diff
+        for pr in pr_dict[pp.id]: #for each processed result with primer_pair i
+            start = min_range + pr[1] #range to search in gen
+            end = max_range + pr[1]
+            result_raw = np.zeros((end-start,), dtype=data_type)
+            tmp = (pp.id, start, end, result_raw)
+            pr[3] = tmp #append to forward match
+            matching_request.append(tmp)
+    
+    matching_request = sorted(matching_request, key=lambda req: req[1])
+    
+    matching_matrix =  np.zeros((max_row_size, max_diff), dtype=data_type) #matrix buffer to compute matches
+    
+    
+    for mr in matching_request:
+        pp = primer_pairs[mr[0]]
+        _compute_matching_chunk(pp.r, pp.rlen, gen, mr[1], mr[2], matching_matrix, mr[3])
+    
+    return _process_reverse_matching(pr_dict, primer_pairs, max_misses, data_type)
+
+def _process_reverse_matching(pr_dict, primer_pairs, max_misses, data_type):
+    """
+    @brief: Transforms _compute_reverse_matching result into something readable and appends it to forwards' results
+    """
+    for pp in primer_pairs: #for each primer pair
+        rlen = pp.rlen
+        for forward_match in pr_dict[pp.id]:
+            reverse_match = forward_match[3] #pos 3 contains a pointer to the corresponding reverse matches
+            
+            raw_result = reverse_match[3]
+            start = reverse_match[1]
+            
+            is_result_valid = raw_result >= (rlen-max_misses)
+            n_results = is_result_valid.sum()
+            raw_result = is_result_valid*raw_result
+            pro_result = np.empty(n_results, dtype=[('mr', data_type), ('start', '>i4'), ('end', '>i4')]) #TODO Use a pandas Dataframe instead?
+            
+            j=0
+            for i in range(len(raw_result)):        
+                if raw_result[i]:
+                    pro_result[j] = (raw_result[i], i-rlen+1+start, i+start)
+                    j=j+1
+            forward_match[3] = pro_result
+    return pr_dict
+
+def select_best_fitting_matches():
+    return
+                
+
+def compute_matching(max_misses_f, max_misses_r, primer_pairs, gen_record, chunk_size, pr_dict, data_type='uint8'):
+    forward_matches = _compute_forward_matching(max_misses_f, primer_pairs, gen, chunk_size, max_row_size, data_type='uint8')
+    reverse_matches = _compute_reverse_matching(max_misses_r, primer_pairs, gen, max_row_size, forward_matches, data_type='uint8')
+    
+    return
 
 def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, bio_gen, gen, hanging_primers):
     """
