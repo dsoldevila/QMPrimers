@@ -18,6 +18,7 @@ import csv
 import pandas as pd
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import numpy as np
 
 "Name, forward starting pos, forward's missmatches loc, reverse's missmatches loc"
 target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],[2,5]),
@@ -340,23 +341,15 @@ def performance_test(primer_pairs, gen_record, o_file):
     stats.strip_dirs().sort_stats('cumtime').print_stats()
     
     
-
+def test_new_matching():
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) 
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    gen = np.array(gen_record["ref|NC_018030.1|"].seq)
+    #gen = np.array(list("AGATAACATA"))
+    #primer_pairs = ld.load_csv_file("Test_data/madeup_pp.csv")
+    result = m.compute_matching(1, [primer_pairs[4]], gen, 3, 30)
+    print(result)
 
 
 if(__name__=="__main__"):
-    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) 
-    
-    counter = 0
-    gcounter = 0
-    for gkey in gen_record:
-        gen = gen_record[gkey]
-        gcounter +=1
-        for char in gen:
-            counter += not(char=="A" or char=="T" or char=="G" or char=="C")
-    print(gcounter, counter, counter/gcounter)
-            
-    """
-    gen_record = split(gen_record, 0.2)
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    performance_test(primer_pairs, gen_record, "test.profile")
-    """
+    test_new_matching()

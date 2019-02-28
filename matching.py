@@ -33,60 +33,83 @@ SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
 MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
 
-#TODO this func is currently unused, ~line 68
-def is_valid(score, min_score):
-    score = np.asarray(score)
-    min_score = np.asarray(min_score)
-    return np.where(score >= min_score, score, 0)
-
-def append_zeros(gen_record, max_miss_f, max_miss_r):
+def _compute_matching_chunk(primer, len_primer, gen, start, end, matching_matrix, result_raw):
     """
-    Adds zeros ('Z') at the beginning and end of the genome to allow the primer to pass the genome's limits
-    Example:
-        genome AGATTCATT, primer TCTAGA scores 2 at pos 1
-        genome ZZZAGATTCATTZZZ, primer TCTAGA scores 3 at pos -3
+    @brief: Computes matching matrix[start:end], the matching is done in chunks to improve memory efficiency
     """
-    for gen_key in gen_record:
-        gen_record[gen_key].seq = Seq("Z"*max_miss_f+str(gen_record[gen_key].seq)+"Z"*max_miss_r)
-    return gen_record
+    rstart = start+len_primer-1
+    rend = end+len_primer-1
 
-def _new_matching(primer, len_primer, gen):
-    
-    match_matrix = np.empty((len_primer, gen.shape[0]))
+    matching_matrix[0:len_primer, 0:end-start] = MATCH_TABLE.loc[primer, gen[start:end]].values
     for i in range(len_primer):
-        match_matrix[i] = gen==primer[i]
-    return match_matrix
+        #matching_matrix[i, 0:end-start] = gen[start:end]==primer[i] #TODO
+        result_raw[rstart-i:rend-i] = np.add(result_raw[rstart-i:rend-i], matching_matrix[i, 0:end-start])
+        
+    return
+
+
+def compute_forward_matching(max_misses, primer_pairs, gen, chunk_size, max_row_size, data_type='uint8'):
+    start = 0
+    end = chunk_size
+    len_gen = gen.shape[0]
+    if end > len_gen or end < start:
+        end = len_gen
+        
+        
+    matching_matrix =  np.zeros((max_row_size, chunk_size), dtype=data_type) #matrix buffer to compute matches
+    rr_dict = {} #raw_result dictionary
     
-
-    #match_matrix = [np.where(gen==primer[i]) for i in range(len(primer))]
-    return match_matrix
-
-def _compute_primer_matching(max_misses, primer, len_primer, gen):
-    """
-    Computes the best matches between a genome and a primer.
-    @returns: Numpy matrix of arrays (score, start_pos, end_pos).
-    """
-    result_matrix = _new_matching(primer, len_primer, gen)
-
-    result_max_len = len(gen)-len_primer+1
-    result_raw = np.zeros(result_max_len, dtype='uint8') #TODO 0-255 should be enough, but better to not hardcode this
-
-    for i in range(len_primer):
-        result_raw = np.add(result_raw, result_matrix[i][i:result_max_len+i]) #Speedup try n2, SpeedUp = 168/26 = 6,4x
+    for pp in primer_pairs:
+        rr_dict[pp.id]= (np.zeros((len_gen+pp.flen-1,), dtype=data_type))
     
-    is_score_valid = (result_raw>=len_primer-max_misses)
-    n_results = is_score_valid.sum()
-    result_raw = is_score_valid*result_raw #if score valid =score else =0
+    while(end <= len_gen):
+        for pp in primer_pairs:
+            _compute_matching_chunk(pp.f, pp.flen, gen, start, end, matching_matrix, rr_dict[pp.id])
+        start = end
+        end += chunk_size
     
-    result = np.zeros(n_results, dtype=[('score', 'uint8'), ('start', '>i4'), ('end', '>i4')]) #TODO integer 32 too much /  integer 8 enough?
-    
-    j = 0
-    for i in range(result_max_len):        
-        if result_raw[i]:
-            result[j] = (result_raw[i], i, i+len_primer)
-            j=j+1
+    if(len_gen % chunk_size): #if there is "gen left", compute the rest
+        for pp in primer_pairs:
+            _compute_matching_chunk(pp.f, pp.flen, gen, start, len_gen, matching_matrix, rr_dict[pp.id])
+     
+    return process_matching(rr_dict, primer_pairs, max_misses, data_type)
 
-    return result
+def compute_reverse_matching(max_misses, primer_pairs, gen, chunk_size, max_row_size, pr_dict, data_type='uint8'):
+    start = 0
+    end = chunk_size
+    len_gen = gen.shape[0]
+    if end > len_gen or end < start:
+        end = len_gen
+        
+    
+    return
+
+def compute_matching(max_misses_f, max_misses_r, primer_pairs, gen_record, chunk_size, pr_dict, data_type='uint8'):
+    
+    return
+
+def process_matching(rr_dict, primer_pairs, max_misses, data_type):
+    
+    pr_dict = {} # processed result dictionary
+    
+    for pp in primer_pairs:
+        flen = pp.flen
+        raw_result = rr_dict[pp.id]
+        raw_result = raw_result
+        is_result_valid = raw_result >= (flen-max_misses)
+        n_results = is_result_valid.sum()
+        raw_result = is_result_valid*raw_result
+        pro_result = np.empty(n_results, dtype=[('misses', data_type), ('start', '>i4'), ('end', '>i4')])
+        
+        j=0
+        for i in range(len(raw_result)):        
+            if raw_result[i]:
+                pro_result[j] = (raw_result[i], i-flen+1, i)
+                j=j+1
+        pr_dict[pp.id] = pro_result
+        
+    return  pr_dict
+    
 
 def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, bio_gen, gen, hanging_primers):
     """
