@@ -94,7 +94,7 @@ class Alignment:
     
     def get_csv(self):
         info= [self.primer_pair.id, self.gen.id, self.primer_pair.f.id, self.primer_pair.r.id, self.fm, self.rm, 
-               self.amplicon, self.real_fpos, str(self.fm_type), self.real_rpos, str(self.rm_type)]
+               self.amplicon, self.real_fpos, self.fm_loc, str(self.fm_type), str(self.real_rpos), str(self.rm_loc), str(self.rm_type)]
         return info
     
 class PrimerAlignment:
