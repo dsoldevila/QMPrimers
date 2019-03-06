@@ -17,12 +17,12 @@ import sys
 import _thread
 
 
-global_parameters = {"-mf": 10, "-mr": 10, "-gf": None, "-gformat": None, "-pf": None, "--hanging-primers": False}
-
 class GUI(Frame):
     def __init__(self, parent=Frame):
         
         self.main_frame = Frame.__init__(self, parent)
+        
+        self.parameters = {"gen": None, "primer_pairs": None, "output_file": None, "mf": 5, "mr": 5, "hanging-primers": False}
         
         """Menu"""
         self.main_menu = Menu(parent)
@@ -65,11 +65,25 @@ class GUI(Frame):
         self.check_frame = Frame(self.main_frame)
         self.check_frame.pack(expand=YES, fill=X)
         self.check_list = []
-        self.check_list_names = ["R is in reverse complement", "Hanging Primers"]
-        for i in range(len(self.check_list_names)):
-            check = Checkbutton(self.check_frame,text=self.check_list_names[i])
-            check.pack(side=LEFT, expand=YES, fill=X)
-            self.check_list.append(check)
+        for pkey in self.parameters:
+            if(isinstance(self.parameters[pkey], bool)):
+                check = Checkbutton(self.check_frame,text=pkey) #TODO Default value and update value
+                check.pack(side=LEFT, expand=YES, fill=X)
+                self.check_list.append(check)
+            
+        """Other parameters"""
+        self.other_frame = Frame(self.main_frame)
+        self.other_frame.pack(expand=YES, fill=X)
+        self.other_list = []
+        for pkey in self.parameters:
+            if(not isinstance(self.parameters[pkey], bool) and isinstance(self.parameters[pkey], int)):
+                other = Entry(self.file_frame)
+                other.pack(side=LEFT, expand=YES, fill=X)
+                other.insert(0, self.parameters[pkey])
+                #other.bind("<Return>", (lambda event: self.parameters[pkey] = other.get()))
+                self.other_list.append(other)
+        
+        
         
         """Compute"""
         self.button_c = Button(text="Compute", command=self.compute)
@@ -95,7 +109,7 @@ class GUI(Frame):
         if(input_files): #is not None
             self.entry_g.delete(0, END)
             self.entry_g.insert(0, str(input_files))
-            self.gen_record = ld.load_bio_files(list(input_files))
+            self.parameters["gen"] = ld.load_bio_files(list(input_files))
         return
     
     def open_csv_file(self, input_files):
@@ -105,19 +119,19 @@ class GUI(Frame):
         if(input_files): #is not None
             self.entry_p.delete(0, END)
             self.entry_p.insert(0, str(input_files))
-            self.primer_pairs = ld.load_csv_file(input_files[0])
+            self.parameters["primer_pairs"] = ld.load_csv_file(input_files[0])
         return
+    
     def set_output_file(self, output_file):
         if(os.path.isabs(output_file)):
-            self.output_file = output_file
+            self.parameters["output_file"] = output_file
         else:
-            self.output_file = os.path.join(self.current_directory,output_file)
-        print(self.output_file)
+            self.parameters["output_file"] = output_file = os.path.join(self.current_directory,output_file)
         return
     
     def compute(self):
-        result = m.compute_gen_matching(5, 5, self.primer_pairs, self.gen_record)
-        ld.store_matching_results(self.output_file, result)
+        result = m.compute_gen_matching(self.parameters["mf"], self.parameters["mr"], self.parameters["primer_pairs"], self.parameters["gen"])
+        ld.store_matching_results(self.parameters["output_file"], result)
         print("Finished!")
         return
 
@@ -147,13 +161,12 @@ def compute_from_cl(parameters):
     return result
 
 if (__name__=="__main__"):
-    only_cl_parameters = {"--help": False, "--nogui": False}
-    parameters = {**global_parameters, **only_cl_parameters}
+    parameters = {"--help": False, "--nogui": False, "-mf": 5, "-mr": 5, "-gf": None, "-gformat": None, "-pf": None, "--hanging-primers": False}
     i = 1
     nargs = len(sys.argv)
     
     while i < nargs:
-        if(sys.argv[i] not in (parameters or only_cl_parameters)):
+        if(sys.argv[i] not in parameters):
             print("Parameter "+str(sys.argv[i])+" unknown")
             print("Use --help to display the manual")
             exit();
