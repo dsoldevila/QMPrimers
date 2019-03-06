@@ -59,10 +59,12 @@ def load_bio_files(files, file_format=None, writable=False):
             if(file_format == "fna"): file_format = "fasta"
             #TODO is the next line acceptable?
         if(file_format in SeqIO._FormatToIterator): #if format supported by biopython
-            if(writable): #if they need to be writable, store in memory
+            if(writable or len(files)>1): #if they need to be writable, store in memory
                 for file in files:
                     seq_record.update(SeqIO.to_dict(SeqIO.parse(file, file_format)))
             else: #create read_only database
+                if(isinstance(files, tuple)):
+                    files = files[0]
                 seq_record = SeqIO.index_db(":memory:", files, file_format) #TODO specify alphabet? It seems it's only used to catch methodology erros
     
     return seq_record

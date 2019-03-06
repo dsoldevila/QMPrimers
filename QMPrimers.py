@@ -22,7 +22,7 @@ class GUI(Frame):
         
         self.main_frame = Frame.__init__(self, parent)
         
-        self.parameters = {"gen": None, "primer_pairs": None, "output_file": None, "mf": 5, "mr": 5, "hanging-primers": False}
+        self.parameters = {"gen": None, "primer_pairs": None, "output_file": "out.csv", "mf": 5, "mr": 5, "hanging-primers": False}
         
         """Menu"""
         self.main_menu = Menu(parent)
@@ -40,7 +40,7 @@ class GUI(Frame):
         self.entry_g.insert(0, "<No Genome>")
         self.entry_g.bind("<Return>", (lambda event: self.open_bio_files(self.entry_g.get())))
         
-        self.button_g = Button(self.file_frame, text="Open", command=(lambda: self.open_bio_files(self._open_file())))
+        self.button_g = Button(self.file_frame, text="Open", command=(lambda: self.update_bio_files(self._open_file())))
         self.button_g.pack(side=LEFT, expand=YES, fill=X)
         
         self.entry_p = Entry(self.file_frame)
@@ -48,7 +48,7 @@ class GUI(Frame):
         self.entry_p.insert(0, "<No Primer Pairs>")
         self.entry_p.bind("<Return>", (lambda event: self.open_csv_file(self.entry_p.get())))
         
-        self.button_p = Button(self.file_frame, text="Open", command=(lambda: self.open_csv_file(self._open_file())))
+        self.button_p = Button(self.file_frame, text="Open", command=(lambda: self.update_primer_file(self._open_file())))
         self.button_p.pack(side=LEFT, expand=YES, fill=X)
         
         self.entry_out = Entry(self.file_frame)
@@ -59,35 +59,28 @@ class GUI(Frame):
         self.button_out = Button(self.file_frame, text="Set", command=(lambda: self.set_output_file(self.entry_out.get())))
         self.button_out.pack(side=LEFT, expand=YES, fill=X)
         
-        
-        
-        """Check List Frame"""
-        self.check_frame = Frame(self.main_frame)
-        self.check_frame.pack(expand=YES, fill=X)
-        self.check_list = []
-        for pkey in self.parameters:
-            if(isinstance(self.parameters[pkey], bool)):
-                check = Checkbutton(self.check_frame,text=pkey) #TODO Default value and update value
-                check.pack(side=LEFT, expand=YES, fill=X)
-                self.check_list.append(check)
             
         """Other parameters"""
         self.other_frame = Frame(self.main_frame)
         self.other_frame.pack(expand=YES, fill=X)
-        self.other_list = []
+        self.other_param_dict = {}
         for pkey in self.parameters:
-            if(not isinstance(self.parameters[pkey], bool) and isinstance(self.parameters[pkey], int)):
-                other = Entry(self.file_frame)
-                other.pack(side=LEFT, expand=YES, fill=X)
-                other.insert(0, self.parameters[pkey])
-                #other.bind("<Return>", (lambda event: self.parameters[pkey] = other.get()))
-                self.other_list.append(other)
+            if(isinstance(self.parameters[pkey], bool)):
+                other = BooleanVar()
+                Checkbutton(self.other_frame, variable=other, text=pkey).pack(side=LEFT, expand=YES)
+                other.set(self.parameters[pkey])
+                self.other_param_dict[pkey] = other
+            elif(isinstance(self.parameters[pkey], int)):
+                other = StringVar()
+                Entry(self.other_frame, textvariable=other).pack(side=LEFT, expand=YES)
+                other.set(self.parameters[pkey])
+                self.other_param_dict[pkey] = other
         
         
         
         """Compute"""
         self.button_c = Button(text="Compute", command=self.compute)
-        self.button_c.pack(expand=YES, fill=BOTH)
+        self.button_c.pack(side=BOTTOM, expand=YES, fill=BOTH)
         
         """Other"""
         self.current_directory = os.getcwd()
@@ -102,24 +95,24 @@ class GUI(Frame):
         if(file_names): self.current_directory = os.path.dirname(file_names[0])
         return file_names
     
-    def open_bio_files(self, input_files):
+    def update_bio_files(self, input_files):
         """
         Loads input genomes 
         """
         if(input_files): #is not None
             self.entry_g.delete(0, END)
             self.entry_g.insert(0, str(input_files))
-            self.parameters["gen"] = ld.load_bio_files(list(input_files))
+            self.parameters["gen"] = input_files
         return
     
-    def open_csv_file(self, input_files):
+    def update_primer_file(self, input_files):
         """
         Loads input primer pairs, stored in csv format
         """
         if(input_files): #is not None
             self.entry_p.delete(0, END)
             self.entry_p.insert(0, str(input_files))
-            self.parameters["primer_pairs"] = ld.load_csv_file(input_files[0])
+            self.parameters["primer_pairs"] = input_files[0]
         return
     
     def set_output_file(self, output_file):
@@ -130,7 +123,13 @@ class GUI(Frame):
         return
     
     def compute(self):
-        result = m.compute_gen_matching(self.parameters["mf"], self.parameters["mr"], self.parameters["primer_pairs"], self.parameters["gen"])
+        for pkey in self.other_param_dict:
+            self.parameters[pkey] = self.other_param_dict[pkey].get()
+        print(self.parameters)
+        self.gen_record = ld.load_bio_files(self.parameters["gen"], writable=self.parameters["hanging-primers"])
+        self.primer_pairs = ld.load_csv_file(self.parameters["primer_pairs"])
+        result = m.compute_gen_matching(int(self.parameters["mf"]), int(self.parameters["mr"]), self.primer_pairs, self.gen_record,
+                                        hanging_primers=self.parameters["hanging-primers"])
         ld.store_matching_results(self.parameters["output_file"], result)
         print("Finished!")
         return
