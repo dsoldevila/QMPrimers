@@ -16,8 +16,12 @@ import os
 import sys
 import _thread
 
+
+global_parameters = {"-mf": 10, "-mr": 10, "-gf": None, "-gformat": None, "-pf": None, "--hanging-primers": False}
+
 class GUI(Frame):
     def __init__(self, parent=Frame):
+        
         self.main_frame = Frame.__init__(self, parent)
         
         """Menu"""
@@ -47,11 +51,21 @@ class GUI(Frame):
         self.button_p = Button(self.file_frame, text="Open", command=(lambda: self.open_csv_file(self._open_file())))
         self.button_p.pack(side=LEFT, expand=YES, fill=X)
         
+        self.entry_out = Entry(self.file_frame)
+        self.entry_out.pack(side=LEFT, expand=YES, fill=X)
+        self.entry_out.insert(0, "<Enter Ouput File>")
+        self.entry_out.bind("<Return>", (lambda event: self.set_output_file(self.entry_out.get())))
+        
+        self.button_out = Button(self.file_frame, text="Set", command=(lambda: self.set_output_file(self.entry_out.get())))
+        self.button_out.pack(side=LEFT, expand=YES, fill=X)
+        
+        
+        
         """Check List Frame"""
         self.check_frame = Frame(self.main_frame)
         self.check_frame.pack(expand=YES, fill=X)
         self.check_list = []
-        self.check_list_names = ["R is in reverse complement", "Hanging Primers", "option3"]
+        self.check_list_names = ["R is in reverse complement", "Hanging Primers"]
         for i in range(len(self.check_list_names)):
             check = Checkbutton(self.check_frame,text=self.check_list_names[i])
             check.pack(side=LEFT, expand=YES, fill=X)
@@ -91,14 +105,20 @@ class GUI(Frame):
         if(input_files): #is not None
             self.entry_p.delete(0, END)
             self.entry_p.insert(0, str(input_files))
-            print(input_files)
             self.primer_pairs = ld.load_csv_file(input_files[0])
-            print(self.primer_pairs[0].f.seq+"\n")
+        return
+    def set_output_file(self, output_file):
+        if(os.path.isabs(output_file)):
+            self.output_file = output_file
+        else:
+            self.output_file = os.path.join(self.current_directory,output_file)
+        print(self.output_file)
         return
     
     def compute(self):
         result = m.compute_gen_matching(5, 5, self.primer_pairs, self.gen_record)
-        print(result[0])
+        ld.store_matching_results(self.output_file, result)
+        print("Finished!")
         return
 
 def get_help():
@@ -116,7 +136,7 @@ def get_help():
         print(param, ": ", parameters_help[param])
     return
 
-def compute_from_cmd(parameters):
+def compute_from_cl(parameters):
     """
     Manages the program in terminal mode
     """
@@ -127,15 +147,15 @@ def compute_from_cmd(parameters):
     return result
 
 if (__name__=="__main__"):
-    
-    parameters = {"--help": False, "-mf": 10, "-mr": 10, "-gf": None, "-gformat": None, "-pf": None, "--nogui": False, "--hanging-primers": False}
-    
+    only_cl_parameters = {"--help": False, "--nogui": False}
+    parameters = {**global_parameters, **only_cl_parameters}
     i = 1
     nargs = len(sys.argv)
     
     while i < nargs:
-        if(sys.argv[i] not in parameters):
+        if(sys.argv[i] not in (parameters or only_cl_parameters)):
             print("Parameter "+str(sys.argv[i])+" unknown")
+            print("Use --help to display the manual")
             exit();
         if(sys.argv[i][:2]=="--"):
             parameters[sys.argv[i]] = True
@@ -147,7 +167,7 @@ if (__name__=="__main__"):
     if(parameters["--help"]):
         get_help()
     elif(parameters["--nogui"]):
-        compute_from_cmd(parameters)
+        compute_from_cl(parameters)
     else:
         root = Tk()
         root.title("QMPrimers")
