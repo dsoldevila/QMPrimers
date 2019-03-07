@@ -21,13 +21,15 @@ This programm has a command line mode and a GUI mode:
   python3.7 QMPrimers --help
   ```
   
-  * GUI mode:
+* GUI mode:
   ```bash
   python3.7 QMPrimers <no options>
   ```
   ![screenshot](./Misc/screenshot.png)
 
-
+  * **Hanging primers**: mf = forward maximum missmatches, mr = reverse max. miss. 
+  Primer pairs are allowed to match between [0-mf,len(genome)+mr] instead of just between the length of the genome
+  * The **primer pairs file** must have the following header. The order does not matter:                        id;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength
 
 
 
