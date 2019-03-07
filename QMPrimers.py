@@ -16,7 +16,7 @@ import os
 import sys
 import _thread
 
-parameters = {"gen": "", "primer_pairs": "", "output_file": "out.csv", "mf": 5, "mr": 5, "hanging-primers": False, "matching_type(NOT IMPLEMENTED": 0}
+parameters = {"gen": "", "primer_pairs": "", "output_file": os.path.join(os.getcwd(),"out.csv"), "forward missmatches": 5, "reverse missmatches": 5, "hanging primers": False} #TODO Matching Type
 output_info = {"primerPair": True,"fastaid": True,"primerF": True,"primerR": True,"mismFT": True,"mismRT": True,"amplicon": True,
                "F_pos": True, "mismFT_loc": True, "mismFT_type": True, "R_pos": True, "mismRT_loc": True, "mismRT_type": True}
 
@@ -25,7 +25,9 @@ class GUI(Frame):
         
         self.main_frame = Frame.__init__(self, parent)
         
+        """Other"""
         self.parameters = parameters
+        self.current_directory = os.getcwd()
         
         """Menu"""
         self.main_menu = Menu(parent)
@@ -62,7 +64,7 @@ class GUI(Frame):
         self.entries["primer_pairs"].bind("<Return>", (lambda event: self.open_csv_file(self.entry_p.get())))
         self.button["primer_pairs"].config(command=(lambda: self.update_primer_file(self._open_file())))
         
-        self.entries["output_file"].insert(0, "output.csv")
+        self.entries["output_file"].insert(0, os.path.join(self.current_directory,"output.csv"))
         self.entries["output_file"].bind("<Return>", (lambda event: self.set_output_file(self.entry_out.get())))
         self.button["output_file"].config(text="Set", command=(lambda: self.set_output_file(self.entry_out.get())))
             
@@ -81,9 +83,9 @@ class GUI(Frame):
             elif(isinstance(self.parameters[pkey], int)):
                 block = Frame(self.other_frame)
                 block.pack(expand=YES)
-                Label(block, text=pkey).pack(side=LEFT)
+                Label(block, text=pkey).pack(side=RIGHT)
                 other = StringVar()
-                Entry(block, textvariable=other).pack(side=LEFT, expand=YES)
+                Entry(block, textvariable=other).pack(side=LEFT)
                 other.set(self.parameters[pkey])
                 self.other_param[pkey] = other
         
@@ -91,6 +93,7 @@ class GUI(Frame):
         self.output_frame = Frame(self.main_frame)
         self.output_frame.pack(expand=YES, fill=X)
         Label(self.output_frame, text="Output Info").grid(row=0, column=0)
+        Label(self.output_frame, text="(NO EFFECT)").grid(row=0, column=1)
         
         self.output_info = output_info
         c=0
@@ -109,8 +112,6 @@ class GUI(Frame):
         self.button_c = Button(self.buttons_frame, text="Compute", command=self.compute)
         self.button_c.pack(expand=YES, fill=X)
         
-        """Other"""
-        self.current_directory = os.getcwd()
         return
         
     def _open_file(self):
@@ -152,11 +153,8 @@ class GUI(Frame):
     def compute(self):
         for pkey in self.other_param:
             self.parameters[pkey] = self.other_param[pkey].get()
-        print(self.parameters)
-        self.gen_record = ld.load_bio_files(self.parameters["gen"], writable=self.parameters["hanging-primers"])
-        self.primer_pairs = ld.load_csv_file(self.parameters["primer_pairs"])
-        result = m.compute_gen_matching(int(self.parameters["mf"]), int(self.parameters["mr"]), self.primer_pairs, self.gen_record,
-                                        hanging_primers=self.parameters["hanging-primers"])
+       
+        result = compute(self.parameters)
         
         header = []
         for key in self.output_info:
@@ -170,8 +168,9 @@ class GUI(Frame):
 def get_help():
     parameters_help = {"--help": "Display this list", 
                        "-mf <number>": "Maximum number of missmatches allowed in the forward primer", 
-                       "-mr <number>": "Maximum number of missmatches allowed in the reverse primer", "-gf <path/to/file>": "Location of the genome file",
-                       "-gformat <string>": "(Optional) Format of the genome file (fasta, etc)", 
+                       "-mr <number>": "Maximum number of missmatches allowed in the reverse primer", 
+                       "-gf <path/to/file>": "Location of the genome file, currently no support for multiple files in command line",
+                       "-gformat <string>": "(NOT IMPLEMENTED, Optional) Format of the genome file (fasta, etc)", 
                        "-pf </path/to/file>": "Location of the primer pairs, the following header must be included in the file. The order does not matter: \
                            id;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength", 
                        "--nogui": "GUI is not loaded", 
@@ -185,20 +184,22 @@ def get_help():
         print(param, ": ", parameters_help[param])
     return
 
-def compute_from_cl(parameters):
+def compute(parameters):
     """
     Manages the program in terminal mode
     """
-    gen_record = ld.load_bio_files([parameters["-gf"]],parameters["-gformat"], writable=parameters["--hanging-primers"])
-    primer_pairs = ld.load_csv_file(parameters["-pf"])
-    result = m.compute_gen_matching(int(parameters["-mf"]), int(parameters["-mr"]), primer_pairs, gen_record, hanging_primers=parameters["--hanging-primers"])
+    gen_record = ld.load_bio_files(parameters["gen"], writable=parameters["hanging primers"])
+    primer_pairs = ld.load_csv_file(parameters["primer_pairs"])
+    result = m.compute_gen_matching(int(parameters["forward missmatches"]), int(parameters["reverse missmatches"]), primer_pairs, gen_record, hanging_primers=parameters["hanging primers"])
 
     return result
 
 if (__name__=="__main__"):
     only_cl_param = {"help": False, "command_line": False}
     all_parameters = {**parameters, **only_cl_param}
-    flags = {"--help": "help", "--nogui": "command_line", "-mf": "mf", "-mr": "mr", "-gf": "gen", "-gformat": None, "-pf": "primer_pairs", "--hanging-primers": "hanging-primers"}
+    flags = {"--help": "help", "--nogui": "command_line", "-mf": "forward missmatches", "-mr": "reverse missmatches", "-gf": "gen", 
+             "-gformat": None, "-pf": "primer_pairs", "--hanging-primers": "hanging primers", "-o": "output_file"}
+   
     i = 1
     nargs = len(sys.argv)
     
@@ -224,7 +225,8 @@ if (__name__=="__main__"):
     if(all_parameters[flags["--help"]]):
         get_help()
     elif(all_parameters[flags["--nogui"]]):
-        compute_from_cl(parameters)
+        all_parameters["gen"] = (all_parameters["gen"],) #TODO multiple files not implemented in cl
+        compute(all_parameters)
     else:
         root = Tk()
         root.title("QMPrimers")
