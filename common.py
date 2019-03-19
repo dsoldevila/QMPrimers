@@ -17,6 +17,7 @@ class PrimerPair:
         self.rlen = len(rprimer.seq)
         self.min_amplicon = min_amplicon
         self.max_amplicon = max_amplicon
+        self.req_length = self.min_amplicon+self.rlen
         return
     
     def __str__(self):

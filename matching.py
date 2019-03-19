@@ -79,6 +79,7 @@ def _compute_forward_matching(max_misses, primer_pairs, gen, chunk_size, max_row
     matching_matrix =  np.zeros((max_row_size, chunk_size), dtype=data_type) #matrix buffer to compute matches
     rr_dict = {} #raw_result dictionary, raw_result is a buffer that stores a matching score for every fprimer position
     
+    
     for pp in primer_pairs.values():
         rr_dict[pp.id]= (np.zeros((len_gen+pp.flen-1,), dtype=data_type))
     
@@ -103,6 +104,7 @@ def _process_forward_matching(rr_dict, primer_pairs, max_misses, data_type):
     for pp in primer_pairs.values():
         flen = pp.flen
         raw_result = rr_dict[pp.id]
+        raw_result[-pp.req_length:-1] = 0
         is_result_valid = raw_result >= (flen-max_misses)
         n_results = is_result_valid.sum()
         raw_result = is_result_valid*raw_result
@@ -122,7 +124,7 @@ def _compute_reverse_matching(max_misses, primer_pairs, gen, max_row_size, pr_di
     """
     @brief: Computes all forward primers at once for a given genomic sequence, given forward results
     """
-    
+    len_gen = len(gen)
     #Set Job queue
     #For each fmatch a reverse matching job is set and appended to it. Matching_request is an ordered list of all
     #reverse matching jobs to improve memory efficiency when computing
@@ -136,6 +138,7 @@ def _compute_reverse_matching(max_misses, primer_pairs, gen, max_row_size, pr_di
         for fmatch in pr_dict[pp.id]: #for each processed result with primer_pair i
             start = min_range + fmatch[2] #range to search in gen
             end = max_range + fmatch[2]
+            end = len_gen if end > len_gen else end
             result_raw = np.zeros(((end-start)+pp.rlen-1,), dtype=data_type)
             fmatch[3] = (pp.id, start, end, result_raw)
             matching_request.append(fmatch[3])
@@ -147,12 +150,11 @@ def _compute_reverse_matching(max_misses, primer_pairs, gen, max_row_size, pr_di
     #Compute
     for mr in matching_request:
         pp = primer_pairs[mr[0]]
-        _compute_matching_chunk_debug(pp.r, pp.rlen, gen, mr[1], mr[2], matching_matrix, mr[3])
+        _compute_matching_chunk_debug(pp.r, pp.rlen, gen[mr[1]:mr[2]], 0, mr[2]-mr[1], matching_matrix, mr[3])
         
     for pp in primer_pairs.values():
         for fmatch in pr_dict[pp.id]:
-            rresult = fmatch[3]
-            rresult = _process_reverse_match(rresult, pp, max_misses, data_type)
+            fmatch[3] = _process_reverse_match(fmatch[3], pp, max_misses, data_type) ##rresult
     
     return pr_dict
 
@@ -174,7 +176,7 @@ def _process_reverse_match(rresult, pp, max_misses, data_type):
         if raw_result[i]:
             pro_result[j] = (raw_result[i], i-rlen+1+start, i+start)
             j=j+1
-    rresult[3] = pro_result
+    rresult = (rresult[0], rresult[1], rresult[2], pro_result)
     
     return rresult
 
@@ -207,6 +209,9 @@ def get_gen_alignment(primer_pairs, gen, pr_dict):
                 
 
 def compute_matching(max_misses_f, max_misses_r, primer_pairs, gen_record, chunk_size, data_type='uint8'):
+    for pp in primer_pairs:
+        pp.req_length -= (max_misses_r-1) #TODO
+        
     gen_matching_list = []
     for gkey in gen_record:
         gen = gen_record[gkey]
