@@ -342,12 +342,15 @@ def performance_test(primer_pairs, gen_record, o_file):
     
     
 def test_new_matching():
-    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"]) 
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    gen = np.array(gen_record["ref|NC_018030.1|"].seq)
-    #gen = np.array(list("AGATAACATA"))
-    #primer_pairs = ld.load_csv_file("Test_data/madeup_pp.csv")
-    result = m.compute_matching(1, [primer_pairs[4]], gen, 3, 30)
+    #gen_record = ld.load_bio_files(["Data/sbog_test.fasta"]) 
+    #primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    #gen = np.array(gen_record["ref|NC_018030.1|"].seq)
+    gen = Seq("AGATAACATA")
+    gen = SeqRecord(gen)
+    primer_pairs = ld.load_csv_file("Test_data/madeup_pp.csv")
+    result = m._compute_forward_matching(1, primer_pairs, gen, 3, 5, data_type='uint8')
+    print(result)
+    result = m._compute_reverse_matching(1, primer_pairs, gen, 4, result, data_type='uint8')
     print(result)
 
 

@@ -43,6 +43,7 @@ class Alignment:
         self.rm_loc = array of the missmatch locations of the reverse primer
         self.amplicon = amplicon of the matching, number between the primer pair max and min amplicon.
         """
+        #TODO remove real positions, not needed with the new matching algorithm
         self.gen = gen
         self.primer_pair = primer_pair
         self.fpos = int(fpos) #it seems Biopython seqrecord does not support numpy.int32

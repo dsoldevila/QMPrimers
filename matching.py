@@ -47,6 +47,22 @@ def _compute_matching_chunk(primer, len_primer, gen, start, end, matching_matrix
         
     return
 
+def _compute_matching_chunk_debug(primer, len_primer, gen, start, end, matching_matrix, result_raw):
+    """
+    @brief: Computes matching matrix[start:end], the matching is done in chunks to improve memory efficiency
+    """
+    rstart = start+len_primer-1
+    rend = end+len_primer-1
+
+    matching_matrix[0:len_primer, 0:end-start] = MATCH_TABLE.loc[primer, gen[start:end]].values
+    for i in range(len_primer):
+        #matching_matrix[i, 0:end-start] = gen[start:end]==primer[i] #TODO
+        print("a")
+        a= result_raw[rstart-i:rend-i]
+        b=  matching_matrix[i, 0:end-start]
+        result_raw[rstart-i:rend-i] = np.add(result_raw[rstart-i:rend-i], matching_matrix[i, 0:end-start])
+        
+    return
 
 def _compute_forward_matching(max_misses, primer_pairs, gen, chunk_size, max_row_size, data_type='uint8'):
     """
@@ -54,25 +70,26 @@ def _compute_forward_matching(max_misses, primer_pairs, gen, chunk_size, max_row
     """
     start = 0
     end = chunk_size
-    len_gen = gen.shape[0]
+    #len_gen = gen.shape[0]
+    len_gen = len(gen)
     if end > len_gen or end < start:
         end = len_gen
         
         
     matching_matrix =  np.zeros((max_row_size, chunk_size), dtype=data_type) #matrix buffer to compute matches
-    rr_dict = {} #raw_result dictionary
+    rr_dict = {} #raw_result dictionary, raw_result is a buffer that stores a matching score for every fprimer position
     
-    for pp in primer_pairs:
+    for pp in primer_pairs.values():
         rr_dict[pp.id]= (np.zeros((len_gen+pp.flen-1,), dtype=data_type))
     
     while(end <= len_gen):
-        for pp in primer_pairs:
+        for pp in primer_pairs.values(): 
             _compute_matching_chunk(pp.f, pp.flen, gen, start, end, matching_matrix, rr_dict[pp.id])
         start = end
         end += chunk_size
     
     if(len_gen % chunk_size): #if there is "gen left", compute the rest
-        for pp in primer_pairs:
+        for pp in primer_pairs.values():
             _compute_matching_chunk(pp.f, pp.flen, gen, start, len_gen, matching_matrix, rr_dict[pp.id])
      
     return _process_forward_matching(rr_dict, primer_pairs, max_misses, data_type)
@@ -83,18 +100,18 @@ def _process_forward_matching(rr_dict, primer_pairs, max_misses, data_type):
     """
     pr_dict = {} # processed result dictionary
     
-    for pp in primer_pairs:
+    for pp in primer_pairs.values():
         flen = pp.flen
         raw_result = rr_dict[pp.id]
         is_result_valid = raw_result >= (flen-max_misses)
         n_results = is_result_valid.sum()
         raw_result = is_result_valid*raw_result
-        pro_result = np.empty(n_results, dtype=[('mf', data_type), ('start', '>i4'), ('end', '>i4'), ('reverse_search', None)]) #TODO Use a pandas Dataframe instead?
+        pro_result = np.empty(n_results, dtype=[('fscore', data_type), ('start', '>i4'), ('end', '>i4'), ('reverse_search', 'object')]) #TODO Use a pandas Dataframe instead?
         
         j=0
         for i in range(len(raw_result)):        
             if raw_result[i]:
-                pro_result[j] = (raw_result[i], i-flen+1, i)
+                pro_result[j] = (raw_result[i], i-flen+1, i, None)
                 j=j+1
         pr_dict[pp.id] = pro_result
         
@@ -105,137 +122,100 @@ def _compute_reverse_matching(max_misses, primer_pairs, gen, max_row_size, pr_di
     """
     @brief: Computes all forward primers at once for a given genomic sequence, given forward results
     """
-    start = 0
-    end = chunk_size
-    len_gen = gen.shape[0]
-    if end > len_gen or end < start:
-        end = len_gen
     
+    #Set Job queue
+    #For each fmatch a reverse matching job is set and appended to it. Matching_request is an ordered list of all
+    #reverse matching jobs to improve memory efficiency when computing
     matching_request = []
     max_diff = 0
-    for pp in primer_pairs: # for each primer_pair in primer_pairs
+    for pp in primer_pairs.values(): # for each primer_pair in primer_pairs
         min_range = pp.min_amplicon #range to search relative to the forward primer
         max_range = pp.max_amplicon+pp.rlen
         diff = max_range-min_range
         max_diff = diff if diff > max_diff else max_diff
-        for pr in pr_dict[pp.id]: #for each processed result with primer_pair i
-            start = min_range + pr[1] #range to search in gen
-            end = max_range + pr[1]
-            result_raw = np.zeros((end-start,), dtype=data_type)
-            tmp = (pp.id, start, end, result_raw)
-            pr[3] = tmp #append to forward match
-            matching_request.append(tmp)
+        for fmatch in pr_dict[pp.id]: #for each processed result with primer_pair i
+            start = min_range + fmatch[2] #range to search in gen
+            end = max_range + fmatch[2]
+            result_raw = np.zeros(((end-start)+pp.rlen-1,), dtype=data_type)
+            fmatch[3] = (pp.id, start, end, result_raw)
+            matching_request.append(fmatch[3])
     
     matching_request = sorted(matching_request, key=lambda req: req[1])
     
     matching_matrix =  np.zeros((max_row_size, max_diff), dtype=data_type) #matrix buffer to compute matches
     
-    
+    #Compute
     for mr in matching_request:
         pp = primer_pairs[mr[0]]
-        _compute_matching_chunk(pp.r, pp.rlen, gen, mr[1], mr[2], matching_matrix, mr[3])
+        _compute_matching_chunk_debug(pp.r, pp.rlen, gen, mr[1], mr[2], matching_matrix, mr[3])
+        
+    for pp in primer_pairs.values():
+        for fmatch in pr_dict[pp.id]:
+            rresult = fmatch[3]
+            rresult = _process_reverse_match(rresult, pp, max_misses, data_type)
     
-    return _process_reverse_matching(pr_dict, primer_pairs, max_misses, data_type)
-
-def _process_reverse_matching(pr_dict, primer_pairs, max_misses, data_type):
-    """
-    @brief: Transforms _compute_reverse_matching result into something readable and appends it to forwards' results
-    """
-    for pp in primer_pairs: #for each primer pair
-        rlen = pp.rlen
-        for forward_match in pr_dict[pp.id]:
-            reverse_match = forward_match[3] #pos 3 contains a pointer to the corresponding reverse matches
-            
-            raw_result = reverse_match[3]
-            start = reverse_match[1]
-            
-            is_result_valid = raw_result >= (rlen-max_misses)
-            n_results = is_result_valid.sum()
-            raw_result = is_result_valid*raw_result
-            pro_result = np.empty(n_results, dtype=[('mr', data_type), ('start', '>i4'), ('end', '>i4')]) #TODO Use a pandas Dataframe instead?
-            
-            j=0
-            for i in range(len(raw_result)):        
-                if raw_result[i]:
-                    pro_result[j] = (raw_result[i], i-rlen+1+start, i+start)
-                    j=j+1
-            forward_match[3] = pro_result
     return pr_dict
 
-def select_best_fitting_matches():
-    return
-                
+def _process_reverse_match(rresult, pp, max_misses, data_type):
+    """
+    @brief: Transforms a reverse (matching) result into something human readable
+    """
+    # rraw = (pp.id, start, end, result_raw)
+    raw_result = rresult[3]
+    start = rresult[1]
+    rlen = pp.rlen
+    is_result_valid = raw_result >= (rlen-max_misses)
+    n_results = is_result_valid.sum()
+    raw_result = is_result_valid*raw_result
+    pro_result = np.empty(n_results, dtype=[('rscore', data_type), ('start', '>i4'), ('end', '>i4')]) #TODO Use a pandas Dataframe instead?
+    
+    j=0
+    for i in range(len(raw_result)):        
+        if raw_result[i]:
+            pro_result[j] = (raw_result[i], i-rlen+1+start, i+start)
+            j=j+1
+    rresult[3] = pro_result
+    
+    return rresult
 
-def compute_matching(max_misses_f, max_misses_r, primer_pairs, gen_record, chunk_size, pr_dict, data_type='uint8'):
-    forward_matches = _compute_forward_matching(max_misses_f, primer_pairs, gen, chunk_size, max_row_size, data_type='uint8')
-    reverse_matches = _compute_reverse_matching(max_misses_r, primer_pairs, gen, max_row_size, forward_matches, data_type='uint8')
+def get_gen_alignment(primer_pairs, gen, pr_dict):
     
-    return
-
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, bio_gen, gen, hanging_primers):
-    """
-    Returns the best alignments between a genome and a primer pair
-    @returns: PrimerAlignment instance
-    """
-    result = PrimerAlignment(primer, gen)
-    max_amplicon = primer.max_amplicon
-    search_limit = primer.rlen+max_amplicon
-    len_gen = len(gen)
-    if(primer.flen+search_limit>len_gen): #If primer pair plus max_amplicon is larger than the genomic sequence, check if with min_amplicon the same happens
-        if(primer.flen+primer.rlen+primer.min_amplicon>len_gen): #If primer pair plus min_amplicon is larger than the genomic sequence, abort
-            return result
-        else: #else modify max_amplicon to keep the primer_pair within the limits
-            max_amplicon = len_gen - (primer.flen + primer.rlen)
-    
-    best_score = 0
-    
-    alignments = []
-    
-    forward_matchings = _compute_primer_matching(max_miss_f, primer.f, primer.flen, gen[0:-search_limit]) #compute forward primer best matches
-    for fm in forward_matchings: #for each match with forward primer, compute reverse matchings
-        start = fm[2]+primer.min_amplicon #forward match start + len(forward) + min amplicon
-        end = fm[2]+max_amplicon+primer.rlen #f match start + len(f) + max amplicon + len(r)
-        reverse_matchings = _compute_primer_matching(max_miss_r, primer.r, primer.rlen, gen[start:end])
-        for rm in reverse_matchings: #get the best or bests matche(s) with this primer pair (alingments)
-            score = fm[0] + rm[0]
-            if (score > best_score): #if the score is better, erase the previous bests results
-                alignments = [(fm, rm)]
-                best_score = score
-            elif (score == best_score): #elif the score is equaly good, get this alignment too
-                alignments.append((fm, rm))
-                
-                
-    for al in alignments:
-        fm = al[0]
-        rm= al[1]
-        amplicon = primer.min_amplicon+rm[1]
-        result.append(Alignment(bio_gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
-                                primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
-            
-    return result
-
-def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hanging_primers=False):
-    """
-    Computes the best alignments between each genome and each primer
-    @returns: List of GenAlignment instances
-    """
-    if(hanging_primers):
-        gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
+    gen_alignment = GenAlignment(gen)
+    for pp in primer_pairs.values():
+        best_score = 0
+        alignments = []
+        for fmatch in pr_dict[pp.id]:
+            reverse_matches = fmatch[3]
+            for rmatch in reverse_matches:
+                score = fmatch[0] + rmatch[0]
+                if (score > best_score): #if the score is better, erase the previous bests results
+                    alignments = [(fmatch, rmatch)]
+                    best_score = score
+                elif (score == best_score): #elif the score is equaly good, get this alignment too
+                    alignments.append((fmatch, rmatch))
         
-    gen_alignment_list = []
-    size = len(gen_record)
-    i = 0
-    for gen_key in gen_record:
-        print(gen_key, "{0:.2f}".format(i/size*100)+"%")
-        i +=1
-        gen = gen_record[gen_key]
-        gen_alignment = GenAlignment(gen)
-        numpy_gen = np.array(list(gen.seq))
-        for primer in primer_pairs:
-            alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, numpy_gen, hanging_primers)
-            gen_alignment.append(alignment_list)
-        gen_alignment_list.append(gen_alignment)
-    return gen_alignment_list
+        primer_alignment = []          
+        for al in alignments:
+            fmatch = al[0]
+            rmatch= al[1]
+            amplicon = pp.min_amplicon+rmatch[1]
+            primer_alignment.append(Alignment(gen, pp, fmatch[1], fmatch[1], rmatch[1]+amplicon+fmatch[2], rmatch[1]+amplicon+fmatch[2],
+                                    pp.flen-fmatch[0], pp.rlen-rmatch[0], amplicon, MATCH_TABLE))
+        gen_alignment.append(primer_alignment)
+            
+    return gen_alignment
+                
+
+def compute_matching(max_misses_f, max_misses_r, primer_pairs, gen_record, chunk_size, data_type='uint8'):
+    gen_matching_list = []
+    for gkey in gen_record:
+        gen = gen_record[gkey]
+        forward_matches = _compute_forward_matching(max_misses_f, primer_pairs, gen, chunk_size,30, data_type='uint8')
+        full_matches = _compute_reverse_matching(max_misses_r, primer_pairs, gen, 30, forward_matches, data_type='uint8')
+        gen_alignment = get_gen_alignment(primer_pairs, gen, full_matches)
+        gen_matching_list.append(gen_alignment)
+    
+    return
 
 if(__name__=="__main__"):
     
@@ -246,6 +226,6 @@ if(__name__=="__main__"):
     
     import time 
     time1 = time.time()
-    result = compute_gen_matching(5, 5, primer_pairs, gen_record)
+    result = compute_matching(5, 5, primer_pairs, gen_record)
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime))
