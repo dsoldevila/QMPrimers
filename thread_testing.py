@@ -14,7 +14,7 @@ def child(tid):
 
 def parent():
     i = 0
-    while True:
+    while i<10:
         i+=1
         _thread.start_new_thread(child, (i,))
         if input() == 'q': break

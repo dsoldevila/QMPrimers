@@ -8,6 +8,8 @@ Created on Fri Nov  9 15:34:23 2018
 import numpy as np
 import pandas as pd
 
+IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
+
 class PrimerPair:
     def __init__(self, pair_id, fprimer, rprimer, min_amplicon, max_amplicon):
         self.id = pair_id
@@ -17,6 +19,8 @@ class PrimerPair:
         self.rlen = len(rprimer.seq)
         self.min_amplicon = min_amplicon
         self.max_amplicon = max_amplicon
+        self.fcomplement = self.f.seq.complement()
+        self.rcomplement = self.r.seq.complement()
         return
     
     def __str__(self):
@@ -26,6 +30,7 @@ class Alignment:
     """
     Alignment info between a genomic sequence and a primer pair
     """
+    base_type = {"A":"Pur", "C":"Pyr", "G":"Pur", "T":"Pyr", "R":"Pur", "Y":"Pyr", "Other": "Ind."}
 
     def __init__(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
     
@@ -56,18 +61,23 @@ class Alignment:
         self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
         self.fm_type, self.rm_type = self._get_missmatch_type()
         
+        self.fm_base, self.rm_base = self._get_missmatch_base_type()
+        
         return
     
     def _get_missmatch_location(self, MATCH_TABLE):
+        """
+        @Brief Returns array with the location of missmatches (on the primer)
+        """
         fm_loc = []
         rm_loc = []
         
         for i in range(self.primer_pair.flen):
-            if(MATCH_TABLE.loc[self.gen[self.fpos+i],self.primer_pair.f.seq[i]]!=1):
+            if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen[self.fpos+i]]!=1):
                 fm_loc.append(i)
                 
         for i in range(self.primer_pair.rlen):
-            if(MATCH_TABLE.loc[self.gen.seq[self.rpos+i], self.primer_pair.r.seq[i]]!=1):
+            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.rpos+i]]!=1):
                     rm_loc.append(i)
                 
         return fm_loc, rm_loc
@@ -75,15 +85,45 @@ class Alignment:
     def _get_missmatch_type(self):
         fm_type = []
         rm_type = []
-    
+        #TODO ask format of primers, in order to know if the gen should be compared against the compelement
         for m in self.fm_loc:
-            fm_type.append(self.gen.seq[self.fpos+m]+self.primer_pair.f.seq[m])
+            fm_type.append(self.gen.seq[self.fpos+m]+self.primer_pair.fcomplement[m])
           
         for m in self.rm_loc:
-            rm_type.append(self.gen.seq[self.rpos+m]+self.primer_pair.r.seq[m])
-            
+            rm_type.append(self.gen.seq[self.rpos+m]+self.primer_pair.rcomplement[m])
             
         return fm_type, rm_type
+    
+    def _get_missmatch_base_type(self):
+        fm_base_type = []
+        fprimer_complement = self.primer_pair.fcomplement
+        
+        for i in range(self.fm):
+            gen_nucleotide = self.fm_type[i][0]
+            f_nucleotide =fprimer_complement[self.fm_loc[i]]
+            
+            if(gen_nucleotide in self.base_type and f_nucleotide in self.base_type):
+                gen_nucleotide_base_type = self.base_type[gen_nucleotide]
+                f_nucleotide_base_type = self.base_type[f_nucleotide]
+                fm_base_type.append(gen_nucleotide_base_type+"-"+f_nucleotide_base_type)
+            else:
+                fm_base_type.append(self.base_type["Other"])
+        
+        rm_base_type = []
+        rprimer_complement = self.primer_pair.rcomplement
+        
+        for i in range(self.rm):
+            gen_nucleotide = self.rm_type[i]
+            r_nucleotide = rprimer_complement[self.rm_loc[i]]
+            
+            if(gen_nucleotide in self.base_type and r_nucleotide in self.base_type):
+                gen_nucleotide_base_type = self.base_type[gen_nucleotide]
+                r_nucleotide_base_type = self.base_type[r_nucleotide]
+                rm_base_type.append(gen_nucleotide_base_type+"-"+r_nucleotide_base_type)
+            else:
+                rm_base_type.append(self.base_type["Other"])
+                
+        return  fm_base_type, rm_base_type
     
     def __str__(self):        
         info = ("PRIME PAIR "+str(self.primer_pair.id)+"\n"+
@@ -94,70 +134,5 @@ class Alignment:
     
     def get_csv(self):
         info= [self.primer_pair.id, self.gen.id, self.primer_pair.f.id, self.primer_pair.r.id, self.fm, self.rm, 
-               self.amplicon, self.real_fpos, self.fm_loc, str(self.fm_type), str(self.real_rpos), str(self.rm_loc), str(self.rm_type)]
+               self.amplicon, self.real_fpos, str(self.fm_loc), str(self.fm_type), str(self.fm_base), self.real_rpos, str(self.rm_loc), str(self.rm_type), str(self.rm_base)]
         return info
-    
-class PrimerAlignment:
-    """
-    List of alignments, it's plausible that a primer pair aligns in more than one place in the sequence.
-    """
-    def __init__(self, primer_pair, gen):
-        self.primer_pair = primer_pair
-        self.gen = gen
-        self._alignment_list = []
-        self.len = 0
-        return
-    
-    def append(self, match):
-        if(type(match)==list):
-            self._alignment_list.extend(match)
-            self.len+=len(match)
-        else:
-            self._alignment_list.append(match)
-            self.len+=1
-        return
-    
-    def get_list(self):
-        return self._alignment_list
-    
-    def get_next_alignment(self, pair_id):
-        pass
-    
-    def __str__(self):
-        info = ""
-        for al in self._alignment_list:
-            info += str(al)
-        return info
-    
-    def write2file(self, filewriter):
-        for a in self._alignment_list:
-            filewriter.writerow(a.get_csv())
-        return
-    
-class GenAlignment:
-    """
-    List of PrimerAlignments
-    """
-    def __init__(self, gen):
-        self.gen = gen
-        self._matching_list = []
-        return
-    
-    def get_matching_list(self):
-        return self._matching_list
-    
-    def append(self, alignment_list):
-        self._matching_list.append(alignment_list)
-        return
-    
-    def __str__(self):
-        info = "------------\nFOR: "+self.gen.id+"\n-------------\n"
-        for al_list in self._matching_list:
-            info += str(al_list)
-        return info
-    
-    def write2file(self, filewriter):
-        for al_list in self._matching_list:
-            al_list.write2file(filewriter)
-            
-        return

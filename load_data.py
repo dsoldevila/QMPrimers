@@ -21,26 +21,39 @@ def load_csv_file(file, delimiter=";"):
     @returns: List of PrimerPair instances
     """
     pos = {"id": 0, "forwardPrimer": 0, "reversePrimer": 0, "fPDNA": 0, "rPDNA": 0,"ampliconMinLength": 0, "ampiconMaxLength": 0}
+    header_len = len(pos)
     primer_list = []
     with open(file, newline='') as csvfile:
         csvreader = csv.reader(csvfile, delimiter=delimiter)
         headers = next(csvreader)
-        for i in range(len(headers)): pos[headers[i]] = i 
-
+        if(len(headers) != header_len):
+            raise ValueError("Wrong header")
+        for i in range(len(headers)): 
+            if (headers[i] not in pos):
+                raise ValueError("Unknown header "+headers[i])
+            pos[headers[i]] = i 
+            
+        i = 1
         for row in csvreader:
-            fprimer = Seq(row[pos["fPDNA"]])
-            fprimer = SeqRecord(fprimer)
-            fprimer.id = row[pos["forwardPrimer"]]
-            
-            rprimer = Seq(row[pos["rPDNA"]])
-            rprimer = SeqRecord(rprimer)
-            if(True): #TODO
-                rprimer = rprimer.reverse_complement()
-            rprimer.id = row[pos["reversePrimer"]]
-            
-            primer_pair = PrimerPair(int(row[pos["id"]]), fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
-
-            primer_list.append(primer_pair)
+            i+=1
+            if(len(row) == header_len):
+                fprimer = Seq(row[pos["fPDNA"]], IUPAC.IUPACAmbiguousDNA())
+                fprimer = SeqRecord(fprimer)
+                fprimer.id = row[pos["forwardPrimer"]]
+                
+                rprimer = Seq(row[pos["rPDNA"]], IUPAC.IUPACAmbiguousDNA())
+                rprimer = SeqRecord(rprimer)
+                if(True): #TODO
+                    rprimer = rprimer.reverse_complement()
+                rprimer.id = row[pos["reversePrimer"]]
+                
+                primer_pair = PrimerPair((row[pos["id"]]), fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
+                if(check_primer_pair_integrity(primer_pair)):
+                    primer_list.append(primer_pair)
+                else:
+                    print("Error: Skipping primer pair "+primer_pair.id+", bad sequence")
+            else:
+                print("Wrong primer pair in line "+str(i))
             
     return primer_list
 
@@ -69,19 +82,38 @@ def load_bio_files(files, file_format=None, writable=False):
     
     return seq_record
 
-def store_matching_results(output_file, gen_matching_list, header=None):
-    """
-    Stores alignment results
-    @param gen_matching_list list of GenMatching instances
-    @return None
-    """
-    with open(output_file, 'w', newline='') as csvfile:
-        filewriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
-        if(header):
-            filewriter.writerow(header)
-        for gm in gen_matching_list:
-            gm.write2file(filewriter)   
-    return
+def check_primer_pair_integrity(primer_pair):
+    for nuc in primer_pair.f:
+        if(nuc not in IUPAC_AMBIGUOUS_DNA):
+            return False
+    for nuc in primer_pair.r:
+        if(nuc not in IUPAC_AMBIGUOUS_DNA):
+            return False
+    
+    return True
+    
+
+def remove_bad_gens(gen_record):
+    bio_default = {"id":"<unknown id>", "name":"<unknown name>", "description":"<unknown description>"}
+    
+    for genkey in gen_record:
+        gen = gen_record[genkey]
+        if(gen.id == None or gen.id == bio_default["id"]): 
+             print("/!\ "+gen.id+"has no id")
+        if(gen.name == None or gen.name == bio_default["name"]):
+            print("/!\ "+gen.id+"has no name")
+        if(gen.description == None or gen.description == bio_default["description"]):
+            print("/!\ "+gen.id+"has no name")
+        for nucleotide in gen.seq:
+            if nucleotide not in IUPAC_AMBIGUOUS_DNA:
+                print("!!!: "+gen.id+" HAS BAD SEQUENCE!, trying to remove it...")
+                try:
+                    gen_record.pop(genkey, None)
+                except:
+                    print("!!!: "+gen.id+" couldn't be removed, it will be skipped during match")
+                break
+            
+    return gen_record
     
 
 if (__name__=="__main__"):

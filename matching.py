@@ -78,18 +78,18 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 
     return result
 
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers):
+def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template):
     """
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
     """
-    result = PrimerAlignment(primer, gen)
     max_amplicon = primer.max_amplicon
     search_limit = primer.rlen+max_amplicon
     len_gen = len(gen)
     if(primer.flen+search_limit>len_gen): #If primer pair plus max_amplicon is larger than the genomic sequence, check if with min_amplicon the same happens
         if(primer.flen+primer.rlen+primer.min_amplicon>len_gen): #If primer pair plus min_amplicon is larger than the genomic sequence, abort
-            return result
+            print("Error: Skipping gen "+gen.id+" primer pair "+str(primer.id))
+            return template
         else: #else modify max_amplicon to keep the primer_pair within the limits
             max_amplicon = len_gen - (primer.flen + primer.rlen)
     
@@ -97,11 +97,11 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
     
     alignments = []
     
-    forward_matchings = _compute_primer_matching(max_miss_f, primer.f, primer.flen, gen[0:-search_limit]) #compute forward primer best matches
+    forward_matchings = _compute_primer_matching(max_miss_f, primer.f.seq, primer.flen, gen.seq[0:-search_limit]) #compute forward primer best matches
     for fm in forward_matchings: #for each match with forward primer, compute reverse matchings
         start = fm[2]+primer.min_amplicon #forward match start + len(forward) + min amplicon
         end = fm[2]+max_amplicon+primer.rlen #f match start + len(f) + max amplicon + len(r)
-        reverse_matchings = _compute_primer_matching(max_miss_r, primer.r, primer.rlen, gen[start:end])
+        reverse_matchings = _compute_primer_matching(max_miss_r, primer.r.seq, primer.rlen, gen.seq[start:end])
         for rm in reverse_matchings: #get the best or bests matche(s) with this primer pair (alingments)
             score = fm[0] + rm[0]
             if (score > best_score): #if the score is better, erase the previous bests results
@@ -115,10 +115,11 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         fm = al[0]
         rm= al[1]
         amplicon = primer.min_amplicon+rm[1]
-        result.append(Alignment(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
-                                primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE))
-            
-    return result
+        alignment = Alignment(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
+                                primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE) #TODO, creating a temp class overkill?
+        template.loc[template.shape[0]] = alignment.get_csv()
+        
+    return template
 
 def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hanging_primers=False):
     """
@@ -127,20 +128,37 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
     """
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
+    
+    for pp in primer_pairs:
+        pp.f.seq = np.array(pp.f)
+        pp.r.seq = np.array(pp.r)
         
-    gen_alignment_list = []
     size = len(gen_record)
     i = 0
+    template = pd.DataFrame(columns=["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
+                                     "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base"])
+    
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")
         i +=1
         gen = gen_record[gen_key]
-        gen_alignment = GenAlignment(gen)
-        for primer in primer_pairs:
-            alignment_list = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers)
-            gen_alignment.append(alignment_list)
-        gen_alignment_list.append(gen_alignment)
-    return gen_alignment_list
+        gen.seq = np.array(gen.seq)
+        for pp in primer_pairs:
+            try:
+                template = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template)
+            except:
+                print("Error: Skipping gen "+gen.id+" primer pair "+str(pp.id))
+    return template
+
+def store_matching_results(output_file, template, header=None):
+    """
+    Stores alignment results
+    @param gen_matching_list list of GenMatching instances
+    @return None
+    """
+    template.to_csv(output_file, columns=header, index_label="id");
+    
+    return
 
 if(__name__=="__main__"):
     

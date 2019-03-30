@@ -10,6 +10,7 @@ The purpose of this code is to check if this program is working properly
 import load_data as ld
 from common import *
 import matching as m
+import interface as i
 
 import cProfile
 import pstats
@@ -339,13 +340,20 @@ def performance_test(primer_pairs, gen_record):
     stats = pstats.Stats('temp.profile')
     stats.strip_dirs().sort_stats('cumtime').print_stats()
     
-    
-
+def new_single_test():
+    parameters = {"gen": ["Data/sbog_test.fasta"], "primer_pairs": "Test_data/wrongP&PP.csv", 
+                  "output_file": "output.csv", "forward missmatches": 5,
+                  "reverse missmatches": 5, "hanging primers": False}
+    template = i.compute(parameters)
+    try:
+        print(template.head())
+    except:
+        print("None")
 
 
 if(__name__=="__main__"):
     time1 = time.time()
     #test_all_pairs()
-    single_test()
+    new_single_test()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
