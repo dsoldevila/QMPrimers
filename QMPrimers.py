@@ -19,6 +19,16 @@ parameters = {"gen": "", "primer_pairs": "", "output_file": os.path.join(os.getc
 output_info = {"primerPair": True,"fastaid": True,"primerF": True,"primerR": True,"mismFT": True,"mismRT": True,"amplicon": True, "F_pos": True,
                "mismFT_loc": True, "mismFT_type": True, "mismFT_base": True, "R_pos": True, "mismRT_loc": True, "mismRT_type": True, "mismRT_base": True}
 
+class TextRedirector(object):
+    def __init__(self, widget, tag="stdout"):
+        self.widget = widget
+        self.tag = tag
+
+    def write(self, str):
+        self.widget.configure(state="normal")
+        self.widget.insert("end", str, (self.tag,))
+        self.widget.yview(END)
+        
 class GUI(Frame):
     def __init__(self, parent=Frame):
         
@@ -113,6 +123,17 @@ class GUI(Frame):
         """Save"""
         self.button_s = Button(self.buttons_frame, text="Save", command=self.store_results)
         self.button_s.pack(expand=YES, fill=X)
+        
+        
+        """Terminal"""
+        self.terminal_frame = Frame(self.main_frame)
+        self.terminal_frame.pack(expand=YES, fill=X)
+        self.text = Text(self.terminal_frame, wrap="word")
+        self.text.pack(side="top", fill="both", expand=True)
+        self.text.tag_configure("stderr", foreground="#b22222")
+                            
+        sys.stdout = TextRedirector(self.text, "stdout")
+        #sys.stderr = TextRedirector(self.text, "stderr")
         
         return
         
@@ -234,9 +255,12 @@ if (__name__=="__main__"):
                 header.append(key)
         save_template_primer_missmatches(parameters["output_file"], template, header=header)
     else:
+        saved_sys_stdout = sys.stdout
+        saved_sys_stderr = sys.stderr
         root = Tk()
         root.title("QMPrimers")
         root.geometry('800x400')
         main_window = GUI(root)
         root.mainloop()
-    
+        sys.stdout = saved_sys_stdout
+        sys.stderr = saved_sys_stderr

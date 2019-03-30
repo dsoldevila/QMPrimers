@@ -99,18 +99,18 @@ def remove_bad_gens(gen_record):
     for genkey in gen_record:
         gen = gen_record[genkey]
         if(gen.id == None or gen.id == bio_default["id"]): 
-             print("/!\ "+gen.id+"has no id")
+             print("Warning: "+gen.id+"has no id")
         if(gen.name == None or gen.name == bio_default["name"]):
-            print("/!\ "+gen.id+"has no name")
+            print("Warning: "+gen.id+"has no name")
         if(gen.description == None or gen.description == bio_default["description"]):
-            print("/!\ "+gen.id+"has no name")
+            print("Warning: "+gen.id+"has no name")
         for nucleotide in gen.seq:
             if nucleotide not in IUPAC_AMBIGUOUS_DNA:
-                print("!!!: "+gen.id+" HAS BAD SEQUENCE!, trying to remove it...")
+                print("Error: "+gen.id+" HAS BAD SEQUENCE!, trying to remove it...")
                 try:
                     gen_record.pop(genkey, None)
                 except:
-                    print("!!!: "+gen.id+" couldn't be removed, it will be skipped during match")
+                    print("Warning: "+gen.id+" couldn't be removed, it will be skipped during match")
                 break
             
     return gen_record

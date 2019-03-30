@@ -88,7 +88,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
     len_gen = len(gen)
     if(primer.flen+search_limit>len_gen): #If primer pair plus max_amplicon is larger than the genomic sequence, check if with min_amplicon the same happens
         if(primer.flen+primer.rlen+primer.min_amplicon>len_gen): #If primer pair plus min_amplicon is larger than the genomic sequence, abort
-            print("Error: Skipping gen "+gen.id+" primer pair "+str(primer.id))
+            print("Warning: Skipping gen "+gen.id+" primer pair "+str(primer.id))
             return template
         else: #else modify max_amplicon to keep the primer_pair within the limits
             max_amplicon = len_gen - (primer.flen + primer.rlen)
