@@ -135,8 +135,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
         
     size = len(gen_record)
     i = 0
-    template = pd.DataFrame(columns=["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
-                                     "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base"])
+    template = pd.DataFrame(columns=TEMPLATE_HEADER)
     
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")

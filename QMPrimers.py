@@ -14,10 +14,23 @@ from tkinter import *
 import os
 import sys
 import _thread
+import pandas as pd
 
-parameters = {"gen": "", "primer_pairs": "", "output_file": os.path.join(os.getcwd(),"output.csv"), "forward missmatches": 5, "reverse missmatches": 5, "hanging primers": False} #TODO Matching Type
-output_info = {"primerPair": True,"fastaid": True,"primerF": True,"primerR": True,"mismFT": True,"mismRT": True,"amplicon": True, "F_pos": True,
-               "mismFT_loc": True, "mismFT_type": True, "mismFT_base": True, "R_pos": True, "mismRT_loc": True, "mismRT_type": True, "mismRT_base": True}
+output_info = {}
+for key in TEMPLATE_HEADER:
+    output_info[key] = True
+
+parameters = [
+        ["gen", "", "Genome file dir, no support for multiple files in cl", "-gf"],
+        ["primer_pairs", "", "Primer pairs file dir. A particular header must be used in the file", "-pf"],
+        ["output_file", os.path.join(os.getcwd(),"output.csv"), "Location of the output file", "-o"],
+        ["forward missmatches", 5, "Maximum number of missmatches allowed in the forward primer", "-fm"],
+        ["reverse missmatches", 5, "Maximum number of missmatches allowed in the reverse primer", "-rm"], 
+        ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging"],
+        ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki"],
+        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku"]]
+                        
+parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag"])
 
 class TextRedirector(object):
     def __init__(self, widget, tag="stdout"):
@@ -56,14 +69,14 @@ class GUI(Frame):
         
         self.entries = {}
         self.button = {}
-        for pkey in self.parameters:
-            if(isinstance(self.parameters[pkey], str)):
+        for name in self.parameters.index:
+            if(isinstance(self.parameters.loc[name, "value"], str)):
                 block = Frame(self.file_frame)
                 block.pack(expand=YES, fill=BOTH)
-                self.entries[pkey] = Entry(block)
-                self.entries[pkey].pack(side=LEFT, expand=YES, fill=X)
-                self.button[pkey] = Button(block, text="Open")
-                self.button[pkey].pack(side=LEFT, expand=NO, fill=X)
+                self.entries[name] = Entry(block)
+                self.entries[name].pack(side=LEFT, expand=YES, fill=X)
+                self.button[name] = Button(block, text="Open")
+                self.button[name].pack(side=LEFT, expand=NO, fill=X)
                 
         self.entries["gen"].insert(0, "<No Genome>")
         self.entries["gen"].bind("<Return>", (lambda event: self.update_bio_files(self.entries["gen"].get())))
@@ -73,7 +86,7 @@ class GUI(Frame):
         self.entries["primer_pairs"].bind("<Return>", (lambda event: self.update_csv_file(self.entries["primer_pairs"].get())))
         self.button["primer_pairs"].config(command=(lambda: self.update_primer_file(self._open_file())))
         
-        self.entries["output_file"].insert(0, self.parameters["output_file"])
+        self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
         self.entries["output_file"].bind("<Return>", (lambda event: self.set_output_file(self.entries["output_file"].get())))
         self.button["output_file"].config(text="Set", command=(lambda: self.set_output_file(self.entries["output_file"].get())))
             
@@ -83,20 +96,20 @@ class GUI(Frame):
         self.other_frame.pack(side=LEFT, expand=YES, fill=X)
         Label(self.other_frame, text="Parameters").pack()
         self.other_param = {}
-        for pkey in self.parameters:
-            if(isinstance(self.parameters[pkey], bool)):
+        for name in self.parameters.index:
+            if(isinstance(self.parameters.loc[name, "value"], bool)):
                 other = BooleanVar()
-                Checkbutton(self.other_frame, variable=other, text=pkey).pack(expand=YES)
-                other.set(self.parameters[pkey])
-                self.other_param[pkey] = other
-            elif(isinstance(self.parameters[pkey], int)):
+                Checkbutton(self.other_frame, variable=other, text=name).pack(expand=YES)
+                other.set(self.parameters.loc[name, "value"])
+                self.other_param[name] = other
+            elif(isinstance(self.parameters.loc[name, "value"], int)):
                 block = Frame(self.other_frame)
                 block.pack(expand=YES)
-                Label(block, text=pkey).pack(side=RIGHT)
+                Label(block, text=name).pack(side=RIGHT)
                 other = StringVar()
                 Entry(block, textvariable=other).pack(side=LEFT)
-                other.set(self.parameters[pkey])
-                self.other_param[pkey] = other
+                other.set(self.parameters.loc[name, "value"])
+                self.other_param[name] = other
         
         """Output info"""
         self.output_frame = Frame(self.main_frame)
@@ -153,7 +166,7 @@ class GUI(Frame):
         if(input_files): #is not None
             self.entries["gen"].delete(0, END)
             self.entries["gen"].insert(0, str(input_files))
-            self.parameters["gen"] = input_files
+            self.parameters.loc["gen", "value"] = input_files
         return
     
     def update_primer_file(self, input_files):
@@ -163,14 +176,14 @@ class GUI(Frame):
         if(input_files): #is not None
             self.entries["primer_pairs"].delete(0, END)
             self.entries["primer_pairs"].insert(0, str(input_files))
-            self.parameters["primer_pairs"] = input_files[0]
+            self.parameters.loc["primer_pairs", "value"] = input_files[0]
         return
     
     def set_output_file(self, output_file):
         if(os.path.isabs(output_file)):
-            self.parameters["output_file"] = output_file
+            self.parameters.loc["output_file", "value"] = output_file
         else:
-            self.parameters["output_file"] = output_file = os.path.join(self.current_directory,output_file)
+            self.parameters.loc["output_file", "value"] = output_file = os.path.join(self.current_directory,output_file)
         return
     
     def compute_in_thread(self):
@@ -179,7 +192,7 @@ class GUI(Frame):
     
     def compute(self):
         for pkey in self.other_param:
-            self.parameters[pkey] = self.other_param[pkey].get()
+            self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
        
         self.template = compute(self.parameters)
         
@@ -191,69 +204,109 @@ class GUI(Frame):
         for key in self.output_info:
             if(self.output_info[key].get()):
                 header.append(key)
-        save_template_primer_missmatches(self.parameters["output_file"], self.template, header=header)
+        save_template_primer_missmatches(self.parameters.loc["output_file", "value"], self.template, header=header)
         print("Saved")
         return
 
-def get_help():
-    parameters_help = {"--help": "Display this list", 
-                       "-mf <number>": "\t\tMaximum number of missmatches allowed in the forward primer, default 5", 
-                       "-mr <number>": "\t\tMaximum number of missmatches allowed in the reverse primer, default 5", 
-                       "(*) -gf <path/to/file>": "\tLocation of the genome file, currently no support for multiple files in command line",
-                       "-gformat <string>": "\t\t(NOT IMPLEMENTED, Optional) Format of the genome file (fasta, etc)", 
-                       "(*) -pf </path/to/file>": "\tLocation of the primer pairs, the following header must be included in the file. The order does not matter:",
-                       "\tFORMAT": "\t\tid;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength", 
-                       "--nogui": "\t\t\tGUI is not loaded", 
-                       "--hanging-primers": "\t\tPrimer pairs are allowed to match between [0-mf,len(genome)+mr] instead of just between the length of the genome",
-                       "-info <multiple strings>": "\tSelect which info to output, all info by default\n\t"+str(output_info.keys()),
-                       "-o </path/to/output": "\t\t./out.csv is the default path",
-                       "(*)": "Parameters marked with this are mandatory, the other either have a default value or are optional"}
+def get_help(paramaters):
+    output_info_keys = [key for key in output_info.keys()]
+    other_info = {"-info <multiple strings>": "\tSelect which info to output, all info by default\n\t"+str(output_info_keys),
+                  "PRIMER PAIRS HEADER": "tid;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength"}
 
     print("QMPRIMERS HELP PAGE")
+    pd.options.display.max_colwidth = 100
+    print(paramaters.to_string())
 
-    for param in parameters_help:
-        print(param, ": ", parameters_help[param])
+    for param in other_info:
+        print(param, ": ", other_info[param])
     return
 
 if (__name__=="__main__"):
-    only_cl_param = {"help": False, "command_line": False}
-    all_parameters = {**parameters, **only_cl_param}
-    flags = {"--help": "help", "--nogui": "command_line", "-mf": "forward missmatches", "-mr": "reverse missmatches", "-gf": "gen", 
-             "-gformat": None, "-pf": "primer_pairs", "--hanging-primers": "hanging primers", "-o": "output_file"}
+    only_cl_parameters = [
+        ["help", False, "Display this list", "--help"],
+        ["command_line", False, "Triggers the command line mode", "--nogui"]]
+    cl_parameters = parameters.copy()
+    for param in only_cl_parameters:
+        cl_parameters.loc[param[0]] = param[1:]
+        
+    flags = cl_parameters["flag"].values
    
     i = 1
     nargs = len(sys.argv)
     
+    last_option= None
+    
+    while i < nargs:
+        argv = sys.argv[i]
+        if(last_option==None):
+            if(argv not in flags):
+                if(argv=="-info"):
+                    last_option = "info"
+                    for key in output_info: output_info[key] = False
+                else:
+                    print("Parameter "+str(sys.argv[i])+" unknown")
+                    print("Use --help to display the manual")
+                    exit();
+            elif(argv[:2]=="--"):
+                index = cl_parameters[cl_parameters["flag"]==sys.argv[i]].index
+                cl_parameters.loc[index, "value"] = True
+            elif(argv[0]=="-"):
+                last_option = cl_parameters[cl_parameters["flag"]==sys.argv[i]].index.values
+                #index = cl_parameters[cl_parameters["flag"]==sys.argv[i]].index
+                #cl_parameters.loc[index, "value"] = sys.argv[i+1]
+            i+=1
+        else:
+            if(last_option == "info" and argv in output_info):
+                output_info[argv] = True
+                i+=1
+            elif(last_option in cl_parameters.index.values):
+                cl_parameters.loc[last_option, "value"] = argv
+                last_option = None
+                i+=1
+            else:
+                last_option = None
+    
+    cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen", "value"]) 
+    
+    """
     while i < nargs:
         argv = sys.argv[i]
         if(argv not in flags):
+            
             if(argv=="-info"): #Set custom output
                 for key in output_info: output_info[key] = False
                 i+=1
                 argv = sys.argv[i]
-                while(argv[0]!="-"):
+                while(sys.argv[i+1]!="-"):
                     output_info[argv] = True
+                    i+=1
+                    argv = sys.argv[i]
+                output_info[argv] = True
+                print(output_info)
+            
             else:
                 print("Parameter "+str(sys.argv[i])+" unknown")
                 print("Use --help to display the manual")
                 exit();
         if(argv[:2]=="--"):
-            all_parameters[flags[sys.argv[i]]] = True
+            index = cl_parameters[cl_parameters["flag"]==sys.argv[i]].index
+            cl_parameters.loc[index, "value"] = True
         elif(argv[0]=="-"):
-             all_parameters[flags[sys.argv[i]]] = sys.argv[i+1]
-             i+=1
+            index = cl_parameters[cl_parameters["flag"]==sys.argv[i]].index
+            cl_parameters.loc[index, "value"] = sys.argv[i+1]
+            i+=1
         i+=1  
-        
-    if(all_parameters[flags["--help"]]):
-        get_help()
-    elif(all_parameters[flags["--nogui"]]):
-        all_parameters["gen"] = (all_parameters["gen"],) #TODO multiple files not implemented in cl
-        template = compute(all_parameters)
+    """ 
+    if(cl_parameters.loc["help", "value"]):
+        get_help(cl_parameters)
+    elif(cl_parameters.loc["command_line","value"]):
+        cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
+        template = compute(cl_parameters)
         header = []
         for key in output_info:
             if(output_info[key]):
                 header.append(key)
-        save_template_primer_missmatches(parameters["output_file"], template, header=header)
+        save_template_primer_missmatches(cl_parameters.loc["output_file", "value"], template, header=header)
     else:
         saved_sys_stdout = sys.stdout
         saved_sys_stderr = sys.stderr

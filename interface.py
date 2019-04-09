@@ -15,10 +15,13 @@ def compute(parameters):
     @Brief calls the matching algorithms for both GUI and command line modes
     """
     template = None
-    gen_record = load_gen_record(parameters["gen"], writable=parameters["hanging primers"], check_integrity=True)
-    primer_pairs = load_primer_pairs(parameters["primer_pairs"])
+    gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
+                                 parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
+    primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
     if(gen_record!=None and primer_pairs!=None):
-        template = m.compute_gen_matching(int(parameters["forward missmatches"]), int(parameters["reverse missmatches"]), primer_pairs, gen_record, hanging_primers=parameters["hanging primers"])
+        template = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), 
+                                          int(parameters.loc["reverse missmatches", "value"]), primer_pairs, gen_record, 
+                                          hanging_primers=parameters.loc["hanging primers", "value"])
 
     return template
 
@@ -26,10 +29,12 @@ def save_template_primer_missmatches(output_file, template, header=None):
     m.store_matching_results(output_file, template, header)
     return
 
-def load_gen_record(gen_file, writable=False, check_integrity=False, file_format=None):
+def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers):
+    if(check_integrity): print("INTEGRITY CHECKED")
     gen_record = None
     try:
-        gen_record = ld.load_bio_files(gen_file, writable=writable, file_format=file_format)
+        gen_record = ld.load_bio_files(gen_file, writable=check_integrity or check_uppercase, 
+                                       check_uppercase=check_uppercase, file_format=None)
     except:
         print("Error at loading gen record")
     if(check_integrity): gen_record = ld.remove_bad_gens(gen_record)

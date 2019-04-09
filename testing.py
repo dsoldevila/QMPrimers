@@ -145,80 +145,66 @@ def test_all_pairs():
     global_check = {"amplicon": 1, "missf": 1, "missr":1}
     check = {"amplicon": 1, "missf": 1, "missr":1}
     gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=True)
-    #gen_record = split(gen_record, 0.005)
+    gen_record = split(gen_record, 0.01)
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     
-    gen_alignment_list = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=True)
+    gen_matching_table = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=True)
     
     header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_type", "R_pos", "mismRT_type"]
     
-    better_alignment_list = []
-    correct_alignment_list = []
-    not_tested_alignment_list = []
-    #ld.store_matching_results("Data/output_test.csv", gen_alignment_list, header)
     
-    info = {"total_gens": len(gen_record), "gens_skipped":0, "alignments_processed": 0, "multiple_alignment_cases":0, "better_alignments":0}
+    info = {"total_gens": len(gen_record), "matches_skipped":0, "alignments_processed": 0, "multiple_alignment_cases":0, "better_alignments":0}
 
-    for gm in gen_alignment_list:
-        matching_list = gm.get_matching_list()
-        for al_list in matching_list:
-            if(al_list.len>1):
-                print (gm.gen.id)
-                print("PRIMER PAIR: ", al_list.primer_pair.id)
-                print("multiple alignments")
-                info["multiple_alignment_cases"]+=1
-            if(al_list.len!=0):
-                #print("PRIMER PAIR: ", al_list.primer_pair.id)
-                al = al_list.get_list()
-                al = al[0]
-                pp = primer_pairs[int(al.primer_pair.id)-1]
-                target = trusted_results.loc[trusted_results['fastaid'] == gm.gen.description]
-                if(target.empty):
-                    #print("Target empty, skipping this gen...")
-                    info["gens_skipped"]+=1
-                    not_tested_alignment_list.append(al)
-                    break
+    for index in gen_matching_table.index:
+        genid = gen_matching_table.iloc[index].loc["fastaid"]
+        pp = gen_matching_table.iloc[index].loc["primerPair"]
+        target = trusted_results.loc[trusted_results['fastaid'].str.contains(genid[4:-1])]
+        target = target.loc[target['primerPair'] == int(pp)]
+        if(target.empty):
+            #print("Target empty, skipping this gen...")
+            info["matches_skipped"]+=1
+            #Add them to not checked list
+        else:
+            pp = primer_pairs[int(pp)-1]
+            info["alignments_processed"]+=1
+            #amplicon
+            amplicon = gen_matching_table.iloc[index].loc["amplicon"]
+            if(amplicon < pp.min_amplicon or amplicon > pp.max_amplicon):  
+                print (genid)
+                print("PRIMER PAIR: ", pp.id)
+                print("Amplicon outside range")
+                print(amplicon, pp.min_amplicon, pp.max_amplicon)
+                global_check["amplicon"]=0
+                check["amplicon"]=0
+            if(amplicon != target['long'].iat[0]):
+                print (genid)
+                print("PRIMER PAIR: ", pp.id)
+                print("Amplicon not matching")
+                global_check["amplicon"]=0
+                check["amplicon"]=0
+                
+            fm = target['mismFT'].iat[0]
+            rm = target['mismRT'].iat[0]
+            #fm
+            if(gen_matching_table.iloc[index].loc["mismFT"] > fm):
+                print (genid)
+                print("PRIMER PAIR: ", pp.id)
+                print("Bad forward matching")
+                global_check["missf"]=0
+                check["missf"]=0
+            #rm
+            if(gen_matching_table.iloc[index].loc["mismRT"] > rm):
+                print (genid)
+                print("PRIMER PAIR: ", pp.id)
+                print("Bad reverse matching")
+                global_check["missr"]=0
+                check["missr"]=0
+            if 0 not in check.values(): #if everything is correct check if the result found is better
+                if(gen_matching_table.iloc[index].loc["mismFT"]+gen_matching_table.iloc[index].loc["mismRT"] < fm+rm):
+                    info["better_alignments"]+=1
                 else:
-                    target = target.loc[target['primerPair']==al.primer_pair.id]
-                    if(not target.empty):
-                        info["alignments_processed"]+=1
-                        #amplicon
-                        if(al.amplicon < pp.min_amplicon or al.amplicon > pp.max_amplicon):  
-                            print (gm.gen.id)
-                            print("PRIMER PAIR: ", al_list.primer_pair.id)
-                            print("Amplicon outside range")
-                            print(al.amplicon, pp.min_amplicon, pp.max_amplicon)
-                            global_check["amplicon"]=0
-                            check["amplicon"]=0
-                        if(al.amplicon != target['long'].iat[0]):
-                            print (gm.gen.id)
-                            print("PRIMER PAIR: ", al_list.primer_pair.id)
-                            print("Amplicon not matching")
-                            global_check["amplicon"]=0
-                            check["amplicon"]=0
-                            
-                        fm = target['mismFT'].iat[0]
-                        rm = target['mismRT'].iat[0]
-                        #fm
-                        if(al.fm > fm):
-                            print (gm.gen.id)
-                            print("PRIMER PAIR: ", al_list.primer_pair.id)
-                            print("Bad forward matching")
-                            global_check["missf"]=0
-                            check["missf"]=0
-                        #rm
-                        if(al.rm > rm):
-                            print (gm.gen.id)
-                            print("PRIMER PAIR: ", al_list.primer_pair.id)
-                            print("Bad reverse matching")
-                            global_check["missr"]=0
-                            check["missr"]=0
-                        if 0 not in check.values(): #if everything is correct check if the result found is better
-                            if(al.fm+al.rm < fm+rm):
-                                info["better_alignments"]+=1
-                                better_alignment_list.append(al)
-                            else:
-                                correct_alignment_list.append(al)
+                    info["better_alignments"]+=0
+                    #correct_alignment_list.append(al)
                             
     for info_key in info:
         print(info_key, info[info_key])
@@ -230,12 +216,13 @@ def test_all_pairs():
         print("SUCCESS!")
     else:
         print("TEST FAILED")
-        
+    """
     store_results("Test_data/better_alignments.csv", better_alignment_list, header)
     store_results("Test_data/correct_alignments.csv", correct_alignment_list, header)
     store_results("Test_data/not_tested_alignments.csv", not_tested_alignment_list, header)
     ld.store_matching_results("Test_data/full_alignments.csv", gen_alignment_list, header)
-
+    """
+    
     return
 
 def check_better_alignments():
@@ -349,11 +336,14 @@ def new_single_test():
         print(template.head())
     except:
         print("None")
+        
+def check_uppercase():
+    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"], check_uppercase=True) 
+    print(gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"])
 
 
 if(__name__=="__main__"):
     time1 = time.time()
-    #test_all_pairs()
-    new_single_test()
+    test_all_pairs()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)

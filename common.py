@@ -9,6 +9,10 @@ import numpy as np
 import pandas as pd
 
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
+TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
+                                     "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base"]
+
+
 
 class PrimerPair:
     def __init__(self, pair_id, fprimer, rprimer, min_amplicon, max_amplicon):
@@ -32,7 +36,7 @@ class Alignment:
     """
     base_type = {"A":"Pur", "C":"Pyr", "G":"Pur", "T":"Pyr", "R":"Pur", "Y":"Pyr", "Other": "Ind."}
 
-    def __init__(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
+    def __init__(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses, MATCH_TABLE):
     
         """
         self.gen = genomic sequence
@@ -57,6 +61,7 @@ class Alignment:
         self.fm = fmisses
         self.rm = rmisses
         self.amplicon = amplicon
+        
         
         self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
         self.fm_type, self.rm_type = self._get_missmatch_type()
@@ -124,6 +129,7 @@ class Alignment:
                 rm_base_type.append(self.base_type["Other"])
                 
         return  fm_base_type, rm_base_type
+            
     
     def __str__(self):        
         info = ("PRIME PAIR "+str(self.primer_pair.id)+"\n"+

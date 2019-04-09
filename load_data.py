@@ -57,12 +57,13 @@ def load_csv_file(file, delimiter=";"):
             
     return primer_list
 
-def load_bio_files(files, file_format=None, writable=False):
+def load_bio_files(files, file_format=None, writable=False, check_uppercase=False):
     """
     This function loads any file whose format is supported by Biopython.
     @return: Dictionary with genomic sequences
     """
     #TODO check all files, not only de first one
+    if(check_uppercase==True): writable=True #to modify seqrecord, make it writable is needed
     seq_record = {}
     if(path.isfile(files[0])):
         if(file_format==None): #if format not specified, use extension
@@ -79,7 +80,9 @@ def load_bio_files(files, file_format=None, writable=False):
                 if(isinstance(files, tuple)):
                     files = files[0]
                 seq_record = SeqIO.index_db(":memory:", files, file_format) #TODO specify alphabet? It seems it's only used to catch methodology erros
-    
+            if(check_uppercase):
+                for kseq in seq_record:
+                    seq_record[kseq] = seq_record[kseq].upper()
     return seq_record
 
 def check_primer_pair_integrity(primer_pair):
@@ -96,7 +99,8 @@ def check_primer_pair_integrity(primer_pair):
 def remove_bad_gens(gen_record):
     bio_default = {"id":"<unknown id>", "name":"<unknown name>", "description":"<unknown description>"}
     
-    for genkey in gen_record:
+    genkeys = gen_record.keys()
+    for genkey in genkeys:
         gen = gen_record[genkey]
         if(gen.id == None or gen.id == bio_default["id"]): 
              print("Warning: "+gen.id+"has no id")
