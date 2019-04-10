@@ -13,6 +13,7 @@ from Bio.Alphabet import IUPAC
 from os import path
 import csv
 from common import *
+import pandas as pd
 
 
 def load_csv_file(file, delimiter=";"):
@@ -118,6 +119,10 @@ def remove_bad_gens(gen_record):
                 break
             
     return gen_record
+
+def load_template(template_file):
+    template = pd.read_csv(template_file)
+    return
     
 
 if (__name__=="__main__"):

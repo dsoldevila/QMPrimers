@@ -49,5 +49,11 @@ def load_primer_pairs(primer_pairs_file):
         
     return primer_pairs
 
+def load_template(template_file):
+    template = ld.load_template(template_file)
+    print(template.head(5))
+    #print("This func loads the template. Not implemented")
+    return
+
 def simulate():
     return

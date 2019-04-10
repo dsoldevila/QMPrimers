@@ -36,7 +36,10 @@ class Alignment:
     """
     base_type = {"A":"Pur", "C":"Pyr", "G":"Pur", "T":"Pyr", "R":"Pur", "Y":"Pyr", "Other": "Ind."}
 
-    def __init__(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses, MATCH_TABLE):
+    def __init__():
+        return
+    
+    def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
     
         """
         self.gen = genomic sequence
@@ -66,6 +69,40 @@ class Alignment:
         self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
         self.fm_type, self.rm_type = self._get_missmatch_type()
         
+        self.fm_base, self.rm_base = self._get_missmatch_base_type()
+        
+        return
+    
+    def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
+        #TODO instead of making a complete output file, calculate only the paramaters needed by the user
+        self.gen = gen
+        self.primer_pair = primer_pair
+        self.real_fpos = int(real_fpos)
+        self.real_rpos = int(real_rpos)
+        
+        if(self.real_fpos == None):
+            raise ValueError("Error: Froward's position NULL")
+            
+        if(self.fmisses == None):
+            self.fmisses = self.get_missmatches("f")
+        else:
+            self.fmisses = fmisses
+            
+        if(self.rmisses == None):
+            self.rmisses = self.get_missmatches("r")
+        else:
+            self.rmisses = rmisses
+            
+        if(self.amplicon == None):
+            if(self.real_rpos == None):
+                raise ValueError("Error Couldn't determine Reverse's position")
+            else:
+                self.amplicon = self.real_rpos - self.real_fpos
+        else:
+            self.amplicon = amplicon
+        
+        self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
+        self.fm_type, self.rm_type = self._get_missmatch_type()        
         self.fm_base, self.rm_base = self._get_missmatch_base_type()
         
         return

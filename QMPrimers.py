@@ -15,20 +15,22 @@ import os
 import sys
 import _thread
 import pandas as pd
+from GUI import *
 
 output_info = {}
 for key in TEMPLATE_HEADER:
     output_info[key] = True
 
 parameters = [
-        ["gen", "", "Genome file dir, no support for multiple files in cl", "-gf"],
-        ["primer_pairs", "", "Primer pairs file dir. A particular header must be used in the file", "-pf"],
+        ["gen", "<No Genome>", "Genome file dir, no support for multiple files in cl", "-gf"],
+        ["primer_pairs", "<No Primer Pairs>", "Primer pairs file dir. A particular header must be used in the file", "-pf"],
         ["output_file", os.path.join(os.getcwd(),"output.csv"), "Location of the output file", "-o"],
         ["forward missmatches", 5, "Maximum number of missmatches allowed in the forward primer", "-fm"],
         ["reverse missmatches", 5, "Maximum number of missmatches allowed in the reverse primer", "-rm"], 
         ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging"],
         ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki"],
-        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku"]]
+        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku"],
+        ["csv_template", "<No Precomputed Template>", "Precomputed missmatching template", "-i"]]
                         
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag"])
 
@@ -55,158 +57,25 @@ class GUI(Frame):
         self.main_menu = Menu(parent)
         parent.config(menu=self.main_menu)
         file = Menu(self.main_menu, tearoff=False)
-        file.add_command(label="New")
+        file.add_command(label="Option 1")
+        file.add_command(label="Option 2...")
         self.main_menu.add_cascade(label="File", menu=file)
         
-        """Frame containing Files and Other Parameters frames"""
-        self.first_row_frame = Frame(self.main_frame)
-        self.first_row_frame.pack(expand=YES, fill=BOTH)
         
-        """Select Files Frame"""
-        self.file_frame = Frame(self.first_row_frame)
-        self.file_frame.pack(side=LEFT, expand=YES, fill=X)
-        Label(self.file_frame, text="Files").pack()
-        
-        self.entries = {}
-        self.button = {}
-        for name in self.parameters.index:
-            if(isinstance(self.parameters.loc[name, "value"], str)):
-                block = Frame(self.file_frame)
-                block.pack(expand=YES, fill=BOTH)
-                self.entries[name] = Entry(block)
-                self.entries[name].pack(side=LEFT, expand=YES, fill=X)
-                self.button[name] = Button(block, text="Open")
-                self.button[name].pack(side=LEFT, expand=NO, fill=X)
-                
-        self.entries["gen"].insert(0, "<No Genome>")
-        self.entries["gen"].bind("<Return>", (lambda event: self.update_bio_files(self.entries["gen"].get())))
-        self.button["gen"].config(command=(lambda: self.update_bio_files(self._open_file())))
-        
-        self.entries["primer_pairs"].insert(0, "<No Primer Pairs>")
-        self.entries["primer_pairs"].bind("<Return>", (lambda event: self.update_csv_file(self.entries["primer_pairs"].get())))
-        self.button["primer_pairs"].config(command=(lambda: self.update_primer_file(self._open_file())))
-        
-        self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
-        self.entries["output_file"].bind("<Return>", (lambda event: self.set_output_file(self.entries["output_file"].get())))
-        self.button["output_file"].config(text="Set", command=(lambda: self.set_output_file(self.entries["output_file"].get())))
-            
-            
-        """Other parameters"""
-        self.other_frame = Frame(self.first_row_frame)
-        self.other_frame.pack(side=LEFT, expand=YES, fill=X)
-        Label(self.other_frame, text="Parameters").pack()
-        self.other_param = {}
-        for name in self.parameters.index:
-            if(isinstance(self.parameters.loc[name, "value"], bool)):
-                other = BooleanVar()
-                Checkbutton(self.other_frame, variable=other, text=name).pack(expand=YES)
-                other.set(self.parameters.loc[name, "value"])
-                self.other_param[name] = other
-            elif(isinstance(self.parameters.loc[name, "value"], int)):
-                block = Frame(self.other_frame)
-                block.pack(expand=YES)
-                Label(block, text=name).pack(side=RIGHT)
-                other = StringVar()
-                Entry(block, textvariable=other).pack(side=LEFT)
-                other.set(self.parameters.loc[name, "value"])
-                self.other_param[name] = other
-        
-        """Output info"""
-        self.output_frame = Frame(self.main_frame)
-        self.output_frame.pack(expand=YES, fill=X)
-        Label(self.output_frame, text="Output Info").grid(row=0, column=0)
-        
-        self.output_info = output_info
-        c=0
-        max_row_len=len(self.output_info)/2
-        for key in self.output_info:
-            var = BooleanVar()
-            Checkbutton(self.output_frame, variable=var, text=key).grid(row=int(1+c/max_row_len), column=int(c%max_row_len), sticky=W)
-            var.set(self.output_info[key])
-            self.output_info[key] = var
-            c = c+1
-        
-        self.buttons_frame = Frame(self.main_frame)
-        self.buttons_frame.pack(expand=YES, fill=X)
-        
-        """Compute"""
-        self.button_c = Button(self.buttons_frame, text="Compute", command=self.compute_in_thread)
-        self.button_c.pack(expand=YES, fill=X)
-        
-        """Save"""
-        self.button_s = Button(self.buttons_frame, text="Save", command=self.store_results)
-        self.button_s.pack(expand=YES, fill=X)
-        
+        self.gui_compute = GUI_compute(self.main_frame, self.parameters, output_info)
+        self.gui_compute.pack()
         
         """Terminal"""
         self.terminal_frame = Frame(self.main_frame)
-        self.terminal_frame.pack(expand=YES, fill=X)
+        self.terminal_frame.pack(side=BOTTOM, expand=YES, fill=X)
         self.text = Text(self.terminal_frame, wrap="word")
-        self.text.pack(side="top", fill="both", expand=True)
+        self.text.pack(fill=BOTH, expand=True)
         self.text.tag_configure("stderr", foreground="#b22222")
                             
         sys.stdout = TextRedirector(self.text, "stdout")
         #sys.stderr = TextRedirector(self.text, "stderr")
         
-        return
-        
-    def _open_file(self):
-        """
-        Open file from the filedialog
-        @return Tuple of strings
-        """
-        file_names = filedialog.askopenfilenames(initialdir=self.current_directory, title = "Select file")
-        if(file_names): self.current_directory = os.path.dirname(file_names[0])
-        return file_names
     
-    def update_bio_files(self, input_files):
-        """
-        Loads input genomes 
-        """
-        if(input_files): #is not None
-            self.entries["gen"].delete(0, END)
-            self.entries["gen"].insert(0, str(input_files))
-            self.parameters.loc["gen", "value"] = input_files
-        return
-    
-    def update_primer_file(self, input_files):
-        """
-        Loads input primer pairs, stored in csv format
-        """
-        if(input_files): #is not None
-            self.entries["primer_pairs"].delete(0, END)
-            self.entries["primer_pairs"].insert(0, str(input_files))
-            self.parameters.loc["primer_pairs", "value"] = input_files[0]
-        return
-    
-    def set_output_file(self, output_file):
-        if(os.path.isabs(output_file)):
-            self.parameters.loc["output_file", "value"] = output_file
-        else:
-            self.parameters.loc["output_file", "value"] = output_file = os.path.join(self.current_directory,output_file)
-        return
-    
-    def compute_in_thread(self):
-        _thread.start_new_thread(self.compute, ())
-        return
-    
-    def compute(self):
-        for pkey in self.other_param:
-            self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
-       
-        self.template = compute(self.parameters)
-        
-        print("Finished!")
-        return
-    
-    def store_results(self):
-        header = []
-        for key in self.output_info:
-            if(self.output_info[key].get()):
-                header.append(key)
-        save_template_primer_missmatches(self.parameters.loc["output_file", "value"], self.template, header=header)
-        print("Saved")
-        return
 
 def get_help(paramaters):
     output_info_keys = [key for key in output_info.keys()]

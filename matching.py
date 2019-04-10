@@ -94,7 +94,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
             max_amplicon = len_gen - (primer.flen + primer.rlen)
     
     best_score = 0
-    
+    alignment_processor = Alignment()
     alignments = []
     
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f.seq, primer.flen, gen.seq[0:-search_limit]) #compute forward primer best matches
@@ -115,7 +115,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         fm = al[0]
         rm= al[1]
         amplicon = primer.min_amplicon+rm[1]
-        alignment = Alignment(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
+        alignment = alignment_processor.get(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
                                 primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE) #TODO, creating a temp class overkill?
         template.loc[template.shape[0]] = alignment.get_csv()
         
