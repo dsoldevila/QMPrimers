@@ -22,17 +22,18 @@ for key in TEMPLATE_HEADER:
     output_info[key] = True
 
 parameters = [
-        ["gen", "<No Genome>", "Genome file dir, no support for multiple files in cl", "-gf"],
-        ["primer_pairs", "<No Primer Pairs>", "Primer pairs file dir. A particular header must be used in the file", "-pf"],
-        ["output_file", os.path.join(os.getcwd(),"output.csv"), "Location of the output file", "-o"],
-        ["forward missmatches", 5, "Maximum number of missmatches allowed in the forward primer", "-fm"],
-        ["reverse missmatches", 5, "Maximum number of missmatches allowed in the reverse primer", "-rm"], 
-        ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging"],
-        ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki"],
-        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku"],
-        ["csv_template", "<No Precomputed Template>", "Precomputed missmatching template", "-i"]]
+        ["gen", "<No Genome>", "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["primer_pairs", "<No Primer Pairs>", "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
+        ["output_file", os.path.join(os.getcwd(),"output.csv"), "Location of the output file", "-o", "entry"],
+        ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
+        ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
+        ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
+        ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
+        ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
+        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
+        ["csv_template", "<No Precomputed Template>", "Precomputed missmatching template", "-i", "entry"]]
                         
-parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag"])
+parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
 class TextRedirector(object):
     def __init__(self, widget, tag="stdout"):
@@ -92,8 +93,8 @@ def get_help(paramaters):
 
 if (__name__=="__main__"):
     only_cl_parameters = [
-        ["help", False, "Display this list", "--help"],
-        ["command_line", False, "Triggers the command line mode", "--nogui"]]
+        ["help", False, "Display this list", "--help", ""],
+        ["command_line", False, "Triggers the command line mode", "--nogui", ""]]
     cl_parameters = parameters.copy()
     for param in only_cl_parameters:
         cl_parameters.loc[param[0]] = param[1:]

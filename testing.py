@@ -328,14 +328,23 @@ def performance_test(primer_pairs, gen_record):
     stats.strip_dirs().sort_stats('cumtime').print_stats()
     
 def new_single_test():
-    parameters = {"gen": ["Data/sbog_test.fasta"], "primer_pairs": "Test_data/wrongP&PP.csv", 
-                  "output_file": "output.csv", "forward missmatches": 5,
-                  "reverse missmatches": 5, "hanging primers": False}
+    parameters = [
+        ["gen", ["Data/sbog_test.fasta"], "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["primer_pairs", "Data/P&PP.csv", "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
+        ["output_file", "output.csv", "Location of the output file", "-o", "entry"],
+        ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
+        ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
+        ["Nend miss.", 3, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
+        ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
+        ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
+        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
+        ["csv_template", "<No Precomputed Template>", "Precomputed missmatching template", "-i", "entry"]]
+    parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
     template = i.compute(parameters)
     try:
         print(template.head())
     except:
-        print("None")
+        print("Error")
         
 def check_uppercase():
     gen_record = ld.load_bio_files(["Data/sbog_test.fasta"], check_uppercase=True) 
@@ -344,6 +353,6 @@ def check_uppercase():
 
 if(__name__=="__main__"):
     time1 = time.time()
-    test_all_pairs()
+    new_single_test()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)

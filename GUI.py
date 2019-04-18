@@ -22,7 +22,6 @@ class GUI_compute():
         """Other"""
         self.parameters = parameters
         self.current_directory = os.getcwd()
-        self.mode = "Compute"
         
         """Frame containing Files and Other Parameters frames"""
         self.first_row_frame = Frame(self.main_frame)
@@ -36,7 +35,7 @@ class GUI_compute():
         self.entries = {}
         self.button = {}
         for name in self.parameters.index:
-            if(isinstance(self.parameters.loc[name, "value"], str)):
+            if(self.parameters.loc[name, "type"] == "entry"):
                 block = Frame(self.file_frame)
                 block.pack(expand=YES, fill=BOTH)
                 self.entries[name] = Entry(block)
@@ -64,22 +63,24 @@ class GUI_compute():
         """Other parameters"""
         self.other_frame = Frame(self.first_row_frame)
         self.other_frame.pack(side=LEFT, expand=YES, fill=X)
-        Label(self.other_frame, text="Parameters").pack()
+        Label(self.other_frame, text="Parameters").pack()   
         self.other_param = {}
         for name in self.parameters.index:
-            if(isinstance(self.parameters.loc[name, "value"], bool)):
-                other = BooleanVar()
-                Checkbutton(self.other_frame, variable=other, text=name).pack(expand=YES)
-                other.set(self.parameters.loc[name, "value"])
-                self.other_param[name] = other
-            elif(isinstance(self.parameters.loc[name, "value"], int)):
-                block = Frame(self.other_frame)
-                block.pack(expand=YES)
-                Label(block, text=name).pack(side=RIGHT)
-                other = StringVar()
-                Entry(block, textvariable=other).pack(side=LEFT)
-                other.set(self.parameters.loc[name, "value"])
-                self.other_param[name] = other
+            if(self.parameters.loc[name, "type"] == "param"):
+                if(isinstance(self.parameters.loc[name, "value"], bool)):
+                    other = BooleanVar()
+                    Checkbutton(self.other_frame, variable=other, text=name).pack(expand=YES)
+                    other.set(self.parameters.loc[name, "value"])
+                    self.other_param[name] = other
+                elif(isinstance(self.parameters.loc[name, "value"], int)):
+                    block = Frame(self.other_frame)
+                    block.pack(expand=YES)
+                    Label(block, text=name).pack(side=RIGHT)
+                    other = StringVar()
+                    Entry(block, textvariable=other).pack(side=LEFT)
+                    other.set(self.parameters.loc[name, "value"])
+                    self.other_param[name] = other
+                    
         
         """Output info"""
         self.output_frame = Frame(self.main_frame)
@@ -95,6 +96,17 @@ class GUI_compute():
             var.set(self.output_info[key])
             self.output_info[key] = var
             c = c+1
+        for name in parameters.loc[parameters["type"]=="info"].index.values:
+            block = Frame(self.output_frame)
+            self.entries[name] = Entry(block, width=2)
+            self.entries[name].pack(side=LEFT)
+            Label(block, text=name).pack(side=RIGHT)
+            block.grid(row=int(1+c/max_row_len), column=int(c%max_row_len), sticky=W)
+            c= c+1
+                    
+        self.entries["Nend miss."].bind("<Return>", (lambda event: self.set_Nend(self.entries["Nend miss."].get())))
+        self.entries["Nend miss."].insert(0, self.parameters.loc[name, "value"])
+        #TODO limit Nend
         
         self.buttons_frame = Frame(self.main_frame)
         self.buttons_frame.pack(expand=YES, fill=X)
@@ -141,14 +153,14 @@ class GUI_compute():
             self.parameters.loc["gen", "value"] = input_files
         return
     
-    def update_primer_file(self, input_files):
+    def update_primer_file(self, input_file):
         """
         Loads input primer pairs, stored in csv format
         """
-        if(input_files): #is not None
+        if(input_file): #is not None
             self.entries["primer_pairs"].delete(0, END)
-            self.entries["primer_pairs"].insert(0, str(input_files))
-            self.parameters.loc["primer_pairs", "value"] = input_files[0]
+            self.entries["primer_pairs"].insert(0, str(input_file))
+            self.parameters.loc["primer_pairs", "value"] = input_file
         return
     
     def set_output_file(self, output_file):
@@ -156,6 +168,10 @@ class GUI_compute():
             self.parameters.loc["output_file", "value"] = output_file
         else:
             self.parameters.loc["output_file", "value"] = os.path.join(self.current_directory,output_file)
+        return
+    def set_Nend(self, Nend):
+        self.parameters.loc["Nend miss.", "value"] = int(Nend)
+        
         return
     
     def set_template_file(self, template_file):
@@ -169,7 +185,6 @@ class GUI_compute():
             
         self.other_frame.pack_forget()
         self.button["csv_template"].config(text="Unset", command= self.unset_template_file)
-        self.mode = "LoadCSV"
         self.button_c.pack_forget()
         self.button_lt.pack(side=TOP, expand=YES, fill=X)
         return
@@ -177,7 +192,6 @@ class GUI_compute():
     def unset_template_file(self):
         self.button["csv_template"].config(text="Open", command=(lambda: self.set_template_file(self._open_file())))
         self.other_frame.pack(side=LEFT, expand=YES, fill=X)
-        self.mode = "Compute"
         self.button_lt.pack_forget()
         self.button_c.pack(side=TOP, expand=YES, fill=X)
         return
@@ -190,13 +204,17 @@ class GUI_compute():
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
        
-        self.template = compute(self.parameters)
+        self.template, self.gen_record, self.primer_pairs = compute(self.parameters)
         
         print("Finished!")
+        
+        self.previous_Nend = self.parameters.loc["Nend miss.", "value"]
+        self.store_results()
+        
         return
     
     def load_template(self):
-        load_template(self.parameters["csv_template", "value"])
+        load_template(self.parameters.loc["csv_template", "value"])
         return
     
     def store_results(self):
@@ -204,6 +222,22 @@ class GUI_compute():
         for key in self.output_info:
             if(self.output_info[key].get()):
                 header.append(key)
+        if(self.parameters.loc["Nend miss.", "value"]):
+            Nend = self.parameters.loc["Nend miss.", "value"]
+            header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
+            
+            if(self.previous_Nend!=Nend):
+                mismFN = 'mismFN'+str(Nend)
+                mismRN = 'mismFN'+str(Nend)
+                self.template = self.template.rename(columns={'mismFN'+str(self.previous_Nend): mismFN,
+                'mismRN'+str(self.previous_Nend): mismRN})
+                
+                for i in range(self.template.shape[0]):
+                    flen = self.primer_pairs[int(self.template.loc[i, "primerPair"])].flen
+                    self.template.loc[i, [mismFN, mismRN]] = get_Nend_missmatches(int(Nend), self.template.loc[i, "mismRT_loc"],
+                                     flen, self.template.loc[i, "mismFT_loc"])
+                self.previous_Nend = Nend
+            
         save_template_primer_missmatches(self.parameters.loc["output_file", "value"], self.template, header=header)
         print("Saved")
         return

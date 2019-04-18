@@ -13,25 +13,6 @@ import numpy as np
 import pandas as pd
 import load_data as ld
 
-#This matrix tells the algorithm whether 2 nucleotides match or don't
-SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
-                        [0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0],
-                        [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0],
-                        [0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0],
-                        [1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-                        [0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-                        [1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
-                        [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-                        [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-                        [0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
-                        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-                        [1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-                        [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-                        [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
-MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
 
 #TODO this func is currently unused, ~line 68
 def is_valid(score, min_score):
@@ -78,7 +59,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 
     return result
 
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template):
+def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template, Nend):
     """
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
@@ -94,7 +75,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
             max_amplicon = len_gen - (primer.flen + primer.rlen)
     
     best_score = 0
-    alignment_processor = Alignment()
+    alignment_processor = Alignment() #TODO declare outside
     alignments = []
     
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f.seq, primer.flen, gen.seq[0:-search_limit]) #compute forward primer best matches
@@ -115,13 +96,12 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         fm = al[0]
         rm= al[1]
         amplicon = primer.min_amplicon+rm[1]
-        alignment = alignment_processor.get(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
-                                primer.flen-fm[0], primer.rlen-rm[0], amplicon, MATCH_TABLE) #TODO, creating a temp class overkill?
-        template.loc[template.shape[0]] = alignment.get_csv()
-        
+        alignment_processor.get(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
+                                primer.flen-fm[0], primer.rlen-rm[0], amplicon, Nend) #TODO, creating a temp class overkill?
+        template.loc[template.shape[0]] = alignment_processor.get_csv()
     return template
 
-def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hanging_primers=False):
+def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend, hanging_primers=False):
     """
     Computes the best alignments between each genome and each primer
     @returns: List of GenAlignment instances
@@ -135,8 +115,11 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
         
     size = len(gen_record)
     i = 0
-    template = pd.DataFrame(columns=TEMPLATE_HEADER)
-    
+    template_header = TEMPLATE_HEADER
+    if(Nend):
+        template_header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
+    template = pd.DataFrame(columns=template_header)
+    print(template)
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")
         i +=1
@@ -144,7 +127,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
         gen.seq = np.array(gen.seq)
         for pp in primer_pairs:
             try:
-                template = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template)
+                template = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template, Nend)
             except:
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pp.id))
     return template

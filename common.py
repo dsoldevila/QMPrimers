@@ -12,7 +12,25 @@ IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
 TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
                                      "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base"]
 
-
+#This matrix tells the algorithm whether 2 nucleotides match or don't
+SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
+                        [0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0],
+                        [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0],
+                        [0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0],
+                        [1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+                        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+                        [1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+                        [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
+MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
 
 class PrimerPair:
     def __init__(self, pair_id, fprimer, rprimer, min_amplicon, max_amplicon):
@@ -36,10 +54,10 @@ class Alignment:
     """
     base_type = {"A":"Pur", "C":"Pyr", "G":"Pur", "T":"Pyr", "R":"Pur", "Y":"Pyr", "Other": "Ind."}
 
-    def __init__():
+    def __init__(self):
         return
     
-    def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
+    def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses):
     
         """
         self.gen = genomic sequence
@@ -66,14 +84,18 @@ class Alignment:
         self.amplicon = amplicon
         
         
-        self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
+        self.fm_loc, self.rm_loc = self._get_missmatch_location()
         self.fm_type, self.rm_type = self._get_missmatch_type()
         
         self.fm_base, self.rm_base = self._get_missmatch_base_type()
         
+        self.Nend_misses = Nend_misses
+        if(Nend_misses):
+            self.fm_Nend, self.rm_Nend = self._get_Nend_missmatches(Nend_misses)
+        
         return
     
-    def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon, MATCH_TABLE):
+    def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses=None):
         #TODO instead of making a complete output file, calculate only the paramaters needed by the user
         self.gen = gen
         self.primer_pair = primer_pair
@@ -101,13 +123,17 @@ class Alignment:
         else:
             self.amplicon = amplicon
         
-        self.fm_loc, self.rm_loc = self._get_missmatch_location(MATCH_TABLE)
+        self.fm_loc, self.rm_loc = self._get_missmatch_location()
         self.fm_type, self.rm_type = self._get_missmatch_type()        
         self.fm_base, self.rm_base = self._get_missmatch_base_type()
         
+        self.Nend_misses = Nend_misses
+        if(self.Nend_misses):
+            self.fm_Nend, self.rm_Nend = self._get_Nend_missmatches(self.Nend_misses)
+        
         return
     
-    def _get_missmatch_location(self, MATCH_TABLE):
+    def _get_missmatch_location(self):
         """
         @Brief Returns array with the location of missmatches (on the primer)
         """
@@ -167,6 +193,9 @@ class Alignment:
                 
         return  fm_base_type, rm_base_type
             
+    def _get_Nend_missmatches(self, Nend_misses):
+        return get_Nend_missmatches(Nend_misses, self.rm_loc, self.primer_pair.flen, self.fm_loc)
+    
     
     def __str__(self):        
         info = ("PRIME PAIR "+str(self.primer_pair.id)+"\n"+
@@ -178,4 +207,21 @@ class Alignment:
     def get_csv(self):
         info= [self.primer_pair.id, self.gen.id, self.primer_pair.f.id, self.primer_pair.r.id, self.fm, self.rm, 
                self.amplicon, self.real_fpos, str(self.fm_loc), str(self.fm_type), str(self.fm_base), self.real_rpos, str(self.rm_loc), str(self.rm_type), str(self.rm_base)]
+        if(self.Nend_misses):
+            info.extend([self.fm_Nend, self.rm_Nend])
         return info
+
+def get_Nend_missmatches(Nend_misses, rm_loc, flen, fm_loc):
+        rm_Nend = 0
+        for i in rm_loc:
+            if(i >= Nend_misses):
+                break;
+            rm_Nend +=1
+            
+        fm_Nend = 0
+        Nend_misses = flen - Nend_misses
+        for i in range(1, len(fm_loc)+1):
+            if(fm_loc[-i] < Nend_misses):
+                break;
+            fm_Nend +=1
+        return fm_Nend, rm_Nend

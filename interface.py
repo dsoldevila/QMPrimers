@@ -19,11 +19,9 @@ def compute(parameters):
                                  parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
     primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
     if(gen_record!=None and primer_pairs!=None):
-        template = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), 
-                                          int(parameters.loc["reverse missmatches", "value"]), primer_pairs, gen_record, 
-                                          hanging_primers=parameters.loc["hanging primers", "value"])
-
-    return template
+        template = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]), 
+                                          primer_pairs, gen_record, parameters.loc["Nend miss.", "value"], hanging_primers=parameters.loc["hanging primers", "value"])
+    return template, gen_record, primer_pairs
 
 def save_template_primer_missmatches(output_file, template, header=None):
     m.store_matching_results(output_file, template, header)

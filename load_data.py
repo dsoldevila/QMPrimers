@@ -66,6 +66,8 @@ def load_bio_files(files, file_format=None, writable=False, check_uppercase=Fals
     #TODO check all files, not only de first one
     if(check_uppercase==True): writable=True #to modify seqrecord, make it writable is needed
     seq_record = {}
+    if(type(files)==str):
+        files = [files]
     if(path.isfile(files[0])):
         if(file_format==None): #if format not specified, use extension
             extension = path.splitext(files[0])[1]
@@ -122,7 +124,32 @@ def remove_bad_gens(gen_record):
 
 def load_template(template_file):
     template = pd.read_csv(template_file)
-    return
+    return template
+
+def restore_template(template, gen_record, primer_pairs):
+    alignment = Alignment()
+    columns = template.columns.values
+    
+    #resize table
+    for header in TEMPLATE_HEADER:
+        if header not in columns:
+            template[header] = None
+            
+    #reorder columns
+    template = template[TEMPLATE_HEADER]
+    
+    for i in range(template.shape[0]):
+        gen = gen_record[template.loc[i, "fastaid"]]
+        primer_pair = primer_pair[template.loc[i, "primerPair"]]
+        fpos = template.loc[i, "F_pos"]
+        rpos = template.loc[i, "R_pos"]
+        fmisses = template.loc[i, "mismFT"]
+        rmisses = template.loc[i, "mismRT"]
+        amplicon = template.loc[i, "amplicon"]
+        alignment.complete_from_csv(gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon)
+        template.loc[i] = alignment.get_csv()
+        
+    return template
     
 
 if (__name__=="__main__"):
