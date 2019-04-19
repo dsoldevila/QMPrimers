@@ -206,7 +206,7 @@ class Alignment:
     
     def get_csv(self):
         info= [self.primer_pair.id, self.gen.id, self.primer_pair.f.id, self.primer_pair.r.id, self.fm, self.rm, 
-               self.amplicon, self.real_fpos, str(self.fm_loc), str(self.fm_type), str(self.fm_base), self.real_rpos, str(self.rm_loc), str(self.rm_type), str(self.rm_base)]
+               self.amplicon, self.real_fpos, self.fm_loc, self.fm_type, self.fm_base, self.real_rpos, self.rm_loc, self.rm_type, self.rm_base]
         if(self.Nend_misses):
             info.extend([self.fm_Nend, self.rm_Nend])
         return info

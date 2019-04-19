@@ -222,19 +222,29 @@ class GUI_compute():
         for key in self.output_info:
             if(self.output_info[key].get()):
                 header.append(key)
+                
         if(self.parameters.loc["Nend miss.", "value"]):
             Nend = self.parameters.loc["Nend miss.", "value"]
             header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
             
             if(self.previous_Nend!=Nend):
                 mismFN = 'mismFN'+str(Nend)
-                mismRN = 'mismFN'+str(Nend)
-                self.template = self.template.rename(columns={'mismFN'+str(self.previous_Nend): mismFN,
-                'mismRN'+str(self.previous_Nend): mismRN})
+                mismRN = 'mismRN'+str(Nend)
+                
+                if(self.previous_Nend!=0):
+                    self.template = self.template.rename(columns={'mismFN'+str(self.previous_Nend): mismFN,
+                                                                'mismRN'+str(self.previous_Nend): mismRN})
+                else:
+                    self.template[mismFN] = 0
+                    self.template[mismRN] = 0
+                
+                #patch
+                self.template[mismFN].astype('int32')
+                self.template[mismRN].astype('int32')
                 
                 for i in range(self.template.shape[0]):
-                    flen = self.primer_pairs[int(self.template.loc[i, "primerPair"])].flen
-                    self.template.loc[i, [mismFN, mismRN]] = get_Nend_missmatches(int(Nend), self.template.loc[i, "mismRT_loc"],
+                    flen = self.primer_pairs[int(self.template.loc[i, "primerPair"])-1].flen
+                    self.template.loc[i, mismFN], self.template.loc[i, mismRN] = get_Nend_missmatches(int(Nend), self.template.loc[i, "mismRT_loc"],
                                      flen, self.template.loc[i, "mismFT_loc"])
                 self.previous_Nend = Nend
             
