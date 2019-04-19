@@ -137,45 +137,21 @@ if (__name__=="__main__"):
                 last_option = None
     
     cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen", "value"]) 
-    
-    """
-    while i < nargs:
-        argv = sys.argv[i]
-        if(argv not in flags):
-            
-            if(argv=="-info"): #Set custom output
-                for key in output_info: output_info[key] = False
-                i+=1
-                argv = sys.argv[i]
-                while(sys.argv[i+1]!="-"):
-                    output_info[argv] = True
-                    i+=1
-                    argv = sys.argv[i]
-                output_info[argv] = True
-                print(output_info)
-            
-            else:
-                print("Parameter "+str(sys.argv[i])+" unknown")
-                print("Use --help to display the manual")
-                exit();
-        if(argv[:2]=="--"):
-            index = cl_parameters[cl_parameters["flag"]==sys.argv[i]].index
-            cl_parameters.loc[index, "value"] = True
-        elif(argv[0]=="-"):
-            index = cl_parameters[cl_parameters["flag"]==sys.argv[i]].index
-            cl_parameters.loc[index, "value"] = sys.argv[i+1]
-            i+=1
-        i+=1  
-    """ 
+    cl_parameters.loc["Nend miss.", "value"] = int(cl_parameters.loc["Nend miss.", "value"]) 
+
     if(cl_parameters.loc["help", "value"]):
         get_help(cl_parameters)
     elif(cl_parameters.loc["command_line","value"]):
         cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
-        template = compute(cl_parameters)
+        template, gen_record, primer_pair = compute(cl_parameters)
+        print(template)
         header = []
         for key in output_info:
             if(output_info[key]):
                 header.append(key)
+        Nend = cl_parameters.loc["Nend miss.", "value"]
+        if(Nend):
+            header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
         save_template_primer_missmatches(cl_parameters.loc["output_file", "value"], template, header=header)
     else:
         saved_sys_stdout = sys.stdout

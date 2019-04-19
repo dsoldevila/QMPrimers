@@ -119,7 +119,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
     if(Nend):
         template_header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
     template = pd.DataFrame(columns=template_header)
-    print(template)
+
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")
         i +=1
@@ -129,6 +129,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
             try:
                 template = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template, Nend)
             except:
+                raise
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pp.id))
     return template
 
