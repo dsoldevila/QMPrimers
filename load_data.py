@@ -140,7 +140,7 @@ def restore_template(template, gen_record, primer_pairs):
     
     for i in range(template.shape[0]):
         gen = gen_record[template.loc[i, "fastaid"]]
-        primer_pair = primer_pair[template.loc[i, "primerPair"]]
+        primer_pair = primer_pairs[int(template.loc[i, "primerPair"])-1]
         fpos = template.loc[i, "F_pos"]
         rpos = template.loc[i, "R_pos"]
         fmisses = template.loc[i, "mismFT"]

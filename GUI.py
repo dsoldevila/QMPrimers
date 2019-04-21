@@ -214,7 +214,7 @@ class GUI_compute():
         return
     
     def load_template(self):
-        load_template(self.parameters.loc["csv_template", "value"])
+        self.template = load_template(self.parameters)
         return
     
     def store_results(self):
@@ -223,6 +223,7 @@ class GUI_compute():
             if(self.output_info[key].get()):
                 header.append(key)
                 
+        #TODO this code should not be handled by the GUI        
         if(self.parameters.loc["Nend miss.", "value"]):
             Nend = self.parameters.loc["Nend miss.", "value"]
             header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
@@ -238,7 +239,7 @@ class GUI_compute():
                     self.template[mismFN] = 0
                     self.template[mismRN] = 0
                 
-                #patch
+                #TODO patch
                 self.template[mismFN].astype('int32')
                 self.template[mismRN].astype('int32')
                 

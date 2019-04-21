@@ -47,11 +47,17 @@ def load_primer_pairs(primer_pairs_file):
         
     return primer_pairs
 
-def load_template(template_file):
-    template = ld.load_template(template_file)
-    print(template.head(5))
-    #print("This func loads the template. Not implemented")
-    return
+def load_template(parameters):
+    template = ld.load_template(parameters.loc["csv_template", "value"])
+    
+    gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
+                                 parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
+    primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
+    if(gen_record!=None and primer_pairs!=None):
+        template = ld.restore_template(template, gen_record, primer_pairs)
+        
+    return template
+        
 
 def simulate():
     return

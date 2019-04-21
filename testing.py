@@ -349,10 +349,23 @@ def new_single_test():
 def check_uppercase():
     gen_record = ld.load_bio_files(["Data/sbog_test.fasta"], check_uppercase=True) 
     print(gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"])
+    
+def retore_template():
+    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
+    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    template = m.compute_gen_matching(5, 5, primer_pairs, gen_record, 0) 
+    
+    header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
+                                     "mismFT_base", "R_pos"]
+    m.store_matching_results("test1.csv", template, header=TEMPLATE_HEADER)
+    templateR = ld.load_template("test1.csv")
+    templateR = ld.restore_template(templateR, gen_record, primer_pairs)
+    m.store_matching_results("test2.csv", templateR, header=TEMPLATE_HEADER)
+    return
 
 
 if(__name__=="__main__"):
     time1 = time.time()
-    new_single_test()
+    retore_template()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)

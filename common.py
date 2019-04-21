@@ -100,20 +100,25 @@ class Alignment:
         self.gen = gen
         self.primer_pair = primer_pair
         self.real_fpos = int(real_fpos)
+        self.fpos = int(real_fpos)
         self.real_rpos = int(real_rpos)
+        self.rpos = int(real_fpos)
+        self.fm = fmisses
+        self.rm = rmisses
+        self.amplicon = amplicon
         
         if(self.real_fpos == None):
             raise ValueError("Error: Froward's position NULL")
             
-        if(self.fmisses == None):
-            self.fmisses = self.get_missmatches("f")
+        if(self.fm == None):
+            self.fm = self.get_missmatches("f")
         else:
-            self.fmisses = fmisses
+            self.fm = fmisses
             
-        if(self.rmisses == None):
-            self.rmisses = self.get_missmatches("r")
+        if(self.rm == None):
+            self.rm = self.get_missmatches("r")
         else:
-            self.rmisses = rmisses
+            self.rm = rmisses
             
         if(self.amplicon == None):
             if(self.real_rpos == None):
@@ -145,7 +150,7 @@ class Alignment:
                 fm_loc.append(i)
                 
         for i in range(self.primer_pair.rlen):
-            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.rpos+i]]!=1):
+            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen[self.rpos+i]]!=1):
                     rm_loc.append(i)
                 
         return fm_loc, rm_loc
