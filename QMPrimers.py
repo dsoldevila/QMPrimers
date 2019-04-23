@@ -22,8 +22,8 @@ for key in TEMPLATE_HEADER:
     output_info[key] = True
 
 parameters = [
-        ["gen", "<No Genome>", "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
-        ["primer_pairs", "<No Primer Pairs>", "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
+        ["gen", None, "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
         ["output_file", os.path.join(os.getcwd(),"output.csv"), "Location of the output file", "-o", "entry"],
         ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
         ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
@@ -31,7 +31,7 @@ parameters = [
         ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
         ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
         ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
-        ["csv_template", "<No Precomputed Template>", "Precomputed missmatching template", "-i", "entry"]]
+        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"]]
                         
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
@@ -142,9 +142,13 @@ if (__name__=="__main__"):
     if(cl_parameters.loc["help", "value"]):
         get_help(cl_parameters)
     elif(cl_parameters.loc["command_line","value"]):
-        cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
-        template, gen_record, primer_pair = compute(cl_parameters)
-        print(template)
+        
+        if(cl_parameters.loc["gen", "value"]):
+            cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
+            template, gen_record, primer_pair = compute(cl_parameters)
+        elif(cl_parameters.loc["csv_template", "value"]):
+            template, gen_record, primer_pair = load_template(cl_parameters)
+            
         header = []
         for key in output_info:
             if(output_info[key]):

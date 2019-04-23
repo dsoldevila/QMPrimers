@@ -43,11 +43,11 @@ class GUI_compute():
                 self.button[name] = Button(block, text="Open")
                 self.button[name].pack(side=LEFT, expand=NO, fill=X)
                 
-        self.entries["gen"].insert(0, self.parameters.loc["gen", "value"])
+        self.entries["gen"].insert(0, "<No Genome>")
         self.entries["gen"].bind("<Return>", (lambda event: self.update_bio_files(self.entries["gen"].get())))
         self.button["gen"].config(command=(lambda: self.update_bio_files(self._open_files())))
         
-        self.entries["primer_pairs"].insert(0, self.parameters.loc["primer_pairs", "value"])
+        self.entries["primer_pairs"].insert(0, "<No Primer Pairs>")
         self.entries["primer_pairs"].bind("<Return>", (lambda event: self.update_csv_file(self.entries["primer_pairs"].get())))
         self.button["primer_pairs"].config(command=(lambda: self.update_primer_file(self._open_files())))
         
@@ -55,7 +55,7 @@ class GUI_compute():
         self.entries["output_file"].bind("<Return>", (lambda event: self.set_output_file(self.entries["output_file"].get())))
         self.button["output_file"].config(text="Set", command=(lambda: self.set_output_file(self.entries["output_file"].get())))
         
-        self.entries["csv_template"].insert(0, self.parameters.loc["csv_template", "value"])
+        self.entries["csv_template"].insert(0, "<No Precomputed Template>")
         self.entries["csv_template"].bind("<Return>", (lambda event: self.set_template_file(self.entries["csv_template"].get())))
         self.button["csv_template"].config(command=(lambda: self.set_template_file(self._open_files())))
             
