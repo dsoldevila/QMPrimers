@@ -322,10 +322,10 @@ def check_if_multiple_alignments_are_frequent():
                print(al_list.gen.id, al_list.primer_pair.id, len(alignments))
     return
 
-def performance_test(primer_pairs, gen_record):
-    cProfile.run('compute_gen_matching(5, 5, primer_pairs, gen_record)', 'temp.profile')
+def performance_test():
+    cProfile.run('restore_template()', 'temp.profile')
     stats = pstats.Stats('temp.profile')
-    stats.strip_dirs().sort_stats('cumtime').print_stats()
+    stats.strip_dirs().sort_stats('cumtime').print_stats(10)
     
 def new_single_test():
     parameters = [
@@ -350,9 +350,11 @@ def check_uppercase():
     gen_record = ld.load_bio_files(["Data/sbog_test.fasta"], check_uppercase=True) 
     print(gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"])
     
-def retore_template():
+def restore_template():
     gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
+    #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
+    #primer_pairs = [primer_pairs[5]]
     template = m.compute_gen_matching(5, 5, primer_pairs, gen_record, 0) 
     
     header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
@@ -360,12 +362,16 @@ def retore_template():
     m.store_matching_results("test1.csv", template, header=TEMPLATE_HEADER)
     templateR = ld.load_template("test1.csv")
     templateR = ld.restore_template(templateR, gen_record, primer_pairs)
+    
     m.store_matching_results("test2.csv", templateR, header=TEMPLATE_HEADER)
     return
 
 
 if(__name__=="__main__"):
+    
     time1 = time.time()
-    retore_template()
+    restore_template()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
+    
+    #performance_test()

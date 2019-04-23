@@ -33,6 +33,7 @@ def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers)
     try:
         gen_record = ld.load_bio_files(gen_file, writable=check_integrity or check_uppercase, 
                                        check_uppercase=check_uppercase, file_format=None)
+        print("Genome record file loaded!")
     except:
         print("Error at loading gen record")
     if(check_integrity): gen_record = ld.remove_bad_gens(gen_record)
@@ -42,21 +43,24 @@ def load_primer_pairs(primer_pairs_file):
     primer_pairs = None
     try:
         primer_pairs = ld.load_csv_file(primer_pairs_file)
+        print("Primer pairs file loaded!")
     except:
         print("Error at loading primer pairs file")
         
     return primer_pairs
 
 def load_template(parameters):
-    template = ld.load_template(parameters.loc["csv_template", "value"])
-    
     gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
                                  parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
     primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
-    if(gen_record!=None and primer_pairs!=None):
+    try:
+        template = ld.load_template(parameters.loc["csv_template", "value"])
         template = ld.restore_template(template, gen_record, primer_pairs)
+        print("Template file restored!")
+    except:
+        print("Error at restoring template")
         
-    return template
+    return template, gen_record, primer_pairs
         
 
 def simulate():

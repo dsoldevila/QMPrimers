@@ -14,7 +14,7 @@ from os import path
 import csv
 from common import *
 import pandas as pd
-
+import numpy as np
 
 def load_csv_file(file, delimiter=";"):
     """
@@ -128,6 +128,7 @@ def load_template(template_file):
 
 def restore_template(template, gen_record, primer_pairs):
     alignment = Alignment()
+    recovered_template = pd.DataFrame(columns=TEMPLATE_HEADER)
     columns = template.columns.values
     
     #resize table
@@ -137,19 +138,18 @@ def restore_template(template, gen_record, primer_pairs):
             
     #reorder columns
     template = template[TEMPLATE_HEADER]
-    
     for i in range(template.shape[0]):
-        gen = gen_record[template.loc[i, "fastaid"]]
-        primer_pair = primer_pairs[int(template.loc[i, "primerPair"])-1]
-        fpos = template.loc[i, "F_pos"]
-        rpos = template.loc[i, "R_pos"]
-        fmisses = template.loc[i, "mismFT"]
-        rmisses = template.loc[i, "mismRT"]
-        amplicon = template.loc[i, "amplicon"]
+        tmp = template.loc[i]
+        gen = gen_record[tmp.loc["fastaid"]]
+        primer_pair = primer_pairs[int(tmp.loc["primerPair"])-1]
+        fpos = tmp.loc["F_pos"]
+        rpos = tmp.loc["R_pos"]
+        fmisses = tmp.loc["mismFT"]
+        rmisses = tmp.loc["mismRT"]
+        amplicon = tmp.loc["amplicon"]
         alignment.complete_from_csv(gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon)
-        template.loc[i] = alignment.get_csv()
-        
-    return template
+        recovered_template.loc[recovered_template.shape[0]] = alignment.get_csv()
+    return recovered_template
     
 
 if (__name__=="__main__"):

@@ -123,6 +123,9 @@ class GUI_compute():
         self.button_s = Button(self.buttons_frame, text="Save", command=self.store_results)
         self.button_s.pack(side=BOTTOM, expand=YES, fill=X)
         
+        """Other"""
+        self.previous_Nend = self.parameters.loc["Nend miss.", "value"]
+        
         return
     def pack(self):
         self.main_frame.pack(expand=YES, fill=BOTH)
@@ -168,10 +171,11 @@ class GUI_compute():
             self.parameters.loc["output_file", "value"] = output_file
         else:
             self.parameters.loc["output_file", "value"] = os.path.join(self.current_directory,output_file)
+        print("Output file path updated")
         return
     def set_Nend(self, Nend):
         self.parameters.loc["Nend miss.", "value"] = int(Nend)
-        
+        print("Nend setted to ", Nend)
         return
     
     def set_template_file(self, template_file):
@@ -208,13 +212,12 @@ class GUI_compute():
         
         print("Finished!")
         
-        self.previous_Nend = self.parameters.loc["Nend miss.", "value"]
         self.store_results()
         
         return
     
     def load_template(self):
-        self.template = load_template(self.parameters)
+        self.template, self.gen_record, self.primer_pairs = load_template(self.parameters)
         return
     
     def store_results(self):

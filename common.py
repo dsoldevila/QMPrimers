@@ -102,7 +102,7 @@ class Alignment:
         self.real_fpos = int(real_fpos)
         self.fpos = int(real_fpos)
         self.real_rpos = int(real_rpos)
-        self.rpos = int(real_fpos)
+        self.rpos = int(real_rpos)
         self.fm = fmisses
         self.rm = rmisses
         self.amplicon = amplicon
@@ -146,11 +146,11 @@ class Alignment:
         rm_loc = []
         
         for i in range(self.primer_pair.flen):
-            if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen[self.fpos+i]]!=1):
+            if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen.seq[self.fpos+i]]!=1):
                 fm_loc.append(i)
-                
+        
         for i in range(self.primer_pair.rlen):
-            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen[self.rpos+i]]!=1):
+            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.rpos+i]]!=1):
                     rm_loc.append(i)
                 
         return fm_loc, rm_loc
