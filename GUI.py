@@ -208,7 +208,7 @@ class GUI_compute():
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
        
-        self.template, self.gen_record, self.primer_pairs = compute(self.parameters)
+        self.template, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)
         
         print("Finished!")
         
@@ -252,6 +252,6 @@ class GUI_compute():
                                      flen, self.template.loc[i, "mismFT_loc"])
                 self.previous_Nend = Nend
             
-        save_template_primer_missmatches(self.parameters.loc["output_file", "value"], self.template, header=header)
+        save_template_primer_missmatches(self.parameters.loc["output_file", "value"], self.template, self.raw_stats, self.cooked_stats, header=header)
         print("Saved")
         return

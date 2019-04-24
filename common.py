@@ -54,7 +54,8 @@ class Alignment:
     """
     base_type = {"A":"Pur", "C":"Pyr", "G":"Pur", "T":"Pyr", "R":"Pur", "Y":"Pyr", "Other": "Ind."}
 
-    def __init__(self):
+    def __init__(self, max_misses):
+        self.pp_stats = pd.DataFrame(columns=list(range(max_misses)), dtype='uint8')
         return
     
     def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses):
@@ -92,6 +93,12 @@ class Alignment:
         self.Nend_misses = Nend_misses
         if(Nend_misses):
             self.fm_Nend, self.rm_Nend = self._get_Nend_missmatches(Nend_misses)
+            
+        try:
+            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] += 1
+        except:
+            self.pp_stats.loc[primer_pair.id] = 0
+            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] = 1
         
         return
     
@@ -136,7 +143,38 @@ class Alignment:
         if(self.Nend_misses):
             self.fm_Nend, self.rm_Nend = self._get_Nend_missmatches(self.Nend_misses)
         
+        try:
+            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] += 1
+        except:
+            self.pp_stats.loc[primer_pair.id] = 0
+            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] = 1
+            
         return
+    
+    def get_stats(self):
+        index = self.pp_stats.index.values
+        columns = self.pp_stats.columns.values
+        
+        cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "meadian"])
+        
+        tmp = self.pp_stats.multiply(columns)
+        total = self.pp_stats.sum(axis=1)
+        cooked_stats["mean"] = tmp.sum(axis=1).div(total)
+        
+        #find minimum
+        for i in index:
+            for j in columns:
+                if(self.pp_stats.loc[i, j]):
+                    cooked_stats.loc[i, "min"] = j 
+                    break;
+                    
+        #find maximum
+        for i in index:
+            for j in columns:
+                if(self.pp_stats.loc[i, j]):
+                    cooked_stats.loc[i, "max"] = j 
+        
+        return self.pp_stats, cooked_stats
     
     def _get_missmatch_location(self):
         """

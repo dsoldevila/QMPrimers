@@ -126,8 +126,8 @@ def load_template(template_file):
     template = pd.read_csv(template_file)
     return template
 
-def restore_template(template, gen_record, primer_pairs):
-    alignment = Alignment()
+def restore_template(template, gen_record, primer_pairs, max_misses):
+    alignment = Alignment(max_misses)
     recovered_template = pd.DataFrame(columns=TEMPLATE_HEADER)
     columns = template.columns.values
     
@@ -149,8 +149,10 @@ def restore_template(template, gen_record, primer_pairs):
         amplicon = tmp.loc["amplicon"]
         alignment.complete_from_csv(gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon)
         recovered_template.loc[recovered_template.shape[0]] = alignment.get_csv()
-    return recovered_template
+    raw_stats, cooked_stats = alignment.get_stats()
     
+    return recovered_template, raw_stats, cooked_stats
+
 
 if (__name__=="__main__"):
     gen_record = load_bio_files(["Data/mitochondrion.1.1.genomic.fna"], writable=True)

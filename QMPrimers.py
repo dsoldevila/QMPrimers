@@ -24,7 +24,7 @@ for key in TEMPLATE_HEADER:
 parameters = [
         ["gen", None, "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
         ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
-        ["output_file", os.path.join(os.getcwd(),"output.csv"), "Location of the output file", "-o", "entry"],
+        ["output_file", os.path.join(os.getcwd(),"output"), "Location of the output files, no extension", "-o", "entry"],
         ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
         ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
         ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
@@ -145,9 +145,9 @@ if (__name__=="__main__"):
         
         if(cl_parameters.loc["gen", "value"]):
             cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
-            template, gen_record, primer_pair = compute(cl_parameters)
+            template, gen_record, primer_pair, raw_stats, cooked_stats = compute(cl_parameters)
         elif(cl_parameters.loc["csv_template", "value"]):
-            template, gen_record, primer_pair = load_template(cl_parameters)
+            template, gen_record, primer_pair, raw_stats, cooked_stats = load_template(cl_parameters)
             
         header = []
         for key in output_info:
@@ -156,7 +156,7 @@ if (__name__=="__main__"):
         Nend = cl_parameters.loc["Nend miss.", "value"]
         if(Nend):
             header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
-        save_template_primer_missmatches(cl_parameters.loc["output_file", "value"], template, header=header)
+        save_template_primer_missmatches(cl_parameters.loc["output_file", "value"], template, raw_stats, cooked_stats, header=header)
     else:
         saved_sys_stdout = sys.stdout
         saved_sys_stderr = sys.stderr

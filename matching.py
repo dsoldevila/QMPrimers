@@ -59,7 +59,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 
     return result
 
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template, Nend):
+def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template, Nend, alignment_processor):
     """
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
@@ -75,7 +75,6 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
             max_amplicon = len_gen - (primer.flen + primer.rlen)
     
     best_score = 0
-    alignment_processor = Alignment() #TODO declare outside
     alignments = []
     
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f.seq, primer.flen, gen.seq[0:-search_limit]) #compute forward primer best matches
@@ -99,6 +98,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         alignment_processor.get(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
                                 primer.flen-fm[0], primer.rlen-rm[0], amplicon, Nend) #TODO, creating a temp class overkill?
         template.loc[template.shape[0]] = alignment_processor.get_csv()
+        
     return template
 
 def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend, hanging_primers=False):
@@ -114,12 +114,14 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
         pp.r.seq = np.array(pp.r)
         
     size = len(gen_record)
-    i = 0
+    i = 0       
     template_header = TEMPLATE_HEADER
     if(Nend):
         template_header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
     template = pd.DataFrame(columns=template_header)
 
+    alignment_processor = Alignment(max_miss_f + max_miss_r)
+    
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")
         i +=1
@@ -127,11 +129,13 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
         gen.seq = np.array(gen.seq)
         for pp in primer_pairs:
             try:
-                template = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template, Nend)
+                template = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template, Nend, alignment_processor)
             except:
                 raise
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pp.id))
-    return template
+    raw_stats, cooked_stats = alignment_processor.get_stats()
+    
+    return template, raw_stats, cooked_stats
 
 def store_matching_results(output_file, template, header=None):
     """
@@ -141,6 +145,13 @@ def store_matching_results(output_file, template, header=None):
     """
     template.to_csv(output_file, columns=header, index_label="id");
     
+    return
+
+def store_stats(output_file, raw_stats, cooked_stats):
+    with open(output_file,'w') as outfile:
+        raw_stats.to_string(outfile)
+        outfile.write("\n\n")
+        cooked_stats.to_string(outfile)
     return
 
 if(__name__=="__main__"):
