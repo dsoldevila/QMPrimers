@@ -33,7 +33,7 @@ This programm has a command line mode and a GUI mode:
   * **Hanging primers**: mf = forward maximum missmatches, mr = reverse max. miss. 
     Primer pairs are allowed to match between [0-mf,len(genome)+mr] instead of just between the length of the genome
   * **Check integrity** is used to check if the genome file is correctly formated. The primer pairs file is always checked due to the fact that is expected to be a small file.
-  * **Nend miss.** outputs the number of missmatches in the N first and end nucleotides of the F  and R primer respectively.
+  * **Nend miss.** outputs the number of missmatches in the N end and first nucleotides of the F  and R primer respectively.
 
 
 
