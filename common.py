@@ -155,7 +155,7 @@ class Alignment:
         index = self.pp_stats.index.values
         columns = self.pp_stats.columns.values
         
-        cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "meadian"])
+        cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "median"])
         
         tmp = self.pp_stats.multiply(columns)
         total = self.pp_stats.sum(axis=1)
@@ -173,6 +173,14 @@ class Alignment:
             for j in columns:
                 if(self.pp_stats.loc[i, j]):
                     cooked_stats.loc[i, "max"] = j 
+                    
+        for i in index:
+            a = 0
+            for j in columns:
+                a += self.pp_stats.loc[i,j]
+                if(a>=total.loc[i]/2):
+                    cooked_stats.loc[i, "median"] = j
+                    break;
         
         return self.pp_stats, cooked_stats
     
