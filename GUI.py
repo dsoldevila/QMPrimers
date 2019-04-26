@@ -217,7 +217,7 @@ class GUI_compute():
         return
     
     def load_template(self):
-        self.template, self.gen_record, self.primer_pairs = load_template(self.parameters)
+        self.template, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = load_template(self.parameters)
         return
     
     def store_results(self):
