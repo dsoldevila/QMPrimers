@@ -59,24 +59,26 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 
     return result
 
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template, Nend, alignment_processor):
+def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template, discarded, Nend, alignment_processor):
     """
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
     """
+    
     max_amplicon = primer.max_amplicon
     search_limit = primer.rlen+max_amplicon
     len_gen = len(gen)
     if(primer.flen+search_limit>len_gen): #If primer pair plus max_amplicon is larger than the genomic sequence, check if with min_amplicon the same happens
         if(primer.flen+primer.rlen+primer.min_amplicon>len_gen): #If primer pair plus min_amplicon is larger than the genomic sequence, abort
             print("Warning: Skipping gen "+gen.id+" primer pair "+str(primer.id))
-            return template
+            discarded.loc[discarded.shape[0]] = [primer.id, gen.id]
+            return template, discarded
         else: #else modify max_amplicon to keep the primer_pair within the limits
             max_amplicon = len_gen - (primer.flen + primer.rlen)
     
     best_score = 0
     alignments = []
-    
+
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f.seq, primer.flen, gen.seq[0:-search_limit]) #compute forward primer best matches
     for fm in forward_matchings: #for each match with forward primer, compute reverse matchings
         start = fm[2]+primer.min_amplicon #forward match start + len(forward) + min amplicon
@@ -90,7 +92,8 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
             elif (score == best_score): #elif the score is equaly good, get this alignment too
                 alignments.append((fm, rm))
                 
-                
+    if(alignments==[]):
+        discarded.loc[discarded.shape[0]] = [primer.id, gen.id]
     for al in alignments:
         fm = al[0]
         rm= al[1]
@@ -99,7 +102,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
                                 primer.flen-fm[0], primer.rlen-rm[0], amplicon, Nend) #TODO, creating a temp class overkill?
         template.loc[template.shape[0]] = alignment_processor.get_csv()
         
-    return template
+    return template, discarded
 
 def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend, hanging_primers=False):
     """
@@ -119,6 +122,8 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
     if(Nend):
         template_header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
     template = pd.DataFrame(columns=template_header)
+    
+    discarded = pd.DataFrame(columns=TEMPLATE_HEADER[0:2])
 
     alignment_processor = Alignment(max_miss_f + max_miss_r)
     
@@ -129,13 +134,13 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
         gen.seq = np.array(gen.seq)
         for pp in primer_pairs:
             try:
-                template = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template, Nend, alignment_processor)
+                template, discarded = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template, discarded, Nend, alignment_processor)
             except:
                 raise
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pp.id))
     raw_stats, cooked_stats = alignment_processor.get_stats()
     
-    return template, raw_stats, cooked_stats
+    return template, discarded, raw_stats, cooked_stats
 
 def store_matching_results(output_file, template, header=None):
     """
@@ -152,6 +157,10 @@ def store_stats(output_file, raw_stats, cooked_stats):
         raw_stats.to_string(outfile)
         outfile.write("\n\n")
         cooked_stats.to_string(outfile)
+    return
+
+def store_discarded(output_file, discarded):
+    discarded.to_csv(output_file, index_label="id")
     return
 
 if(__name__=="__main__"):

@@ -145,9 +145,9 @@ if (__name__=="__main__"):
         
         if(cl_parameters.loc["gen", "value"]):
             cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
-            template, gen_record, primer_pair, raw_stats, cooked_stats = compute(cl_parameters)
+            template, discarded, gen_record, primer_pair, raw_stats, cooked_stats = compute(cl_parameters)
         elif(cl_parameters.loc["csv_template", "value"]):
-            template, gen_record, primer_pair, raw_stats, cooked_stats = load_template(cl_parameters)
+            template, discarded, gen_record, primer_pair, raw_stats, cooked_stats = load_template(cl_parameters)
             
         header = []
         for key in output_info:
@@ -156,7 +156,7 @@ if (__name__=="__main__"):
         Nend = cl_parameters.loc["Nend miss.", "value"]
         if(Nend):
             header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
-        save_template_primer_missmatches(cl_parameters.loc["output_file", "value"], template, raw_stats, cooked_stats, header=header)
+        save_matching_info(cl_parameters.loc["output_file", "value"], template, discarded, raw_stats, cooked_stats, header=header)
     else:
         saved_sys_stdout = sys.stdout
         saved_sys_stderr = sys.stderr

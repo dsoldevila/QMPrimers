@@ -129,6 +129,7 @@ def load_template(template_file):
 def restore_template(template, gen_record, primer_pairs, max_misses):
     alignment = Alignment(max_misses)
     recovered_template = pd.DataFrame(columns=TEMPLATE_HEADER)
+    discarded = pd.DataFrame() # TODO
     columns = template.columns.values
     
     #resize table
@@ -151,7 +152,7 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
         recovered_template.loc[recovered_template.shape[0]] = alignment.get_csv()
     raw_stats, cooked_stats = alignment.get_stats()
     
-    return recovered_template, raw_stats, cooked_stats
+    return recovered_template, discarded, raw_stats, cooked_stats
 
 
 if (__name__=="__main__"):

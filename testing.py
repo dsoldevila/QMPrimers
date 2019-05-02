@@ -355,7 +355,7 @@ def restore_template():
     #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     #primer_pairs = [primer_pairs[5]]
-    template, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, 0) 
+    template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, 0) 
     
     header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
                                      "mismFT_base", "R_pos"]
@@ -363,7 +363,7 @@ def restore_template():
     #templateR = ld.load_template("test1.csv")
     #templateR, rs, cs = ld.restore_template(templateR, gen_record, primer_pairs, 10)
     
-    i.save_template_primer_missmatches("test", template, rs, cs, header=TEMPLATE_HEADER)
+    i.save_template_primer_missmatches("test", template, discarded, rs, cs, header=TEMPLATE_HEADER)
     return
 
 

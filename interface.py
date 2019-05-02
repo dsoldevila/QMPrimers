@@ -19,14 +19,18 @@ def compute(parameters):
                                  parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
     primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
     if(gen_record!=None and primer_pairs!=None):
-        template, raw_stats, cooked_stats = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]), 
+        template, discarded, raw_stats, cooked_stats = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]), 
                                           primer_pairs, gen_record, parameters.loc["Nend miss.", "value"], hanging_primers=parameters.loc["hanging primers", "value"])
-    return template, gen_record, primer_pairs, raw_stats, cooked_stats
+    return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
-def save_template_primer_missmatches(output_file, template, raw_stats, cooked_stats, header=None):
-    m.store_matching_results(output_file+".csv", template, header)
+def save_matching_info(output_file, template, discarded, raw_stats, cooked_stats, header=None):
+    m.store_matching_results(output_file+"_positive.csv", template, header)
+    
+    if(not discarded.empty):
+        m.store_discarded(output_file+"_negative.csv", discarded)
     
     m.store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
+    
     return
 
 def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers):
@@ -58,12 +62,11 @@ def load_template(parameters):
     try:
         template = ld.load_template(parameters.loc["csv_template", "value"])
         max_misses = int(parameters.loc["forward missmatches", "value"]) + int(parameters.loc["reverse missmatches", "value"])
-        template, raw_stats, cooked_stats = ld.restore_template(template, gen_record, primer_pairs, max_misses)
+        template, discarded, raw_stats, cooked_stats = ld.restore_template(template, gen_record, primer_pairs, max_misses)
         print("Template file restored!")
     except:
         print("Error at restoring template")
-        
-    return template, gen_record, primer_pairs, raw_stats, cooked_stats
+    return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
         
 
 def simulate():

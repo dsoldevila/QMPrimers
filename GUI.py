@@ -194,7 +194,9 @@ class GUI_compute():
         return
     
     def unset_template_file(self):
-        self.button["csv_template"].config(text="Open", command=(lambda: self.set_template_file(self._open_file())))
+        self.button["csv_template"].config(text="Open", command=(lambda: self.set_template_file(self._open_files())))
+        self.entries["csv_template"].delete(0, END)
+        self.entries["csv_template"].insert(0, "<No Precomputed Template>")
         self.other_frame.pack(side=LEFT, expand=YES, fill=X)
         self.button_lt.pack_forget()
         self.button_c.pack(side=TOP, expand=YES, fill=X)
@@ -208,7 +210,7 @@ class GUI_compute():
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
        
-        self.template, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)
+        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)
         
         print("Finished!")
         
@@ -217,7 +219,7 @@ class GUI_compute():
         return
     
     def load_template(self):
-        self.template, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = load_template(self.parameters)
+        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = load_template(self.parameters)
         return
     
     def store_results(self):
@@ -252,6 +254,6 @@ class GUI_compute():
                                      flen, self.template.loc[i, "mismFT_loc"])
                 self.previous_Nend = Nend
             
-        save_template_primer_missmatches(self.parameters.loc["output_file", "value"], self.template, self.raw_stats, self.cooked_stats, header=header)
+        save_matching_info(self.parameters.loc["output_file", "value"], self.template, self.discarded, self.raw_stats, self.cooked_stats, header=header)
         print("Saved")
         return
