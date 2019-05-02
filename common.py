@@ -55,7 +55,9 @@ class Alignment:
     base_type = {"A":"Pur", "C":"Pyr", "G":"Pur", "T":"Pyr", "R":"Pur", "Y":"Pyr", "Other": "Ind."}
 
     def __init__(self, max_misses):
-        self.pp_stats = pd.DataFrame(columns=list(range(max_misses)), dtype='uint8')
+        columns = list(range(max_misses+1))
+        columns.append("No")
+        self.pp_stats = pd.DataFrame(columns=columns, dtype='uint8')
         return
     
     def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses):
@@ -150,34 +152,48 @@ class Alignment:
             self.pp_stats.loc[primer_pair.id, fmisses+rmisses] = 1
             
         return
+    def add_negative_2_stats(self, primer_pair_id):
+        try:
+            self.pp_stats.loc[primer_pair_id, "No"] += 1
+        except:
+            self.pp_stats.loc[primer_pair_id] = 0
+            self.pp_stats.loc[primer_pair_id, "No"] = 1
+        return
     
     def get_stats(self):
-        index = self.pp_stats.index.values
-        columns = self.pp_stats.columns.values
         
-        cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "median"])
+        columns = self.pp_stats.columns.values[:-1]
+        pp_stats = self.pp_stats[columns] #pop "No" columns to compute the stats
         
-        tmp = self.pp_stats.multiply(columns)
-        total = self.pp_stats.sum(axis=1)
+        
+        tmp = pp_stats.multiply(columns)
+        total = pp_stats.sum(axis=1)
+        total = total.loc[total!=0]
+        index = pp_stats.loc[total.index].index.values
+        cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "median", "n_samples"])
+        #find mean
         cooked_stats["mean"] = tmp.sum(axis=1).div(total)
         
+        cooked_stats["n_samples"] = total
+        
+        #TODO this simple code could be improved
         #find minimum
         for i in index:
             for j in columns:
-                if(self.pp_stats.loc[i, j]):
+                if(pp_stats.loc[i, j]):
                     cooked_stats.loc[i, "min"] = j 
                     break;
                     
         #find maximum
         for i in index:
             for j in columns:
-                if(self.pp_stats.loc[i, j]):
+                if(pp_stats.loc[i, j]):
                     cooked_stats.loc[i, "max"] = j 
-                    
+        #find median
         for i in index:
             a = 0
             for j in columns:
-                a += self.pp_stats.loc[i,j]
+                a += pp_stats.loc[i,j]
                 if(a>=total.loc[i]/2):
                     cooked_stats.loc[i, "median"] = j
                     break;

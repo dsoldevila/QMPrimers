@@ -72,6 +72,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         if(primer.flen+primer.rlen+primer.min_amplicon>len_gen): #If primer pair plus min_amplicon is larger than the genomic sequence, abort
             print("Warning: Skipping gen "+gen.id+" primer pair "+str(primer.id))
             discarded.loc[discarded.shape[0]] = [primer.id, gen.id]
+            alignment_processor.add_negative_2_stats(primer.id)
             return template, discarded
         else: #else modify max_amplicon to keep the primer_pair within the limits
             max_amplicon = len_gen - (primer.flen + primer.rlen)
@@ -94,6 +95,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
                 
     if(alignments==[]):
         discarded.loc[discarded.shape[0]] = [primer.id, gen.id]
+        alignment_processor.add_negative_2_stats(primer.id)
     for al in alignments:
         fm = al[0]
         rm= al[1]
@@ -138,6 +140,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
             except:
                 raise
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pp.id))
+
     raw_stats, cooked_stats = alignment_processor.get_stats()
     
     return template, discarded, raw_stats, cooked_stats

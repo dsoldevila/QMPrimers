@@ -148,10 +148,11 @@ def test_all_pairs():
     gen_record = split(gen_record, 0.01)
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     
-    gen_matching_table = m.compute_gen_matching(5, 5, primer_pairs, gen_record, hanging_primers=True)
+    result = m.compute_gen_matching(5, 5, primer_pairs, gen_record, 0, hanging_primers=True)
+    gen_matching_table = result[0]
     
-    header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_type", "R_pos", "mismRT_type"]
-    
+    header = TEMPLATE_HEADER
+    correct_alignments = pd.DataFrame(columns=header)
     
     info = {"total_gens": len(gen_record), "matches_skipped":0, "alignments_processed": 0, "multiple_alignment_cases":0, "better_alignments":0}
 
@@ -200,6 +201,7 @@ def test_all_pairs():
                 global_check["missr"]=0
                 check["missr"]=0
             if 0 not in check.values(): #if everything is correct check if the result found is better
+                correct_alignments.loc[correct_alignments.shape[0]] = gen_matching_table.loc[index]
                 if(gen_matching_table.iloc[index].loc["mismFT"]+gen_matching_table.iloc[index].loc["mismRT"] < fm+rm):
                     info["better_alignments"]+=1
                 else:
@@ -216,9 +218,10 @@ def test_all_pairs():
         print("SUCCESS!")
     else:
         print("TEST FAILED")
+        
+    correct_alignments.to_csv("correct_alignments.csv", index_label="id")
     """
     store_results("Test_data/better_alignments.csv", better_alignment_list, header)
-    store_results("Test_data/correct_alignments.csv", correct_alignment_list, header)
     store_results("Test_data/not_tested_alignments.csv", not_tested_alignment_list, header)
     ld.store_matching_results("Test_data/full_alignments.csv", gen_alignment_list, header)
     """
@@ -363,14 +366,14 @@ def restore_template():
     #templateR = ld.load_template("test1.csv")
     #templateR, rs, cs = ld.restore_template(templateR, gen_record, primer_pairs, 10)
     
-    i.save_template_primer_missmatches("test", template, discarded, rs, cs, header=TEMPLATE_HEADER)
+    i.save_matching_info("test", template, discarded, rs, cs, header=TEMPLATE_HEADER)
     return
 
 
 if(__name__=="__main__"):
     
     time1 = time.time()
-    restore_template()
+    test_all_pairs()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     
