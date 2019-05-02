@@ -114,7 +114,8 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
     
-    for pp in primer_pairs:
+    for pkey in primer_pairs:
+        pp = primer_pairs[pkey]
         pp.f.seq = np.array(pp.f)
         pp.r.seq = np.array(pp.r)
         
@@ -134,12 +135,12 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
         i +=1
         gen = gen_record[gen_key]
         gen.seq = np.array(gen.seq)
-        for pp in primer_pairs:
+        for pkey in primer_pairs:
             try:
-                template, discarded = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, pp, gen, hanging_primers, template, discarded, Nend, alignment_processor)
+                template, discarded = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer_pairs[pkey], gen, hanging_primers, template, discarded, Nend, alignment_processor)
             except:
                 raise
-                print("Error: Skipping gen "+gen.id+" primer pair "+str(pp.id))
+                print("Error: Skipping gen "+gen.id+" primer pair "+str(pkey))
 
     raw_stats, cooked_stats = alignment_processor.get_stats()
     

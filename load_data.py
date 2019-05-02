@@ -23,7 +23,7 @@ def load_csv_file(file, delimiter=";"):
     """
     pos = {"id": 0, "forwardPrimer": 0, "reversePrimer": 0, "fPDNA": 0, "rPDNA": 0,"ampliconMinLength": 0, "ampiconMaxLength": 0}
     header_len = len(pos)
-    primer_list = []
+    primer_dict = {}
     with open(file, newline='') as csvfile:
         csvreader = csv.reader(csvfile, delimiter=delimiter)
         headers = next(csvreader)
@@ -50,13 +50,13 @@ def load_csv_file(file, delimiter=";"):
                 
                 primer_pair = PrimerPair((row[pos["id"]]), fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
                 if(check_primer_pair_integrity(primer_pair)):
-                    primer_list.append(primer_pair)
+                    primer_dict[row[pos["id"]]] = primer_pair
                 else:
                     print("Error: Skipping primer pair "+primer_pair.id+", bad sequence")
             else:
                 print("Wrong primer pair in line "+str(i))
             
-    return primer_list
+    return primer_dict
 
 def load_bio_files(files, file_format=None, writable=False, check_uppercase=False):
     """
@@ -142,7 +142,7 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
     for i in range(template.shape[0]):
         tmp = template.loc[i]
         gen = gen_record[tmp.loc["fastaid"]]
-        primer_pair = primer_pairs[int(tmp.loc["primerPair"])-1]
+        primer_pair = primer_pairs[str(tmp.loc["primerPair"])]
         fpos = tmp.loc["F_pos"]
         rpos = tmp.loc["R_pos"]
         fmisses = tmp.loc["mismFT"]

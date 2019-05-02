@@ -166,7 +166,7 @@ def test_all_pairs():
             info["matches_skipped"]+=1
             #Add them to not checked list
         else:
-            pp = primer_pairs[int(pp)-1]
+            pp = primer_pairs[pp]
             info["alignments_processed"]+=1
             #amplicon
             amplicon = gen_matching_table.iloc[index].loc["amplicon"]
@@ -219,7 +219,7 @@ def test_all_pairs():
     else:
         print("TEST FAILED")
         
-    correct_alignments.to_csv("correct_alignments.csv", index_label="id")
+    correct_alignments.to_csv("Test_data/correct_alignments.csv", index_label="id")
     """
     store_results("Test_data/better_alignments.csv", better_alignment_list, header)
     store_results("Test_data/not_tested_alignments.csv", not_tested_alignment_list, header)
@@ -362,18 +362,19 @@ def restore_template():
     
     header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
                                      "mismFT_base", "R_pos"]
-    #m.store_matching_results("test1.csv", template, header=TEMPLATE_HEADER)
-    #templateR = ld.load_template("test1.csv")
-    #templateR, rs, cs = ld.restore_template(templateR, gen_record, primer_pairs, 10)
+    m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
+    templateR = ld.load_template("Test_data/test1.csv")
+    templateR, discarded, rs, cs = ld.restore_template(templateR, gen_record, primer_pairs, 10)
     
-    i.save_matching_info("test", template, discarded, rs, cs, header=TEMPLATE_HEADER)
+    i.save_matching_info("Test_data/test2", templateR, discarded, rs, cs, header=TEMPLATE_HEADER)
     return
 
 
 if(__name__=="__main__"):
     
     time1 = time.time()
-    test_all_pairs()
+    #test_all_pairs()
+    restore_template()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     

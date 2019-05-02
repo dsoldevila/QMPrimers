@@ -249,7 +249,7 @@ class GUI_compute():
                 self.template[mismRN].astype('int32')
                 
                 for i in range(self.template.shape[0]):
-                    flen = self.primer_pairs[int(self.template.loc[i, "primerPair"])-1].flen
+                    flen = self.primer_pairs[self.template.loc[i, "primerPair"]].flen
                     self.template.loc[i, mismFN], self.template.loc[i, mismRN] = get_Nend_missmatches(int(Nend), self.template.loc[i, "mismRT_loc"],
                                      flen, self.template.loc[i, "mismFT_loc"])
                 self.previous_Nend = Nend
