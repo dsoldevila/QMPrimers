@@ -116,7 +116,7 @@ class GUI_compute():
         self.button_c.pack(side=TOP, expand=YES, fill=X)
         
         """Load Template"""
-        self.button_lt = Button(self.buttons_frame, text="Load template", command=self.load_template)
+        self.button_lt = Button(self.buttons_frame, text="Load template", command=self.load_template_in_thread)
         #self.button_c.pack(expand=YES, fill=X)
         
         """Save"""
@@ -216,6 +216,10 @@ class GUI_compute():
         
         self.store_results()
         
+        return
+    
+    def load_template_in_thread(self):
+        _thread.start_new_thread(self.load_template, ())
         return
     
     def load_template(self):

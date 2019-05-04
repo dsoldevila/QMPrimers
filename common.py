@@ -87,7 +87,7 @@ class Alignment:
         self.amplicon = amplicon
         
         
-        self.fm_loc, self.rm_loc = self._get_missmatch_location()
+        self.fm_loc, self.fm_loc_output, self.rm_loc, self.rm_loc_output = self._get_missmatch_location()
         self.fm_type, self.rm_type = self._get_missmatch_type()
         
         self.fm_base, self.rm_base = self._get_missmatch_base_type()
@@ -137,7 +137,7 @@ class Alignment:
         else:
             self.amplicon = amplicon
         
-        self.fm_loc, self.rm_loc = self._get_missmatch_location()
+        self.fm_loc, self.fm_loc_output, self.rm_loc, self.rm_loc_output = self._get_missmatch_location()
         self.fm_type, self.rm_type = self._get_missmatch_type()        
         self.fm_base, self.rm_base = self._get_missmatch_base_type()
         
@@ -152,6 +152,7 @@ class Alignment:
             self.pp_stats.loc[primer_pair.id, fmisses+rmisses] = 1
             
         return
+    
     def add_negative_2_stats(self, primer_pair_id):
         try:
             self.pp_stats.loc[primer_pair_id, "No"] += 1
@@ -205,17 +206,23 @@ class Alignment:
         @Brief Returns array with the location of missmatches (on the primer)
         """
         fm_loc = []
+        fm_loc_output = [] #fm_loc but inversed and starting at one, formated for the output file
         rm_loc = []
+        rm_loc_output = [] #rm_loc, but starting at one, formated for the output file
         
-        for i in range(self.primer_pair.flen):
+        flen = self.primer_pair.flen
+        for i in range(flen):
             if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen.seq[self.fpos+i]]!=1):
                 fm_loc.append(i)
+                fm_loc_output.append(flen-i+1)
         
-        for i in range(self.primer_pair.rlen):
+        rlen = self.primer_pair.rlen
+        for i in range(rlen):
             if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.rpos+i]]!=1):
                     rm_loc.append(i)
+                    rm_loc_output.append(i+1)
                 
-        return fm_loc, rm_loc
+        return fm_loc, fm_loc_output, rm_loc, rm_loc_output
     
     def _get_missmatch_type(self):
         fm_type = []
@@ -273,7 +280,8 @@ class Alignment:
     
     def get_csv(self):
         info= [self.primer_pair.id, self.gen.id, self.primer_pair.f.id, self.primer_pair.r.id, self.fm, self.rm, 
-               self.amplicon, self.real_fpos, self.fm_loc, self.fm_type, self.fm_base, self.real_rpos, self.rm_loc, self.rm_type, self.rm_base]
+               self.amplicon, self.real_fpos, self.fm_loc_output, self.fm_type, self.fm_base, self.real_rpos, self.rm_loc_output, 
+               self.rm_type, self.rm_base]
         if(self.Nend_misses):
             info.extend([self.fm_Nend, self.rm_Nend])
         return info
