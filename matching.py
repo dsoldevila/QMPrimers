@@ -146,6 +146,10 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
     
     return template, discarded, raw_stats, cooked_stats
 
+"""
+OTHER FUNCTIONS
+"""
+
 def store_matching_results(output_file, template, header=None):
     """
     Stores alignment results
@@ -166,6 +170,28 @@ def store_stats(output_file, raw_stats, cooked_stats):
 def store_discarded(output_file, discarded):
     discarded.to_csv(output_file, index_label="id")
     return
+
+def recalculate_Nend(template, primer_pairs, Nend, previous_Nend):
+
+    mismFN = 'mismFN'+str(Nend)
+    mismRN = 'mismRN'+str(Nend)
+    
+    if(previous_Nend!=0):
+        template = template.rename(columns={'mismFN'+str(previous_Nend): mismFN, 'mismRN'+str(previous_Nend): mismRN})
+    else:
+        template[mismFN] = 0
+        template[mismRN] = 0
+    
+    #TODO patch
+    template[mismFN].astype('int32')
+    template[mismRN].astype('int32')
+    
+    for i in range(template.shape[0]):
+        flen = primer_pairs[template.loc[i, "primerPair"]].flen
+        template.loc[i, mismFN], template.loc[i, mismRN] = get_Nend_missmatches(int(Nend), template.loc[i, "mismRT_loc"],
+                         flen, template.loc[i, "mismFT_loc"])
+    
+    return template
 
 if(__name__=="__main__"):
     

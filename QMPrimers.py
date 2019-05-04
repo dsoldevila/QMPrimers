@@ -143,19 +143,25 @@ if (__name__=="__main__"):
         get_help(cl_parameters)
     elif(cl_parameters.loc["command_line","value"]):
         
-        if(cl_parameters.loc["gen", "value"]):
+        if(cl_parameters.loc["csv_template", "value"]):
+            template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = load_template(cl_parameters)
+
+        elif(cl_parameters.loc["gen", "value"]):
             cl_parameters.loc["gen", "value"] = (cl_parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
-            template, discarded, gen_record, primer_pair, raw_stats, cooked_stats = compute(cl_parameters)
-        elif(cl_parameters.loc["csv_template", "value"]):
-            template, discarded, gen_record, primer_pair, raw_stats, cooked_stats = load_template(cl_parameters)
+            template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = compute(cl_parameters)
             
         header = []
         for key in output_info:
             if(output_info[key]):
                 header.append(key)
+                
         Nend = cl_parameters.loc["Nend miss.", "value"]
         if(Nend):
+            if(cl_parameters.loc["csv_template", "value"]):
+                template = recalculate_Nend(template, primer_pairs, Nend, 0)
             header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
+
+            
         save_matching_info(cl_parameters.loc["output_file", "value"], template, discarded, raw_stats, cooked_stats, header=header)
     else:
         saved_sys_stdout = sys.stdout

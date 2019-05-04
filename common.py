@@ -268,7 +268,19 @@ class Alignment:
         return  fm_base_type, rm_base_type
             
     def _get_Nend_missmatches(self, Nend_misses):
-        return get_Nend_missmatches(Nend_misses, self.rm_loc, self.primer_pair.flen, self.fm_loc)
+        rm_Nend = 0
+        for i in self.rm_loc:
+            if(i >= Nend_misses):
+                break;
+            rm_Nend +=1
+            
+        fm_Nend = 0
+        Nend_misses = self.primer_pair.flen - Nend_misses
+        for i in range(1, len(self.fm_loc)+1):
+            if(self.fm_loc[-i] < Nend_misses):
+                break;
+            fm_Nend +=1
+        return fm_Nend, rm_Nend
     
     
     def __str__(self):        
@@ -286,17 +298,21 @@ class Alignment:
             info.extend([self.fm_Nend, self.rm_Nend])
         return info
 
-def get_Nend_missmatches(Nend_misses, rm_loc, flen, fm_loc):
-        rm_Nend = 0
-        for i in rm_loc:
-            if(i >= Nend_misses):
-                break;
-            rm_Nend +=1
+def get_Nend_missmatches(Nend_misses, rm_loc_output, flen, fm_loc_output):
+    """
+    @brief: Modified version of Alignment._get_Nend_missmatches. It's needded because missmatch locations in the output_file are formated 
+    differently from the ones used by the program internally. Check fm_loc and fm_loc_output.
+    """
+    rm_Nend = 0
+    for i in rm_loc_output:
+        if(i > Nend_misses):
+            break;
+        rm_Nend +=1
+        
+    fm_Nend = 0
+    for i in fm_loc_output:
+        if(i > Nend_misses):
+            break;
+        fm_Nend +=1
             
-        fm_Nend = 0
-        Nend_misses = flen - Nend_misses
-        for i in range(1, len(fm_loc)+1):
-            if(fm_loc[-i] < Nend_misses):
-                break;
-            fm_Nend +=1
-        return fm_Nend, rm_Nend
+    return fm_Nend, rm_Nend

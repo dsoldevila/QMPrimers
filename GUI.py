@@ -238,24 +238,7 @@ class GUI_compute():
             header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
             
             if(self.previous_Nend!=Nend):
-                mismFN = 'mismFN'+str(Nend)
-                mismRN = 'mismRN'+str(Nend)
-                
-                if(self.previous_Nend!=0):
-                    self.template = self.template.rename(columns={'mismFN'+str(self.previous_Nend): mismFN,
-                                                                'mismRN'+str(self.previous_Nend): mismRN})
-                else:
-                    self.template[mismFN] = 0
-                    self.template[mismRN] = 0
-                
-                #TODO patch
-                self.template[mismFN].astype('int32')
-                self.template[mismRN].astype('int32')
-                
-                for i in range(self.template.shape[0]):
-                    flen = self.primer_pairs[self.template.loc[i, "primerPair"]].flen
-                    self.template.loc[i, mismFN], self.template.loc[i, mismRN] = get_Nend_missmatches(int(Nend), self.template.loc[i, "mismRT_loc"],
-                                     flen, self.template.loc[i, "mismFT_loc"])
+                self.template = recalculate_Nend(self.template, self.primer_pairs, Nend, self.previous_Nend)
                 self.previous_Nend = Nend
             
         save_matching_info(self.parameters.loc["output_file", "value"], self.template, self.discarded, self.raw_stats, self.cooked_stats, header=header)

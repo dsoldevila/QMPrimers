@@ -34,7 +34,6 @@ def save_matching_info(output_file, template, discarded, raw_stats, cooked_stats
     return
 
 def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers):
-    if(check_integrity): print("INTEGRITY CHECKED")
     gen_record = None
     try:
         gen_record = ld.load_bio_files(gen_file, writable=check_integrity or check_uppercase, 
@@ -67,6 +66,9 @@ def load_template(parameters):
     except:
         print("Error at restoring template")
     return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
+
+def recalculate_Nend(template, primer_pairs, Nend, previous_Nend):
+    return m.recalculate_Nend(template, primer_pairs, Nend, previous_Nend)
         
 
 def simulate():
