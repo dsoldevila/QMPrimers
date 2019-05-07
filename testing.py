@@ -20,6 +20,8 @@ import pandas as pd
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
+import simulation as s
+
 "Name, forward starting pos, forward's missmatches loc, reverse's missmatches loc"
 target1 = [("XXX-99_Xysticus_OWN", 11, [0,12,13,15],[2,5]),
         ("FBARB265-11_Clubiona_leucaspis_BOLD", 0,[0,12],[2,5,14,18]),
@@ -369,12 +371,27 @@ def restore_template():
     i.save_matching_info("Test_data/test2", templateR, discarded, rs, cs, header=TEMPLATE_HEADER)
     return
 
+def simulate():
+    template = pd.read_csv("/home/david/Git/QMPrimers/Test_data/test1.csv")
+    full_sample = template["fastaid"].unique()
+    sample_size = 6
+    primer_pairs = [14]
+    k = 0.3
+    B = 4
+    sample = s.get_random_sample(full_sample, sample_size, k)
+    
+    s.amplify(template, primer_pairs, sample, B)
+    print(sample)
+    tmp = sample[["oprop", "fprop"]]
+    tmp = tmp.astype('float64')
+    tmp = tmp.corr()
+    print(tmp)
+
 
 if(__name__=="__main__"):
     
     time1 = time.time()
-    #test_all_pairs()
-    restore_template()
+    simulate()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     
