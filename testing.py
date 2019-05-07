@@ -371,22 +371,31 @@ def restore_template():
     i.save_matching_info("Test_data/test2", templateR, discarded, rs, cs, header=TEMPLATE_HEADER)
     return
 
-def simulate():
+def simulate_whitebox():
     template = pd.read_csv("/home/david/Git/QMPrimers/Test_data/test1.csv")
     full_sample = template["fastaid"].unique()
     sample_size = 6
-    primer_pairs = [14]
+    primer_pair = 14
     k = 0.3
     B = 4
-    sample = s.get_random_sample(full_sample, sample_size, k)
+    sim = s.Simulation(template, sample_size)
+    sample = sim.get_random_sample(full_sample, sample_size, k)
     
-    s.amplify(template, primer_pairs, sample, B)
+    sim.amplify(template, primer_pair, sample, B)
     print(sample)
     tmp = sample[["oprop", "fprop"]]
     tmp = tmp.astype('float64')
     tmp = tmp.corr()
     print(tmp)
 
+def simulate():
+    template = pd.read_csv("/home/david/Git/QMPrimers/Test_data/test1.csv")
+    full_sample = template["fastaid"].unique()
+    sample_size = 6
+    k = 0.3
+    B = 4
+    sim = s.Simulation(template, sample_size)
+    sim.simulate(k, B, N=6)
 
 if(__name__=="__main__"):
     
