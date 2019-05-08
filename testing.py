@@ -356,7 +356,7 @@ def check_uppercase():
     print(gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"])
     
 def restore_template():
-    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
+    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
     #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     #primer_pairs = [primer_pairs[5]]
@@ -368,7 +368,7 @@ def restore_template():
     templateR = ld.load_template("Test_data/test1.csv")
     templateR, discarded, rs, cs = ld.restore_template(templateR, gen_record, primer_pairs, 10)
     
-    i.save_matching_info("Test_data/test2", templateR, discarded, rs, cs, header=TEMPLATE_HEADER)
+    #i.save_matching_info("Test_data/test2", templateR, discarded, rs, cs, header=TEMPLATE_HEADER)
     return
 
 def simulate_whitebox():
@@ -391,16 +391,19 @@ def simulate_whitebox():
 def simulate():
     template = pd.read_csv("/home/david/Git/QMPrimers/Test_data/test1.csv")
     full_sample = template["fastaid"].unique()
-    sample_size = 6
+    sample_size = 10
     k = 0.3
     B = 4
+    N=10
     sim = s.Simulation(template, sample_size)
-    sim.simulate(k, B, N=6)
+    raw, cooked = sim.simulate(k, B, N)
+    sim.store_raw_data("/home/david/Git/QMPrimers/Test_data/sim_test", raw, cooked)
 
 if(__name__=="__main__"):
     
     time1 = time.time()
     simulate()
+    #restore_template()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     

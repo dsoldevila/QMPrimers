@@ -156,7 +156,7 @@ def store_matching_results(output_file, template, header=None):
     @param gen_matching_list list of GenMatching instances
     @return None
     """
-    template.to_csv(output_file, columns=header, index_label="id");
+    template.to_csv(output_file, columns=header, index_label="id")
     
     return
 

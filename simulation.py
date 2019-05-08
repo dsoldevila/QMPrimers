@@ -24,7 +24,7 @@ class Simulation():
         
         return
 
-    def simulate(self, k, B, N=100):
+    def simulate(self, k, B, N):
         """
         @param k: Paramater used to calculte the concentration of each sample. Range(0,1).
         @param B: Amplification eficiency = B^(-missmatches)
@@ -36,6 +36,8 @@ class Simulation():
         columns.append("ncombinations")
         self.raw_stats = pd.DataFrame(columns=range(N))
         
+        pplen = self.primer_pairs.shape[0]
+        count = 0
         for pp in self.primer_pairs:
             template = self.template.loc[self.template["primerPair"] == pp]
             full_sample = template["fastaid"].unique()
@@ -56,11 +58,14 @@ class Simulation():
                     sample = self.get_random_sample(full_sample, self.sample_size, k)
                     amplified_sample = self.amplify(template, pp, sample, B)
                     self.update_stats(amplified_sample, pp)
+            count+=1
+            print("{0:.2f}".format((count/pplen)*100)+"%")
+                
 
         self.cooked_stats = self.cook_stats(0.95)
         print(self.raw_stats)
         print(self.cooked_stats)
-        return
+        return self.raw_stats, self.cooked_stats
 
     def get_random_sample(self, full_sample, sample_size, k):
         sample = pd.DataFrame(columns=["fastaid", "oprop", "fprop"])
@@ -72,7 +77,7 @@ class Simulation():
             sample.loc[i, "oprop"] = prop
         return sample
 
-    def amplify(self, template, pp, sample, B):
+    def amplify(self, template, pp, sample, B, mode=1):
         reduced_template = template.loc[template["fastaid"].isin(sample["fastaid"])]
         
         a = 0.0
@@ -82,6 +87,7 @@ class Simulation():
         
         for i in sample.index.values:
             row = pp_matches.loc[pp_matches["fastaid"]==sample.loc[i, "fastaid"]]
+            #TODO use N end missmatches if mode=2
             m = row["mismFT"].values[0] + row["mismRT"].values[0] #TODO make it more clean(?)
             amp_eff = 1/(B**m)
             a += amp_eff*sample.loc[i, "oprop"]
@@ -94,14 +100,14 @@ class Simulation():
 
     def update_stats(self, sample, primer_pair): 
         tmp = sample[["oprop", "fprop"]]
-        tmp = tmp.astype('float64') #TODO patch, create a better solution of slow
+        tmp = tmp.astype('float64') #TODO patch, create a better solution if slow
         tmp = tmp.corr()
         tmp = tmp.loc["oprop", "fprop"]
         self.raw_stats.loc[primer_pair, self.step] = tmp
         return
     
     def cook_stats(self, ci):
-        cooked_stats = pd.DataFrame(index=self.raw_stats.index, columns=["mean", "median", "ncombinations", "CI"])
+        cooked_stats = pd.DataFrame(index=self.raw_stats.index, columns=["min", "max", "mean", "median", "ncombinations", "CI"])
         raw_stats = self.raw_stats[self.raw_stats.columns[:-1]]
         
         raw_stats = np.sort(raw_stats)
@@ -111,12 +117,28 @@ class Simulation():
     
         raw_stats = raw_stats[:,low_interval:high_interval]
         
+        cooked_stats["min"] = raw_stats[:, 0]
+        cooked_stats["max"] = raw_stats[:, -1]
         cooked_stats["CI"] = ci
         cooked_stats["ncombinations"] = self.raw_stats["ncombinations"]
         cooked_stats["mean"] = raw_stats.mean(axis=1)
         cooked_stats["median"] = np.median(raw_stats, axis=1)
     
         return cooked_stats
+    
+    def store_raw_data(self, output_file, raw_stats, cooked_stats):
+        raw_stats.to_csv(output_file+".csv", index_label="primerPair")
+        
+        with open(output_file+".txt",'w') as outfile:
+            cooked_stats.to_string(outfile)
+        return
+    
+    def plot_results(self, cooked_stats):
+        #boxplot = cooked_stats.boxplot()
+        return
+    
+    def store_plot(self):
+        return
 
 
 

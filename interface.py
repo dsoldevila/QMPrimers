@@ -9,7 +9,12 @@ Created on Sat Mar 30 13:31:13 2019
 import load_data as ld
 import matching as m
 from common import *
+import simulation as s
 
+
+"""
+Matching Stuff
+"""
 def compute(parameters):
     """
     @Brief calls the matching algorithms for both GUI and command line modes
@@ -54,6 +59,9 @@ def load_primer_pairs(primer_pairs_file):
         
     return primer_pairs
 
+"""
+Loading template stuff
+"""
 def load_template(parameters):
     gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
                                  parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
@@ -70,6 +78,11 @@ def load_template(parameters):
 def recalculate_Nend(template, primer_pairs, Nend, previous_Nend):
     return m.recalculate_Nend(template, primer_pairs, Nend, previous_Nend)
         
+"""
+Simulation stuff
+"""
+def simulate(template, sample_size, k, B, N):
+    sim = s.Simulation(template, sample_size)
+    raw, cooked = sim.simulate(k, B, N)
+    return raw, cooked
 
-def simulate():
-    return
