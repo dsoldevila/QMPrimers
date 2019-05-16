@@ -232,7 +232,7 @@ def simulate_whitebox():
     print(tmp)
 
 def simulate():
-    template = pd.read_csv("/home/david/Git/QMPrimers/output_positive.csv")
+    template = pd.read_csv("/home/david/Git/QMPrimers/Data/output_positive.csv")
     full_sample = template["fastaid"].unique()
     sample_size = 10
     k = 0.3

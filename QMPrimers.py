@@ -36,7 +36,7 @@ parameters = [
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
 parameters_sim = [
-        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"],
+        ["template", None, "Precomputed missmatching template", "-i", "entry"],
         ["sample size", 10, "Nº genome samples per simulation step", "-s", "int"],
         ["Beta", 4, "", "-b", "int"],
         ["k", 0.5, "", "-k", "float"],

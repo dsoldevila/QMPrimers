@@ -25,7 +25,7 @@ This programm has a command line mode and a GUI mode:
   ```bash
   python3.7 QMPrimers <no options>
   ```
-  ![screenshot](./Misc/screenshot.png)
+  ![screenshot](./Misc/screenshot_compute.png)
 
   * The **primer pairs file** must have the following header. The order does not matter:                        id;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength
   * The **output** entry is used to specify the path and name of the output file**s**. The program outputs a template csv file and a text file containing basic statistics.

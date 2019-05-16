@@ -7,7 +7,6 @@ Created on Sun May  5 12:39:40 2019
 """
 
 import pandas as pd
-from common import *
 import numpy as np
 import math
 
@@ -20,7 +19,10 @@ class Simulation():
         self.template = template
         self.sample_size = sample_size
         
-        self.primer_pairs = self.template["primerPair"].unique()
+        try:
+            self.primer_pairs = self.template["primerPair"].unique()
+        except:
+            raise ValueError("Template not valid")
         
         return
 
@@ -42,7 +44,7 @@ class Simulation():
             template = self.template.loc[self.template["primerPair"] == pp]
             full_sample = template["fastaid"].unique()
             
-            if(full_sample.shape[0]<N):
+            if(full_sample.shape[0]<N or full_sample.shape[0] < self.sample_size):
                 print("Warning: sample too small with primer pair ", str(pp), ". Skipping...")
                 
             else:

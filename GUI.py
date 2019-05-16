@@ -41,7 +41,7 @@ class GUI_compute():
                 block = Frame(self.file_frame)
                 block.pack(expand=YES, fill=BOTH)
                 self.entries[name] = Entry(block)
-                self.entries[name].pack(side=LEFT, expand=YES, fill=X)
+                self.entries[name].pack(side=LEFT, expand=YES, fill=BOTH)
                 self.button[name] = Button(block, text="Open")
                 self.button[name].pack(side=LEFT, expand=NO, fill=X)
                 
@@ -258,6 +258,7 @@ class GUI_simulate():
         self.parameters = parameters
         self.current_directory = os.getcwd()
         self.entries = {}
+        self.buttons = {}
         self.template = None
         
         """Frame containing Files and Other Parameters frames"""
@@ -267,20 +268,19 @@ class GUI_simulate():
         """Select Files Frame"""
         self.file_frame = Frame(self.first_row_frame)
         self.file_frame.pack(side=LEFT, expand=YES, fill=X)
-        Label(self.file_frame, text="Template").pack()
+        Label(self.file_frame, text="Files").pack()
         
-        """Template entry"""
         for name in self.parameters.loc[parameters["type"]=="entry"].index.values:
             block = Frame(self.file_frame)
             block.pack(expand=YES, fill=BOTH)
             self.entries[name] = Entry(block)
             self.entries[name].pack(side=LEFT, expand=YES, fill=BOTH)
-            self.template_button = Button(block, text="Open")
-            self.template_button.pack(side=LEFT, expand=NO, fill=X)
+            self.buttons[name] = Button(block, text="Open")
+            self.buttons[name].pack(side=LEFT, expand=NO, fill=X)
                 
-        self.entries["csv_template"].insert(0, "<No Template>")
-        self.entries["csv_template"].bind("<Return>", (lambda event: self.update_template_file(self.entries["template"].get())))
-        self.template_button.config(command=(lambda: self.update_template_file(self._open_file())))
+        self.entries["template"].insert(0, "<No Template>")
+        self.entries["template"].bind("<Return>", (lambda event: self.update_template_file(self.entries["template"].get())))
+        self.buttons["template"].config(command=(lambda: self.update_template_file(self._open_file())))
         
         self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
         #self.entries["template"].bind("<Return>", (lambda event: self.update_template_file(self.entries["output_file"].get())))
@@ -313,6 +313,10 @@ class GUI_simulate():
         self.button_c = Button(self.buttons_frame, text="Simulate", command=self.simulate)
         self.button_c.pack(side=TOP, expand=YES, fill=X)
         
+        """Compute"""
+        self.button_c = Button(self.buttons_frame, text="Save raw", command=self.save)
+        self.button_c.pack(side=TOP, expand=YES, fill=X)
+        
         return
     
     def _open_file(self):
@@ -331,8 +335,8 @@ class GUI_simulate():
         if(input_file): #is not None
             self.entries["template"].delete(0, END)
             self.entries["template"].insert(0, str(input_file))
-            self.parameters.loc["csv_template", "value"] = input_file
-            self.template = load_template_only(self.parameters.loc["csv_template", "value"])
+            self.parameters.loc["template", "value"] = input_file
+            self.template = load_template_only(self.parameters.loc["template", "value"])
         return
     
     def set_template(self, template):
