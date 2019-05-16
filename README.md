@@ -3,15 +3,15 @@ A tool to select the best primers to perform quantitative metabarcoding studies.
 
 **WARNING:** This program is still in development, so expect bugs and crashes. Its use is still not recommended!
 
-### Dependencies
+## Dependencies
 
 - [Biopython](https://biopython.org)
 - [Numpy](http://www.numpy.org)
 - [Pandas](https://pandas.pydata.org)
 
-### Wiki
-#### [Matching](https://github.com/dsoldevila/QMPrimers/wiki/Matching)
-Everything related to the Matching is explained here.
+## Wiki
+### Matching
+Everything related to the Matching is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Matching).
 
 
 
