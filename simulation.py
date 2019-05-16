@@ -34,7 +34,7 @@ class Simulation():
         self.B = B
         columns = list(range(N))
         columns.append("ncombinations")
-        self.raw_stats = pd.DataFrame(columns=range(N))
+        self.raw_stats = pd.DataFrame(columns=columns)
         
         pplen = self.primer_pairs.shape[0]
         count = 0
@@ -126,6 +126,7 @@ class Simulation():
     
         return cooked_stats
     
+    @staticmethod
     def store_raw_data(self, output_file, raw_stats, cooked_stats):
         raw_stats.to_csv(output_file+".csv", index_label="primerPair")
         

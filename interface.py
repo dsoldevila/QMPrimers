@@ -75,14 +75,24 @@ def load_template(parameters):
         print("Error at restoring template")
     return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
+def load_template_only(template_file):
+    try:
+        template = ld.load_template(template_file)
+        print("Template loaded!")
+    except:
+        print("Error at loading template")
+    return template
+
 def recalculate_Nend(template, primer_pairs, Nend, previous_Nend):
     return m.recalculate_Nend(template, primer_pairs, Nend, previous_Nend)
         
 """
 Simulation stuff
 """
+"""
 def simulate(template, sample_size, k, B, N):
     sim = s.Simulation(template, sample_size)
     raw, cooked = sim.simulate(k, B, N)
     return raw, cooked
+"""
 

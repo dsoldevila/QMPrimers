@@ -1,2 +1,5 @@
 __pycache__
 Data/mitochondrion*
+*test*
+output*
+*.fasta

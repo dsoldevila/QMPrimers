@@ -11,6 +11,7 @@ from interface import *
 from common import *
 from tkinter import filedialog
 from tkinter import *
+import tkinter.ttk as ttk
 import os
 import sys
 import _thread
@@ -31,9 +32,17 @@ parameters = [
         ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
         ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
         ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
-        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"]]
-                        
+        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"]]                      
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
+
+parameters_sim = [
+        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"],
+        ["sample size", 10, "Nº genome samples per simulation step", "-s", "int"],
+        ["Beta", 4, "", "-b", "int"],
+        ["k", 0.5, "", "-k", "float"],
+        ["N", 100, "Nº simulation steps", "-n", "int"],
+        ["output_file", os.path.join(os.getcwd(),"simout"), "Location of the output files, no extension", "-o", "entry"]]
+parameters_sim = pd.DataFrame([x[1:] for x in parameters_sim], index = [x[0] for x in parameters_sim], columns=["value", "description", "flag", "type"])
 
 class TextRedirector(object):
     def __init__(self, widget, tag="stdout"):
@@ -49,9 +58,10 @@ class GUI(Frame):
     def __init__(self, parent=Frame):
         
         self.main_frame = Frame.__init__(self, parent)
-        
+
         """Other"""
         self.parameters = parameters
+        self.parameters_sim = parameters_sim
         self.current_directory = os.getcwd()
         
         """Menu"""
@@ -61,10 +71,28 @@ class GUI(Frame):
         file.add_command(label="Option 1")
         file.add_command(label="Option 2...")
         self.main_menu.add_cascade(label="File", menu=file)
+
         
+        """Tabs"""
+        nb = ttk.Notebook(self.main_frame)
         
-        self.gui_compute = GUI_compute(self.main_frame, self.parameters, output_info)
+        page2 = ttk.Frame(nb)
+        self.gui_simulate = GUI_simulate(page2, self.parameters_sim, output_info)
+        
+        page1 = ttk.Frame(nb)
+        self.gui_compute = GUI_compute(page1, self.parameters, output_info, self.gui_simulate)
+        
         self.gui_compute.pack()
+        nb.add(page1, text="Matching")
+        
+        
+        self.gui_simulate.pack()
+        nb.add(page2, text="Simulation")
+
+        nb.pack(fill=BOTH, expand=YES)
+        
+        
+
         
         """Terminal"""
         self.terminal_frame = Frame(self.main_frame)

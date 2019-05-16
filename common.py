@@ -110,6 +110,7 @@ class Alignment:
         self.primer_pair = primer_pair
         self.real_fpos = int(real_fpos)
         self.fpos = int(real_fpos)
+        #TODO Crash expected if real_fpos is lower than 0, fix this
         self.real_rpos = int(real_rpos)
         self.rpos = int(real_rpos)
         self.fm = fmisses
@@ -214,7 +215,7 @@ class Alignment:
         for i in range(flen):
             if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen.seq[self.fpos+i]]!=1):
                 fm_loc.append(i)
-                fm_loc_output.append(flen-i+1)
+                fm_loc_output.append(flen-i)
         
         rlen = self.primer_pair.rlen
         for i in range(rlen):
