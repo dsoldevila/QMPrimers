@@ -10,6 +10,18 @@ A tool to select the best primers to perform quantitative metabarcoding studies.
 - [Pandas](https://pandas.pydata.org)
 
 ## Wiki
+### First steps
+To execute the program in GUI mode, just type on a terminal:
+```bash
+python3.X QMPrimers
+#where X depends on your python version
+```
+
+To execute the program in command line mode, type on a terminal:
+```bash
+python3.X QMPrimers --nogui <paramters....>
+```
+
 ### Matching
 Everything related to the Matching is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Matching).
 
