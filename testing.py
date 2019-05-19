@@ -243,8 +243,8 @@ def simulate():
     #sim.store_raw_data("/home/david/Git/QMPrimers/Test_data/sim_test", raw, cooked)
     
 def check_matching():
-    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
-    gen = gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"]
+    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"])
+    gen = gen_record["ref|NC_015118.1|"]
     print(gen[217:217+30])
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     print(primer_pairs["10"].fcomplement)
