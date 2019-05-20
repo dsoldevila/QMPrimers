@@ -19,7 +19,7 @@ def compute(parameters):
     """
     @Brief calls the matching algorithms for both GUI and command line modes
     """
-    #template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = None
+    template = None
     gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
                                  parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
     primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
@@ -37,6 +37,10 @@ def save_matching_info(output_file, template, discarded, raw_stats, cooked_stats
     m.store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
     
     return
+
+"""
+Loading input stuff
+"""
 
 def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers):
     gen_record = None

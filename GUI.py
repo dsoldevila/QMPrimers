@@ -104,14 +104,17 @@ class GUI_compute():
             c = c+1
         for name in parameters.loc[parameters["type"]=="info"].index.values:
             block = Frame(self.output_frame)
-            self.entries[name] = Entry(block, width=2)
-            self.entries[name].pack(side=LEFT)
+            other = IntVar()
+            Entry(block, textvariable=other, width=2).pack(side=LEFT)
+            other.set(self.parameters.loc[name, "value"])
+            self.other_param[name] = other 
             Label(block, text=name).pack(side=RIGHT)
             block.grid(row=int(1+c/max_row_len), column=int(c%max_row_len), sticky=W)
             c= c+1
+            
                     
-        self.entries["Nend miss."].bind("<Return>", (lambda event: self.set_Nend(self.entries["Nend miss."].get())))
-        self.entries["Nend miss."].insert(0, self.parameters.loc[name, "value"])
+        #elf.entries["Nend miss."].bind("<Return>", (lambda event: self.set_Nend(self.entries["Nend miss."].get())))
+        #self.entries["Nend miss."].insert(0, self.parameters.loc[name, "value"])
         #TODO limit Nend
         
         self.buttons_frame = Frame(self.main_frame)
@@ -177,8 +180,11 @@ class GUI_compute():
             self.parameters.loc["output_file", "value"] = output_file
         else:
             self.parameters.loc["output_file", "value"] = os.path.join(self.current_directory,output_file)
+            self.entries["output_file"].delete(0, END)
+            self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
         print("Output file path updated")
         return
+    
     def set_Nend(self, Nend):
         self.parameters.loc["Nend miss.", "value"] = int(Nend)
         print("Nend setted to ", Nend)
@@ -223,6 +229,8 @@ class GUI_compute():
         
         self.store_results()
         self.gui_simulate.set_template(self.template)
+
+        
         return
     
     def load_template_in_thread(self):
@@ -239,8 +247,8 @@ class GUI_compute():
         for key in self.output_info:
             if(self.output_info[key].get()):
                 header.append(key)
-                
-        #TODO this code should not be handled by the GUI        
+                   
+        self.parameters.loc["Nend miss.", "value"] = self.other_param["Nend miss."].get()
         if(self.parameters.loc["Nend miss.", "value"]):
             Nend = self.parameters.loc["Nend miss.", "value"]
             header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
@@ -287,7 +295,9 @@ class GUI_simulate():
         self.buttons["template"].config(command=(lambda: self.update_template_file(self._open_file())))
         
         self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
-        #self.entries["template"].bind("<Return>", (lambda event: self.update_template_file(self.entries["output_file"].get())))
+        self.entries["output_file"].bind("<Return>", (lambda event: self.set_output_file(self.entries["output_file"].get())))
+        self.buttons["output_file"].config(text="Set", command=(lambda: self.set_output_file(self.entries["output_file"].get())))
+
         
         """Parameters"""
         self.param_frame = Frame(self.main_frame)
@@ -341,6 +351,16 @@ class GUI_simulate():
             self.entries["template"].insert(0, str(input_file))
             self.parameters.loc["template", "value"] = input_file
             self.template = load_template_only(self.parameters.loc["template", "value"])
+        return
+    
+    def set_output_file(self, output_file):
+        if(os.path.isabs(output_file)):
+            self.parameters.loc["output_file", "value"] = output_file
+        else:
+            self.parameters.loc["output_file", "value"] = os.path.join(self.current_directory,output_file)
+            self.entries["output_file"].delete(0, END)
+            self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
+        print("Output file path updated")
         return
     
     def set_template(self, template):
