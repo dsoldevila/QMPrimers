@@ -10,6 +10,7 @@ from common import *
 from simulation import *
 from tkinter import filedialog
 from tkinter import *
+from tkinter.font import Font
 import os
 import sys
 import _thread
@@ -19,6 +20,8 @@ class GUI_compute():
     def __init__(self, parent, parameters, output_info, gui_simulate):
         
         self.main_frame = Frame(parent)
+
+        #myFont = Font(family="Noto Sans", size=12, weight="bold")
         
         """Other"""
         self.parameters = parameters
@@ -33,6 +36,7 @@ class GUI_compute():
         self.file_frame = Frame(self.first_row_frame)
         self.file_frame.pack(side=LEFT, expand=YES, fill=X)
         Label(self.file_frame, text="Files").pack()
+        
         
         self.entries = {}
         self.button = {}
@@ -79,7 +83,7 @@ class GUI_compute():
                     block.pack(expand=YES)
                     Label(block, text=name).pack(side=RIGHT)
                     other = StringVar()
-                    Entry(block, textvariable=other).pack(side=LEFT)
+                    Entry(block, textvariable=other, width=2).pack(side=LEFT)
                     other.set(self.parameters.loc[name, "value"])
                     self.other_param[name] = other
                     

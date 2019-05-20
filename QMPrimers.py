@@ -11,6 +11,7 @@ from interface import *
 from common import *
 from tkinter import filedialog
 from tkinter import *
+from tkinter.font import Font
 import tkinter.ttk as ttk
 import os
 import sys

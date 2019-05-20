@@ -96,8 +96,8 @@ class Simulation():
             a += amp_eff*sample.loc[i, "oprop"]
             sample.loc[i, "fprop"] = amp_eff
             
-            #compute final proportion, note that the previous fprop is amplification efficiency
-            sample["fprop"] = sample["fprop"]*(sample["oprop"]/a)
+        #compute final proportion, note that the previous fprop is amplification efficiency
+        sample["fprop"] = sample["fprop"]*(sample["oprop"]/a)
             
         return sample
 
@@ -130,10 +130,13 @@ class Simulation():
         return cooked_stats
     
     @staticmethod
-    def store_raw_data(output_file, raw_stats, cooked_stats):
+    def store_raw_data(output_file, raw_stats, cooked_stats, sample_size, k, B, N):
         raw_stats.to_csv(output_file+".csv", index_label="primerPair")
         
+        parameters_used = "SampleSize = "+str(sample_size)+"\t\tk = "+str(k)+"\t\tBeta = "+str(B)+"\t\tN = "+str(N)+"\n"
+        
         with open(output_file+".txt",'w') as outfile:
+            outfile.write(parameters_used)
             cooked_stats.to_string(outfile)
             
         print("Saved!")
