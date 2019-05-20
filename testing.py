@@ -255,7 +255,7 @@ def check_matching():
 if(__name__=="__main__"):
     
     time1 = time.time()
-    check_matching()
+    matching_test()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     

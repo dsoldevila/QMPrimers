@@ -67,6 +67,7 @@ class Simulation():
         self.cooked_stats = self.cook_stats(0.95)
         print(self.raw_stats)
         print(self.cooked_stats)
+        print("Simulation done!")
         return self.raw_stats, self.cooked_stats
 
     def get_random_sample(self, full_sample, sample_size, k):
@@ -129,11 +130,13 @@ class Simulation():
         return cooked_stats
     
     @staticmethod
-    def store_raw_data(self, output_file, raw_stats, cooked_stats):
+    def store_raw_data(output_file, raw_stats, cooked_stats):
         raw_stats.to_csv(output_file+".csv", index_label="primerPair")
         
         with open(output_file+".txt",'w') as outfile:
             cooked_stats.to_string(outfile)
+            
+        print("Saved!")
         return
     
     def plot_results(self, cooked_stats):
