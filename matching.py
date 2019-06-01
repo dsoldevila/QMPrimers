@@ -155,10 +155,10 @@ def store_matching_results(output_file, template, header):
     @param gen_matching_list list of GenMatching instances
     @return None
     """
-    if("id" in template.columns.values):
-        template.to_csv(output_file, columns=header)
-    else:
-        template.to_csv(output_file, index_label="id", columns=header)
+    columns = template.columns.values
+    for i in range(len(header)):
+        header[i] = columns[header[i]]
+    template.to_csv(output_file, index_label="id", columns=header)
     
     return
 

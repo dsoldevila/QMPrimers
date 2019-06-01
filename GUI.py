@@ -243,12 +243,19 @@ class GUI_compute():
         return
     
     def store_results_in_thread(self):
-        _thread.start_new_thread(self.store_results, ())
+        self.store_results()
+        #_thread.start_new_thread(self.store_results, ())
         return
         
     
     def store_results(self):
         header = []
+        i = 0 #TODO convert output_info to list
+        for key in self.output_info:
+            if(self.output_info[key].get()):
+                header.append(i)
+            i+=1
+                   
         try:
             Nend = self.parameters.loc["Nend miss.", "value"] = self.other_param["Nend miss."].get()
         except: #Crash expected if tkinter variable is empty
@@ -263,7 +270,7 @@ class GUI_compute():
             self.out_raw_stats = self.raw_stats
             self.out_cooked_stats = self.cooked_stats
             
-        save_matching_info(self.parameters.loc["output_file", "value"], self.out_template, TEMPLATE_HEADER, self.discarded, self.out_raw_stats, self.out_cooked_stats)
+        save_matching_info(self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
         return
     
 class GUI_simulate():

@@ -30,24 +30,25 @@ def compute(parameters):
 
 def save_matching_info(output_file, template, header, discarded, raw_stats, cooked_stats):
     
-    try:
-        m.store_matching_results(output_file+"_positive.csv", template, header)
-        print("Template saved")
+    #try:
+    m.store_matching_results(output_file+"_positive.csv", template, header)
+    print("Template saved")
+    
+    if(not discarded.empty):
+        m.store_discarded(output_file+"_negative.csv", discarded)
+        print("Negatives saved")
+    else:
+        print("Negatives not saved")
         
-        if(not discarded.empty):
-            m.store_discarded(output_file+"_negative.csv", discarded)
-            print("Negatives saved")
-        else:
-            print("Negatives not saved")
-            
-        if(not raw_stats.empty and not cooked_stats.empty):
-            m.store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
-            print("Statistics saved")
-        else:
-            print("Statistics not saved")
-            
+    if(not raw_stats.empty and not cooked_stats.empty):
+        m.store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
+        print("Statistics saved")
+    else:
+        print("Statistics not saved")
+    """       
     except:
         print("Unable to save files")
+    """
     
     return
 

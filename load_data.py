@@ -124,7 +124,7 @@ def remove_bad_gens(gen_record):
     return gen_record
 
 def load_template(template_file):
-    template = pd.read_csv(template_file)
+    template = pd.read_csv(template_file, index_col=0)
     
     return template
 
@@ -133,7 +133,7 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
     @brief
     """
     
-    if(template.shape[1]==len(TEMPLATE_HEADER)+1): #the template is complete, no need to redo all the work
+    if(template.shape[1]==len(TEMPLATE_HEADER)): #the template is complete, no need to redo all the work
         column_is_list = []
         for col in template.columns.values:
             if(type(template.loc[0, col])==str and template.loc[0, col]=="["): #if this column is containing a list

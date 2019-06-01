@@ -9,6 +9,7 @@ Created on Sun May  5 12:39:40 2019
 import pandas as pd
 import numpy as np
 import math
+import re
 
 class Simulation():
     def __init__(self, template, sample_size):
@@ -21,6 +22,12 @@ class Simulation():
         
         try:
             self.primer_pairs = self.template["primerPair"].unique()
+            
+            f_reg = re.compile("^mismF[T|N\d+]$")
+            self.mismF = list(filter(f_reg.match, template.columns.values))[0]
+            
+            r_reg = re.compile("^mismR[T|N\d+]$")
+            self.mismR = list(filter(r_reg.match, template.columns.values))[0]
         except:
             raise ValueError("Template not valid")
         
@@ -91,7 +98,7 @@ class Simulation():
         for i in sample.index.values:
             row = pp_matches.loc[pp_matches["fastaid"]==sample.loc[i, "fastaid"]]
             #TODO use N end missmatches if mode=2
-            m = row["mismFT"].values[0] + row["mismRT"].values[0] #TODO make it more clean(?)
+            m = row[self.mismF].values[0] + row[self.mismR].values[0] #TODO make it more clean(?)
             amp_eff = 1/(B**m)
             a += amp_eff*sample.loc[i, "oprop"]
             sample.loc[i, "fprop"] = amp_eff
