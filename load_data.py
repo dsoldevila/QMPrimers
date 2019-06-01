@@ -15,6 +15,7 @@ import csv
 from common import *
 import pandas as pd
 import numpy as np
+import ast
 
 def load_csv_file(file, delimiter=";"):
     """
@@ -124,35 +125,56 @@ def remove_bad_gens(gen_record):
 
 def load_template(template_file):
     template = pd.read_csv(template_file)
+    
     return template
 
 def restore_template(template, gen_record, primer_pairs, max_misses):
-    alignment = Alignment(max_misses)
-    recovered_template = pd.DataFrame(columns=TEMPLATE_HEADER)
-    discarded = pd.DataFrame() # TODO
-    columns = template.columns.values
+    """
+    @brief
+    """
     
-    #resize table
-    for header in TEMPLATE_HEADER:
-        if header not in columns:
-            template[header] = None
+    if(template.shape[1]==len(TEMPLATE_HEADER)+1): #the template is complete, no need to redo all the work
+        column_is_list = []
+        for col in template.columns.values:
+            if(type(template.loc[0, col])==str and template.loc[0, col]=="["): #if this column is containing a list
+                column_is_list.append(col)
+        
+        size = template.shape[0]
+        for i in range(size):
+            for col in column_is_list:
+                template.loc[i, col] = ast.literal_eval(template.loc[i,col])
+            print("Loading template "+"{0:.2f}".format(i/size*100)+"%")
             
-    #reorder columns
-    template = template[TEMPLATE_HEADER]
-    for i in range(template.shape[0]):
-        tmp = template.loc[i]
-        gen = gen_record[tmp.loc["fastaid"]]
-        primer_pair = primer_pairs[str(tmp.loc["primerPair"])]
-        fpos = tmp.loc["F_pos"]
-        rpos = tmp.loc["R_pos"]
-        fmisses = tmp.loc["mismFT"]
-        rmisses = tmp.loc["mismRT"]
-        amplicon = tmp.loc["amplicon"]
-        alignment.complete_from_csv(gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon)
-        recovered_template.loc[recovered_template.shape[0]] = alignment.get_csv()
-    raw_stats, cooked_stats = alignment.get_stats()
+        return template, pd.DataFrame(), pd.DataFrame(), pd.DataFrame()                     
+    else:
+        alignment = Alignment(max_misses)
+        recovered_template = pd.DataFrame(columns=TEMPLATE_HEADER)
+        discarded = pd.DataFrame() # TODO
+        columns = template.columns.values
+        
+        #resize table
+        for header in TEMPLATE_HEADER:
+            if header not in columns:
+                template[header] = None
+                
+        #reorder columns
+        template = template[TEMPLATE_HEADER]
+        size = template.shape[0]
+        for i in range(size):
+            tmp = template.loc[i]
+            gen = gen_record[tmp.loc["fastaid"]]
+            primer_pair = primer_pairs[str(tmp.loc["primerPair"])]
+            fpos = tmp.loc["F_pos"]
+            rpos = tmp.loc["R_pos"]
+            fmisses = tmp.loc["mismFT"]
+            rmisses = tmp.loc["mismRT"]
+            amplicon = tmp.loc["amplicon"]
+            alignment.complete_from_csv(gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon)
+            recovered_template.loc[recovered_template.shape[0]] = alignment.get_csv()
+            print("Restoring template "+"{0:.2f}".format(i/size*100)+"%")
+        raw_stats, cooked_stats = alignment.get_stats()
     
-    return recovered_template, discarded, raw_stats, cooked_stats
+        return recovered_template, discarded, raw_stats, cooked_stats
 
 
 if (__name__=="__main__"):

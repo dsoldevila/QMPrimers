@@ -7,7 +7,6 @@ Created on Fri Nov  9 15:34:23 2018
 """
 import numpy as np
 import pandas as pd
-import ast
 
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
 TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
@@ -61,7 +60,7 @@ class Alignment:
         self.pp_stats = pd.DataFrame(columns=columns, dtype='uint8')
         return
     
-    def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses):
+    def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon):
     
         """
         self.gen = genomic sequence
@@ -98,10 +97,6 @@ class Alignment:
         
         self.mismF_base, self.mismR_base = self._get_missmatch_base_type()
         
-        self.Nend_misses = Nend_misses
-        if(Nend_misses):
-            self.mismF_Nend, self.mismR_Nend = self._get_Nend_missmatches(Nend_misses)
-            
         try:
             self.pp_stats.loc[self.primerPair, fmisses+rmisses] += 1
         except:
@@ -110,7 +105,7 @@ class Alignment:
         
         return
     
-    def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses=None):
+    def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon):
         #TODO instead of making a complete output file, calculate only the paramaters needed by the user
         self.gen = gen
         self.fastaid = gen.id #TODO patch
@@ -153,10 +148,6 @@ class Alignment:
         self.mismF_type, self.mismR_type = self._get_missmatch_type()        
         self.mismF_base, self.mismR_base = self._get_missmatch_base_type()
         
-        self.Nend_misses = Nend_misses
-        if(self.Nend_misses):
-            self.mismF_Nend, self.mismR_Nend = self._get_Nend_missmatches(self.Nend_misses)
-        
         try:
             self.pp_stats.loc[self.primerPair, fmisses+rmisses] += 1
         except:
@@ -164,7 +155,7 @@ class Alignment:
             self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
             
         return
-    def get_Nend(self, id, primerPair,fastaid,primerF,primerR,mismFT,mismRT,amplicon,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,
+    def get_Nend(self, primerPair,fastaid,primerF,primerR,mismFT,mismRT,amplicon,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,
                  mismRT_type,mismRT_base, nend):
         """
         @brief Gets alignment and computes the alignment in Nend mode. There are more arguments than the required for convenience.
@@ -182,13 +173,13 @@ class Alignment:
         self.amplicon = amplicon
         
         
-        self.mismF_loc, self.mismR_loc = self._get_nend_loc(ast.literal_eval(mismFT_loc), ast.literal_eval(mismRT_loc), nend)
+        self.mismF_loc, self.mismR_loc = self._get_nend_loc(mismFT_loc, mismRT_loc, nend)
         self.mismF = len(self.mismF_loc)
         self.mismR = len(self.mismR_loc)
-        self.mismF_type = ast.literal_eval(mismFT_type)[-(self.mismF+1): -1]
-        self.mismR_type = ast.literal_eval(mismRT_type)[0: self.mismR]
-        self.mismF_base = ast.literal_eval(mismFT_base)[-(self.mismF+1): -1]
-        self.mismR_base = ast.literal_eval(mismRT_base)[0: self.mismR]
+        self.mismF_type = mismFT_type[-(self.mismF+1): -1]
+        self.mismR_type = mismRT_type[0: self.mismR]
+        self.mismF_base = mismFT_base[-(self.mismF+1): -1]
+        self.mismR_base = mismRT_base[0: self.mismR]
         
         #Stats
         try:
@@ -330,23 +321,7 @@ class Alignment:
             if(i>nend):
                 break
             mismR_loc.append(i)
-        return mismF_loc, mismR_loc
-            
-    def _get_Nend_missmatches(self, Nend_misses):
-        rm_Nend = 0
-        for i in self.mismR_loc_raw:
-            if(i >= Nend_misses):
-                break;
-            rm_Nend +=1
-            
-        fm_Nend = 0
-        Nend_misses = self.primer_pair.flen - Nend_misses
-        for i in range(1, len(self.mismF_loc_raw)+1):
-            if(self.mismF_loc_raw[-i] < Nend_misses):
-                break;
-            fm_Nend +=1
-        return fm_Nend, rm_Nend
-    
+        return mismF_loc, mismR_loc    
     
     def __str__(self):        
         info = ("PRIME PAIR "+str(self.primerPair)+"\n"+
@@ -364,22 +339,3 @@ class Alignment:
             info.extend([self.mismF_Nend, self.mismR_Nend])
         """
         return info
-
-def get_Nend_missmatches(Nend_misses, rm_loc_output, flen, fm_loc_output):
-    """
-    @brief: Modified version of Alignment._get_Nend_missmatches. It's needded because missmatch locations in the output_file are formated 
-    differently from the ones used by the program internally. Check fm_loc and fm_loc_output.
-    """
-    rm_Nend = 0
-    for i in rm_loc_output:
-        if(i > Nend_misses):
-            break;
-        rm_Nend +=1
-        
-    fm_Nend = 0
-    for i in fm_loc_output:
-        if(i > Nend_misses):
-            break;
-        fm_Nend +=1
-            
-    return fm_Nend, rm_Nend

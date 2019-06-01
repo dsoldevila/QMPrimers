@@ -129,7 +129,7 @@ class GUI_compute():
         #self.button_c.pack(expand=YES, fill=X)
         
         """Save"""
-        self.button_s = Button(self.buttons_frame, text="Save", command=self.store_results)
+        self.button_s = Button(self.buttons_frame, text="Save", command=self.store_results_in_thread)
         self.button_s.pack(side=BOTTOM, expand=YES, fill=X)
         
         """Other"""
@@ -242,23 +242,28 @@ class GUI_compute():
         self.gui_simulate.set_template(self.template)
         return
     
+    def store_results_in_thread(self):
+        _thread.start_new_thread(self.store_results, ())
+        return
+        
+    
     def store_results(self):
         header = []
-        for key in self.output_info:
-            if(self.output_info[key].get()):
-                header.append(key)
-                   
-        self.parameters.loc["Nend miss.", "value"] = self.other_param["Nend miss."].get()
-        if(self.parameters.loc["Nend miss.", "value"]):
-            Nend = self.parameters.loc["Nend miss.", "value"]
-            header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
-            
+        try:
+            Nend = self.parameters.loc["Nend miss.", "value"] = self.other_param["Nend miss."].get()
+        except: #Crash expected if tkinter variable is empty
+            Nend = 0
+        if(Nend):
             if(self.previous_Nend!=Nend):
-                self.template = recalculate_Nend(self.template, self.primer_pairs, Nend, self.previous_Nend)
+                max_misses = int(self.parameters.loc["forward missmatches", "value"])+int(self.parameters.loc["reverse missmatches", "value"])
+                self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_match(self.template, Nend, max_misses)
                 self.previous_Nend = Nend
+        else:
+            self.out_template = self.template
+            self.out_raw_stats = self.raw_stats
+            self.out_cooked_stats = self.cooked_stats
             
-        save_matching_info(self.parameters.loc["output_file", "value"], self.template, self.discarded, self.raw_stats, self.cooked_stats, header=header)
-        print("Saved")
+        save_matching_info(self.parameters.loc["output_file", "value"], self.out_template, TEMPLATE_HEADER, self.discarded, self.out_raw_stats, self.out_cooked_stats)
         return
     
 class GUI_simulate():

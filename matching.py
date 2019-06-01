@@ -59,7 +59,7 @@ def _compute_primer_matching(max_misses, primer, len_primer, gen):
 
     return result
 
-def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template, discarded, Nend, alignment_processor):
+def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hanging_primers, template, discarded, alignment_processor):
     """
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
@@ -101,12 +101,12 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         rm= al[1]
         amplicon = primer.min_amplicon+rm[1]
         alignment_processor.get(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
-                                primer.flen-fm[0], primer.rlen-rm[0], amplicon, Nend) #TODO, creating a temp class overkill?
+                                primer.flen-fm[0], primer.rlen-rm[0], amplicon) #TODO, creating a temp class overkill?
         template.loc[template.shape[0]] = alignment_processor.get_csv()
         
     return template, discarded
 
-def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend, hanging_primers=False):
+def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hanging_primers=False):
     """
     Computes the best alignments between each genome and each primer
     @returns: List of GenAlignment instances
@@ -122,8 +122,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
     size = len(gen_record)
     i = 0       
     template_header = TEMPLATE_HEADER
-    if(Nend):
-        template_header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
+
     template = pd.DataFrame(columns=template_header)
     
     discarded = pd.DataFrame(columns=TEMPLATE_HEADER[0:2])
@@ -137,7 +136,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
         gen.seq = np.array(gen.seq)
         for pkey in primer_pairs:
             try:
-                template, discarded = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer_pairs[pkey], gen, hanging_primers, template, discarded, Nend, alignment_processor)
+                template, discarded = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer_pairs[pkey], gen, hanging_primers, template, discarded, alignment_processor)
             except:
                 raise
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pkey))
@@ -150,13 +149,16 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, Nend,
 OTHER FUNCTIONS
 """
 
-def store_matching_results(output_file, template, header=None):
+def store_matching_results(output_file, template, header):
     """
     Stores alignment results
     @param gen_matching_list list of GenMatching instances
     @return None
     """
-    template.to_csv(output_file, columns=header, index_label="id")
+    if("id" in template.columns.values):
+        template.to_csv(output_file, columns=header)
+    else:
+        template.to_csv(output_file, index_label="id", columns=header)
     
     return
 
@@ -171,46 +173,24 @@ def store_discarded(output_file, discarded):
     discarded.to_csv(output_file, index_label="id")
     return
 
-def recalculate_Nend(template, primer_pairs, Nend, previous_Nend):
 
-    mismFN = 'mismFN'+str(Nend)
-    mismRN = 'mismRN'+str(Nend)
-    
-    if(previous_Nend!=0):
-        template = template.rename(columns={'mismFN'+str(previous_Nend): mismFN, 'mismRN'+str(previous_Nend): mismRN})
-    else:
-        template[mismFN] = 0
-        template[mismRN] = 0
-    
-    #TODO patch
-    template[mismFN].astype('int32')
-    template[mismRN].astype('int32')
-    
-    for i in range(template.shape[0]):
-        flen = primer_pairs[template.loc[i, "primerPair"]].flen
-        template.loc[i, mismFN], template.loc[i, mismRN] = get_Nend_missmatches(int(Nend), template.loc[i, "mismRT_loc"],
-                         flen, template.loc[i, "mismFT_loc"])
-    
-    return template
-
-def get_Nend_template(template, nend):
+def get_Nend_template(template, nend, max_misses):
     """
     @brief With the computed template, generate a template but with Nend mismatches
     @Return new template, raw stats, cooked_stats
     """
-    alignment = Alignment(2*nend);
+    alignment = Alignment(max_misses);
     
     header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"amplicon", "F_pos", 
               "mismFN"+str(nend)+"_loc", "mismFN"+str(nend)+"_type", "mismFN"+str(nend)+"_base", "R_pos", "mismRN"+str(nend)+"_loc",
               "mismRN"+str(nend)+"_type", "mismRN"+str(nend)+"_base"]
     
     nend_template = pd.DataFrame(columns=header)
-    
+    size = template.shape[0]
     for i in range(template.shape[0]):
         nend_template.loc[i] = alignment.get_Nend(*template.loc[i], nend)
-        
+        print("Getting Nend "+"{0:.2f}".format(i/size*100)+"%")
     raw_stats, cooked_stats = alignment.get_stats()
-    print(nend_template)
     
     return nend_template, raw_stats, cooked_stats
     

@@ -4,3 +4,4 @@ Data/mitochondrion*
 output*
 *.fasta
 *~*
+Test_data/*
