@@ -201,11 +201,11 @@ def restore_template():
 
 def matching_test():
     gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"])
-    gen_record = split(gen_record, 0.01)
+    gen_record = split(gen_record, 0.005)
     #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
     primer_pairs = ld.load_csv_file("Data/P&PP.csv")
     primer_pairs = {"6":primer_pairs["6"]}
-    template, discarded, rs, cs = m.compute_gen_matching(10, 10, primer_pairs, gen_record, 0) 
+    template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, 0) 
     
     header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
                                      "mismFT_base", "R_pos"]
@@ -250,12 +250,24 @@ def check_matching():
     print(primer_pairs["10"].fcomplement)
 
     return
+
+def get_nend_test():
+    nend = 2
+    template = pd.read_csv("/home/david/Git/QMPrimers/Test_data/test_positive.csv")
+    template2, raw, cooked = m.get_Nend_template(template, nend)
+    
+    header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"amplicon", "F_pos", 
+              "mismFN"+str(nend)+"_loc", "mismFN"+str(nend)+"_type", "mismFN"+str(nend)+"_base", "R_pos", "mismRN"+str(nend)+"_loc",
+              "mismRN"+str(nend)+"_type", "mismRN"+str(nend)+"_base"]
+    
+    m.store_matching_results("Test_data/test_nend.csv", template2, header=header)
+    return
     
 
 if(__name__=="__main__"):
     
     time1 = time.time()
-    simulate()
+    get_nend_test()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     

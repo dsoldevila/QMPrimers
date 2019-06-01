@@ -193,6 +193,28 @@ def recalculate_Nend(template, primer_pairs, Nend, previous_Nend):
     
     return template
 
+def get_Nend_template(template, nend):
+    """
+    @brief With the computed template, generate a template but with Nend mismatches
+    @Return new template, raw stats, cooked_stats
+    """
+    alignment = Alignment(2*nend);
+    
+    header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"amplicon", "F_pos", 
+              "mismFN"+str(nend)+"_loc", "mismFN"+str(nend)+"_type", "mismFN"+str(nend)+"_base", "R_pos", "mismRN"+str(nend)+"_loc",
+              "mismRN"+str(nend)+"_type", "mismRN"+str(nend)+"_base"]
+    
+    nend_template = pd.DataFrame(columns=header)
+    
+    for i in range(template.shape[0]):
+        nend_template.loc[i] = alignment.get_Nend(*template.loc[i], nend)
+        
+    raw_stats, cooked_stats = alignment.get_stats()
+    print(nend_template)
+    
+    return nend_template, raw_stats, cooked_stats
+    
+
 if(__name__=="__main__"):
     
     gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])

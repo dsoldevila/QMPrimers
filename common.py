@@ -7,6 +7,7 @@ Created on Fri Nov  9 15:34:23 2018
 """
 import numpy as np
 import pandas as pd
+import ast
 
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
 TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
@@ -65,70 +66,80 @@ class Alignment:
         """
         self.gen = genomic sequence
         self.primer_pair = primer pair used for matching, instance of PrimerPair class
-        self.fpos = starting position of the forward primer in the genomic sequence, starting at 0
+        self.F_pos = starting position of the forward primer in the genomic sequence, starting at 0
         self.real_fpos --> gen:    ZZAGTAC...     real_fpos = -2, the primer is hanging
                            primer: AGAGT          fpos = 0
-        self.rpos = starting position of the reverse primer in the genomic sequence, starting at the end of genomic sequence
+        self.R_pos = starting position of the reverse primer in the genomic sequence, starting at the end of genomic sequence
         self.real_rpos = reverse's position depends on forward's position
-        self.fm = number of missmatches on the forward primer
-        self.fm_loc = array of the missmatch locations of the forward primer
-        self.rm = number of missmatches on the reverse primer
-        self.rm_loc = array of the missmatch locations of the reverse primer
+        self.mismF = number of missmatches on the forward primer
+        self.mismF_loc_raw = array of the missmatch locations of the forward primer
+        self.mismR = number of missmatches on the reverse primer
+        self.mismR_loc_raw = array of the missmatch locations of the reverse primer
         self.amplicon = amplicon of the matching, number between the primer pair max and min amplicon.
         """
         self.gen = gen
+        self.fastaid = gen.id #TODO patch
         self.primer_pair = primer_pair
-        self.fpos = int(fpos) #it seems Biopython seqrecord does not support numpy.int32
+        self.primerPair = primer_pair.id #TODO patch
+        self.primerF = primer_pair.f.id
+        self.primerR = primer_pair.f.id
+        
+        self.F_pos = int(fpos) #it seems Biopython seqrecord does not support numpy.int32
         self.real_fpos = int(real_fpos)
-        self.rpos = int(rpos)
+        self.R_pos = int(rpos)
         self.real_rpos = int(real_rpos)
-        self.fm = fmisses
-        self.rm = rmisses
+        self.mismF = fmisses
+        self.mismR = rmisses
         self.amplicon = amplicon
         
         
-        self.fm_loc, self.fm_loc_output, self.rm_loc, self.rm_loc_output = self._get_missmatch_location()
-        self.fm_type, self.rm_type = self._get_missmatch_type()
+        self.mismF_loc_raw, self.mismF_loc, self.mismR_loc_raw, self.mismR_loc = self._get_missmatch_location()
+        self.mismF_type, self.mismR_type = self._get_missmatch_type()
         
-        self.fm_base, self.rm_base = self._get_missmatch_base_type()
+        self.mismF_base, self.mismR_base = self._get_missmatch_base_type()
         
         self.Nend_misses = Nend_misses
         if(Nend_misses):
-            self.fm_Nend, self.rm_Nend = self._get_Nend_missmatches(Nend_misses)
+            self.mismF_Nend, self.mismR_Nend = self._get_Nend_missmatches(Nend_misses)
             
         try:
-            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] += 1
+            self.pp_stats.loc[self.primerPair, fmisses+rmisses] += 1
         except:
-            self.pp_stats.loc[primer_pair.id] = 0
-            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] = 1
+            self.pp_stats.loc[self.primerPair] = 0
+            self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
         
         return
     
     def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon, Nend_misses=None):
         #TODO instead of making a complete output file, calculate only the paramaters needed by the user
         self.gen = gen
+        self.fastaid = gen.id #TODO patch
         self.primer_pair = primer_pair
+        self.primerPair = primer_pair.id #TODO patch
+        self.primerF = primer_pair.f.id
+        self.primerR = primer_pair.f.id
+        
         self.real_fpos = int(real_fpos)
-        self.fpos = int(real_fpos)
+        self.F_pos = int(real_fpos)
         #TODO Crash expected if real_fpos is lower than 0, fix this
         self.real_rpos = int(real_rpos)
-        self.rpos = int(real_rpos)
-        self.fm = fmisses
-        self.rm = rmisses
+        self.R_pos = int(real_rpos)
+        self.mismF = fmisses
+        self.mismR = rmisses
         self.amplicon = amplicon
         
         if(self.real_fpos == None):
             raise ValueError("Error: Froward's position NULL")
             
-        if(self.fm == None):
-            self.fm = self.get_missmatches("f")
+        if(self.mismF == None):
+            self.mismF = self.get_missmatches("f")
         else:
-            self.fm = fmisses
+            self.mismF = fmisses
             
-        if(self.rm == None):
-            self.rm = self.get_missmatches("r")
+        if(self.mismR == None):
+            self.mismR = self.get_missmatches("r")
         else:
-            self.rm = rmisses
+            self.mismR = rmisses
             
         if(self.amplicon == None):
             if(self.real_rpos == None):
@@ -138,28 +149,62 @@ class Alignment:
         else:
             self.amplicon = amplicon
         
-        self.fm_loc, self.fm_loc_output, self.rm_loc, self.rm_loc_output = self._get_missmatch_location()
-        self.fm_type, self.rm_type = self._get_missmatch_type()        
-        self.fm_base, self.rm_base = self._get_missmatch_base_type()
+        self.mismF_loc_raw, self.mismF_loc, self.mismR_loc_raw, self.mismR_loc = self._get_missmatch_location()
+        self.mismF_type, self.mismR_type = self._get_missmatch_type()        
+        self.mismF_base, self.mismR_base = self._get_missmatch_base_type()
         
         self.Nend_misses = Nend_misses
         if(self.Nend_misses):
-            self.fm_Nend, self.rm_Nend = self._get_Nend_missmatches(self.Nend_misses)
+            self.mismF_Nend, self.mismR_Nend = self._get_Nend_missmatches(self.Nend_misses)
         
         try:
-            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] += 1
+            self.pp_stats.loc[self.primerPair, fmisses+rmisses] += 1
         except:
-            self.pp_stats.loc[primer_pair.id] = 0
-            self.pp_stats.loc[primer_pair.id, fmisses+rmisses] = 1
+            self.pp_stats.loc[self.primerPair] = 0
+            self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
             
         return
-    
-    def add_negative_2_stats(self, primer_pair_id):
+    def get_Nend(self, id, primerPair,fastaid,primerF,primerR,mismFT,mismRT,amplicon,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,
+                 mismRT_type,mismRT_base, nend):
+        """
+        @brief Gets alignment and computes the alignment in Nend mode. There are more arguments than the required for convenience.
+        """
+        #TODO, better remove id
+        
+        self.primerPair = primerPair
+        self.fastaid = fastaid
+        self.primerF = primerF
+        self.primerR = primerR
+        self.F_pos = F_pos
+        self.real_fpos = F_pos #TODO patch
+        self.R_pos = R_pos
+        self.real_rpos = R_pos #TODO patch
+        self.amplicon = amplicon
+        
+        
+        self.mismF_loc, self.mismR_loc = self._get_nend_loc(ast.literal_eval(mismFT_loc), ast.literal_eval(mismRT_loc), nend)
+        self.mismF = len(self.mismF_loc)
+        self.mismR = len(self.mismR_loc)
+        self.mismF_type = ast.literal_eval(mismFT_type)[-(self.mismF+1): -1]
+        self.mismR_type = ast.literal_eval(mismRT_type)[0: self.mismR]
+        self.mismF_base = ast.literal_eval(mismFT_base)[-(self.mismF+1): -1]
+        self.mismR_base = ast.literal_eval(mismRT_base)[0: self.mismR]
+        
+        #Stats
         try:
-            self.pp_stats.loc[primer_pair_id, "No"] += 1
+            self.pp_stats.loc[self.primerPair, self.mismF+self.mismR] += 1
         except:
-            self.pp_stats.loc[primer_pair_id] = 0
-            self.pp_stats.loc[primer_pair_id, "No"] = 1
+            self.pp_stats.loc[self.primerPair] = 0
+            self.pp_stats.loc[self.primerPair, self.mismF+self.mismR] = 1
+            
+        return self.get_csv()
+    
+    def add_negative_2_stats(self, primerPair):
+        try:
+            self.pp_stats.loc[primerPair, "No"] += 1
+        except:
+            self.pp_stats.loc[primerPair] = 0
+            self.pp_stats.loc[primerPair, "No"] = 1
         return
     
     def get_stats(self):
@@ -213,13 +258,13 @@ class Alignment:
         
         flen = self.primer_pair.flen
         for i in range(flen):
-            if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen.seq[self.fpos+i]]!=1):
+            if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen.seq[self.F_pos+i]]!=1):
                 fm_loc.append(i)
                 fm_loc_output.append(flen-i)
         
         rlen = self.primer_pair.rlen
         for i in range(rlen):
-            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.rpos+i]]!=1):
+            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.R_pos+i]]!=1):
                     rm_loc.append(i)
                     rm_loc_output.append(i+1)
                 
@@ -229,11 +274,11 @@ class Alignment:
         fm_type = []
         rm_type = []
         #TODO ask format of primers, in order to know if the gen should be compared against the compelement
-        for m in self.fm_loc:
-            fm_type.append(self.gen.seq[self.fpos+m]+self.primer_pair.fcomplement[m])
+        for m in self.mismF_loc_raw:
+            fm_type.append(self.gen.seq[self.F_pos+m]+self.primer_pair.fcomplement[m])
           
-        for m in self.rm_loc:
-            rm_type.append(self.gen.seq[self.rpos+m]+self.primer_pair.rcomplement[m])
+        for m in self.mismR_loc_raw:
+            rm_type.append(self.gen.seq[self.R_pos+m]+self.primer_pair.rcomplement[m])
             
         return fm_type, rm_type
     
@@ -241,9 +286,9 @@ class Alignment:
         fm_base_type = []
         fprimer_complement = self.primer_pair.fcomplement
         
-        for i in range(self.fm):
-            gen_nucleotide = self.fm_type[i][0]
-            f_nucleotide =fprimer_complement[self.fm_loc[i]]
+        for i in range(self.mismF):
+            gen_nucleotide = self.mismF_type[i][0]
+            f_nucleotide =fprimer_complement[self.mismF_loc_raw[i]]
             
             if(gen_nucleotide in self.base_type and f_nucleotide in self.base_type):
                 gen_nucleotide_base_type = self.base_type[gen_nucleotide]
@@ -255,9 +300,9 @@ class Alignment:
         rm_base_type = []
         rprimer_complement = self.primer_pair.rcomplement
         
-        for i in range(self.rm):
-            gen_nucleotide = self.rm_type[i]
-            r_nucleotide = rprimer_complement[self.rm_loc[i]]
+        for i in range(self.mismR):
+            gen_nucleotide = self.mismR_type[i]
+            r_nucleotide = rprimer_complement[self.mismR_loc_raw[i]]
             
             if(gen_nucleotide in self.base_type and r_nucleotide in self.base_type):
                 gen_nucleotide_base_type = self.base_type[gen_nucleotide]
@@ -267,36 +312,57 @@ class Alignment:
                 rm_base_type.append(self.base_type["Other"])
                 
         return  fm_base_type, rm_base_type
+    
+    def _get_nend_loc(self, mismFT_loc, mismRT_loc, nend):
+        """
+        @brief Returns mismataches locations that are in a Nend position
+        @param mismFT_loc location of forward mismatches, reversed and starting at 1
+        @param mismRT_loc location of reverse mismatches, starting at 1
+        """
+        mismF_loc = []
+        
+        for i in mismFT_loc:
+            if(i<=nend):
+                mismF_loc.append(i)
+        
+        mismR_loc = []
+        for i in mismRT_loc:
+            if(i>nend):
+                break
+            mismR_loc.append(i)
+        return mismF_loc, mismR_loc
             
     def _get_Nend_missmatches(self, Nend_misses):
         rm_Nend = 0
-        for i in self.rm_loc:
+        for i in self.mismR_loc_raw:
             if(i >= Nend_misses):
                 break;
             rm_Nend +=1
             
         fm_Nend = 0
         Nend_misses = self.primer_pair.flen - Nend_misses
-        for i in range(1, len(self.fm_loc)+1):
-            if(self.fm_loc[-i] < Nend_misses):
+        for i in range(1, len(self.mismF_loc_raw)+1):
+            if(self.mismF_loc_raw[-i] < Nend_misses):
                 break;
             fm_Nend +=1
         return fm_Nend, rm_Nend
     
     
     def __str__(self):        
-        info = ("PRIME PAIR "+str(self.primer_pair.id)+"\n"+
-              "Forward's at: "+str(self.real_fpos)+" with "+str(self.fm)+" misses "+ str(self.fm_loc)+" "+str(self.fm_type)+"\n"+
-              "Reverse's at: "+str(self.real_rpos)+" with "+str(self.rm)+" misses "+ str(self.rm_loc)+" "+str(self.rm_type)+"\n"+
+        info = ("PRIME PAIR "+str(self.primerPair)+"\n"+
+              "Forward's at: "+str(self.real_fpos)+" with "+str(self.mismF)+" misses "+ str(self.mismF_loc_raw)+" "+str(self.mismF_type)+"\n"+
+              "Reverse's at: "+str(self.real_rpos)+" with "+str(self.mismR)+" misses "+ str(self.mismR_loc_raw)+" "+str(self.mismR_type)+"\n"+
               "Amplicon: "+str(self.amplicon)+"\n")
         return info
     
     def get_csv(self):
-        info= [self.primer_pair.id, self.gen.id, self.primer_pair.f.id, self.primer_pair.r.id, self.fm, self.rm, 
-               self.amplicon, self.real_fpos, self.fm_loc_output, self.fm_type, self.fm_base, self.real_rpos, self.rm_loc_output, 
-               self.rm_type, self.rm_base]
+        info= [self.primerPair, self.fastaid, self.primerF, self.primerR, self.mismF, self.mismR, 
+               self.amplicon, self.real_fpos, self.mismF_loc, self.mismF_type, self.mismF_base, self.real_rpos, self.mismR_loc, 
+               self.mismR_type, self.mismR_base]
+        """
         if(self.Nend_misses):
-            info.extend([self.fm_Nend, self.rm_Nend])
+            info.extend([self.mismF_Nend, self.mismR_Nend])
+        """
         return info
 
 def get_Nend_missmatches(Nend_misses, rm_loc_output, flen, fm_loc_output):
