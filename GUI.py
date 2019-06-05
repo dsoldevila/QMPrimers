@@ -223,14 +223,9 @@ class GUI_compute():
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
        
-        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)
-        
-        print("Finished!")
-        
-        self.store_results()
-        self.gui_simulate.set_template(self.template)
-
-        
+        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)        
+        self.gui_simulate.set_template(self.template)        
+       
         return
     
     def load_template_in_thread(self):

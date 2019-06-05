@@ -146,9 +146,10 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
             except:
                 raise
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pkey))
-
+   
     raw_stats, cooked_stats = alignment_processor.get_stats()
-    
+    store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
+    print("Template, negative and statistics saved")
     return template, discarded, raw_stats, cooked_stats
 
 """
