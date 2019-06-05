@@ -41,9 +41,9 @@ class Simulation():
         """
         self.k = k
         self.B = B
-        columns = list(range(N))
-        columns.append("ncombinations")
-        self.raw_stats = pd.DataFrame(columns=columns)
+        index = list(range(N))
+        index.append("ncombinations")
+        self.raw_stats = pd.DataFrame(index=index)
         
         pplen = self.primer_pairs.shape[0]
         count = 0
@@ -55,10 +55,10 @@ class Simulation():
                 print("Warning: sample too small with primer pair ", str(pp), ". Skipping...")
                 
             else:
-                self.raw_stats.loc[pp] = 0.0
+                self.raw_stats[pp] = 0.0
                 n_combinations = math.factorial(full_sample.shape[0])/(math.factorial(self.sample_size)
                 *math.factorial(full_sample.shape[0]-self.sample_size))
-                self.raw_stats.loc[pp, "ncombinations"] = n_combinations
+                self.raw_stats.loc["ncombinations", pp] = n_combinations
                 if(N > 0.5*n_combinations):
                     print("Warning: Only ", str(n_combinations), " possible combinations with primer pair ", str(pp))
                     
@@ -113,26 +113,26 @@ class Simulation():
         tmp = tmp.astype('float64') #TODO patch, create a better solution if slow
         tmp = tmp.corr()
         tmp = tmp.loc["oprop", "fprop"]
-        self.raw_stats.loc[primer_pair, self.step] = tmp
+        self.raw_stats.loc[self.step, primer_pair] = tmp
         return
     
     def cook_stats(self, ci):
-        cooked_stats = pd.DataFrame(index=self.raw_stats.index, columns=["min", "max", "mean", "median", "ncombinations", "CI"])
-        raw_stats = self.raw_stats[self.raw_stats.columns[:-1]]
+        cooked_stats = pd.DataFrame(index=self.raw_stats.columns, columns=["min", "max", "mean", "median", "ncombinations", "CI"])
+        raw_stats = self.raw_stats.loc[self.raw_stats.index[:-1]]
         
-        raw_stats = np.sort(raw_stats)
+        raw_stats = np.sort(raw_stats, axis=0)
     
-        low_interval = int(((1-ci)/2)*raw_stats.shape[1])
-        high_interval = int((1-((1-ci)/2))*raw_stats.shape[1])
+        low_interval = int(((1-ci)/2)*raw_stats.shape[0])
+        high_interval = int((1-((1-ci)/2))*raw_stats.shape[0])
     
-        raw_stats = raw_stats[:,low_interval:high_interval]
+        raw_stats = raw_stats[low_interval:high_interval, :]
         
-        cooked_stats["min"] = raw_stats[:, 0]
-        cooked_stats["max"] = raw_stats[:, -1]
+        cooked_stats["min"] = raw_stats[0,:]
+        cooked_stats["max"] = raw_stats[-1, :]
         cooked_stats["CI"] = ci
-        cooked_stats["ncombinations"] = self.raw_stats["ncombinations"]
-        cooked_stats["mean"] = raw_stats.mean(axis=1)
-        cooked_stats["median"] = np.median(raw_stats, axis=1)
+        cooked_stats["ncombinations"] = self.raw_stats.loc["ncombinations"]
+        cooked_stats["mean"] = raw_stats.mean(axis=0)
+        cooked_stats["median"] = np.median(raw_stats, axis=0)
     
         return cooked_stats
     

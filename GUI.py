@@ -243,8 +243,8 @@ class GUI_compute():
         return
     
     def store_results_in_thread(self):
-        self.store_results()
-        #_thread.start_new_thread(self.store_results, ())
+        #self.store_results()
+        _thread.start_new_thread(self.store_results, ())
         return
         
     
@@ -336,7 +336,7 @@ class GUI_simulate():
         self.buttons_frame.pack(expand=YES, fill=X)
         
         """Compute"""
-        self.button_c = Button(self.buttons_frame, text="Simulate", command=self.simulate)
+        self.button_c = Button(self.buttons_frame, text="Simulate", command=self.simulate_in_thread)
         self.button_c.pack(side=TOP, expand=YES, fill=X)
         
         """Compute"""
@@ -381,6 +381,10 @@ class GUI_simulate():
         self.entries["template"].delete(0, END)
         self.entries["template"].insert(0, str("TEMPLATE FROM LAST MATCHING"))
         return
+    
+    def simulate_in_thread(self):
+         _thread.start_new_thread(self.simulate, ())
+         return
     
     def simulate(self):
         sim = Simulation(self.template, self.parameters.loc["sample size", "value"].get())

@@ -232,7 +232,7 @@ def simulate_whitebox():
     print(tmp)
 
 def simulate():
-    template = pd.read_csv("/home/david/Git/QMPrimers/Test_data/test_positive.csv")
+    template = pd.read_csv("output_positive.csv")
     full_sample = template["fastaid"].unique()
     sample_size = 10
     k = 0.3
@@ -240,7 +240,7 @@ def simulate():
     N=10
     sim = s.Simulation(template, sample_size)
     raw, cooked = sim.simulate(k, B, N)
-    sim.store_raw_data("/home/david/Git/QMPrimers/Test_data/sim_test", raw, cooked, sample_size, k, B, N)
+    sim.store_raw_data("sim_test", raw, cooked, sample_size, k, B, N)
     
 def check_matching():
     gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"])
@@ -267,7 +267,7 @@ def get_nend_test():
 if(__name__=="__main__"):
     
     time1 = time.time()
-    get_nend_test()
+    simulate()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     
