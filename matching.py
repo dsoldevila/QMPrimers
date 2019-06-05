@@ -106,7 +106,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
         
     return template, discarded
 
-def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hanging_primers=False):
+def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, output_file, hanging_primers=False):
     """
     Computes the best alignments between each genome and each primer
     @returns: List of GenAlignment instances
@@ -129,6 +129,8 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
 
     alignment_processor = Alignment(max_miss_f + max_miss_r)
     
+    template.to_csv(output_file+"_positive.csv", index_label="id")
+    discarded.to_csv(output_file+"_negative.csv", index_label="id")
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")
         i +=1
@@ -136,7 +138,11 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, hangi
         gen.seq = np.array(gen.seq)
         for pkey in primer_pairs:
             try:
+                t2 = template.shape[0]
                 template, discarded = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer_pairs[pkey], gen, hanging_primers, template, discarded, alignment_processor)
+                t1 = template.shape[0]
+                template.loc[template.index[t2:t1]].to_csv(output_file+"_positive.csv", mode='a', index_label="id", header=None)
+                discarded.loc[discarded.index[t2:t1]].to_csv(output_file+"_negative.csv", mode='a', index_label="id", header=None)
             except:
                 raise
                 print("Error: Skipping gen "+gen.id+" primer pair "+str(pkey))
