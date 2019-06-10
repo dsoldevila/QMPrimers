@@ -114,11 +114,11 @@ class Alignment:
         self.primerF = primer_pair.f.id
         self.primerR = primer_pair.f.id
         
-        self.real_fpos = int(real_fpos)
-        self.F_pos = int(real_fpos)
+        self.real_fpos = int(real_fpos)-1
+        self.F_pos = int(real_fpos)-1
         #TODO Crash expected if real_fpos is lower than 0, fix this
-        self.real_rpos = int(real_rpos)
-        self.R_pos = int(real_rpos)
+        self.real_rpos = int(real_rpos)-1
+        self.R_pos = int(real_rpos)-1
         self.mismF = fmisses
         self.mismR = rmisses
         self.amplicon = amplicon
@@ -166,10 +166,10 @@ class Alignment:
         self.fastaid = fastaid
         self.primerF = primerF
         self.primerR = primerR
-        self.F_pos = F_pos
-        self.real_fpos = F_pos #TODO patch
-        self.R_pos = R_pos
-        self.real_rpos = R_pos #TODO patch
+        self.F_pos = F_pos-1
+        self.real_fpos = F_pos-1 #TODO patch
+        self.R_pos = R_pos-1
+        self.real_rpos = R_pos-1 #TODO patch
         self.amplicon = amplicon
         
         
@@ -249,13 +249,14 @@ class Alignment:
         
         flen = self.primer_pair.flen
         for i in range(flen):
-            if(MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen.seq[self.F_pos+i]]!=1):
+            if(self.F_pos+i<0 or MATCH_TABLE.loc[self.primer_pair.f.seq[i], self.gen.seq[self.F_pos+i]]!=1):
                 fm_loc.append(i)
                 fm_loc_output.append(flen-i)
         
         rlen = self.primer_pair.rlen
+        leng = len(self.gen)
         for i in range(rlen):
-            if(MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.R_pos+i]]!=1):
+            if(self.F_pos+i>=leng or MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.R_pos+i]]!=1):
                     rm_loc.append(i)
                     rm_loc_output.append(i+1)
                 
@@ -266,10 +267,17 @@ class Alignment:
         rm_type = []
         #TODO ask format of primers, in order to know if the gen should be compared against the compelement
         for m in self.mismF_loc_raw:
-            fm_type.append(self.gen.seq[self.F_pos+m]+self.primer_pair.fcomplement[m])
+            if(self.F_pos+m>0):
+                fm_type.append(self.gen.seq[self.F_pos+m]+self.primer_pair.fcomplement[m])
+            else:
+                fm_type.append("Z"+self.primer_pair.fcomplement[m])
           
+        leng = len(self.gen)
         for m in self.mismR_loc_raw:
-            rm_type.append(self.gen.seq[self.R_pos+m]+self.primer_pair.rcomplement[m])
+            if(self.F_pos+m<leng):
+                rm_type.append(self.gen.seq[self.R_pos+m]+self.primer_pair.rcomplement[m])
+            else:
+                fm_type.append("Z"+self.primer_pair.rcomplement[m])
             
         return fm_type, rm_type
     
@@ -323,16 +331,9 @@ class Alignment:
             mismR_loc.append(i)
         return mismF_loc, mismR_loc    
     
-    def __str__(self):        
-        info = ("PRIME PAIR "+str(self.primerPair)+"\n"+
-              "Forward's at: "+str(self.real_fpos)+" with "+str(self.mismF)+" misses "+ str(self.mismF_loc_raw)+" "+str(self.mismF_type)+"\n"+
-              "Reverse's at: "+str(self.real_rpos)+" with "+str(self.mismR)+" misses "+ str(self.mismR_loc_raw)+" "+str(self.mismR_type)+"\n"+
-              "Amplicon: "+str(self.amplicon)+"\n")
-        return info
-    
     def get_csv(self):
         info= [self.primerPair, self.fastaid, self.primerF, self.primerR, self.mismF, self.mismR, 
-               self.amplicon, self.real_fpos, self.mismF_loc, self.mismF_type, self.mismF_base, self.real_rpos, self.mismR_loc, 
+               self.amplicon, self.real_fpos+1, self.mismF_loc, self.mismF_type, self.mismF_base, self.real_rpos+1, self.mismR_loc, 
                self.mismR_type, self.mismR_base]
         """
         if(self.Nend_misses):
