@@ -136,7 +136,7 @@ class Simulation():
     
     @staticmethod
     def store_raw_data(output_file, raw_stats, cooked_stats, sample_size, k, B, N):
-        raw_stats.to_csv(output_file+".csv", index_label="primerPair")
+        raw_stats.to_csv(output_file+".csv", index_label="Step")
         
         parameters_used = "SampleSize = "+str(sample_size)+"\t\tk = "+str(k)+"\t\tBeta = "+str(B)+"\t\tN = "+str(N)+"\n"
         

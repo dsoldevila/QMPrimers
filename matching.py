@@ -114,10 +114,12 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
     
+    primerPair_list = [] #used to sort template by primer pairs
     for pkey in primer_pairs:
         pp = primer_pairs[pkey]
         pp.f.seq = np.array(pp.f)
         pp.r.seq = np.array(pp.r)
+        primerPair_list.append(pkey)
         
     size = len(gen_record)
     i = 0       
@@ -150,6 +152,11 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     raw_stats, cooked_stats = alignment_processor.get_stats()
     store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
     print("Template, negative and statistics saved")
+    
+    
+    template["primerPair"] = pd.Categorical(template["primerPair"], categories=primerPair_list, ordered=True)
+    template.sort_values(['primerPair', 'fastaid'], inplace=True)
+    template.reset_index(drop=True, inplace=True)
     return template, discarded, raw_stats, cooked_stats
 
 """
