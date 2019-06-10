@@ -72,8 +72,6 @@ class Simulation():
                 
 
         self.cooked_stats = self.cook_stats(0.95)
-        print(self.raw_stats)
-        print(self.cooked_stats)
         print("Simulation done!")
         return self.raw_stats, self.cooked_stats
 

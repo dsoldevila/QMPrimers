@@ -4,6 +4,9 @@
 Created on Sat Mar 30 13:31:13 2019
 
 @author: david
+@brief: This document was made to make the front end a little cleaner and to separate the front end from the backend, to not have to modify both
+command line mode and gui mode when making changes on the back end. Now that the project is almost complete, maybe this file has no sense anymore. 
+Especially if we take into account that the simulation backend bypasses this file.
 """
 
 import load_data as ld
@@ -101,6 +104,7 @@ def load_template(parameters):
         return pd.DataFrame(), pd.DataFrame(), gen_record, primer_pairs, pd.DataFrame(), pd.DataFrame()
 
 def load_template_only(template_file):
+    template = pd.DataFrame();
     try:
         template = ld.load_template(template_file)
         print("Template loaded!")

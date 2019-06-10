@@ -12,12 +12,30 @@ from tkinter import filedialog
 from tkinter import *
 from tkinter.font import Font
 import os
-import sys
 import _thread
 import pandas as pd
 
-class GUI_compute():
-    def __init__(self, parent, parameters, output_info, gui_simulate):
+output_info = {}
+for key in TEMPLATE_HEADER:
+    output_info[key] = True
+
+parameters = [
+        ["gen", None, "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
+        ["output_file", os.path.join(os.getcwd(),"output"), "Location of the output files, no extension", "-o", "entry"],
+        ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
+        ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
+        ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
+        ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
+        ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
+        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
+        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"]]                      
+parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
+
+
+
+class GUI_matching():
+    def __init__(self, parent, gui_simulate):
         
         self.main_frame = Frame(parent)
 
@@ -267,129 +285,84 @@ class GUI_compute():
             
         save_matching_info(self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
         return
-    
-class GUI_simulate():
-    def __init__(self, parent, parameters, output_info):
-        
-        self.main_frame = Frame(parent)
-        
-        """Other"""
-        self.parameters = parameters
-        self.current_directory = os.getcwd()
-        self.entries = {}
-        self.buttons = {}
-        self.template = None
-        
-        """Frame containing Files and Other Parameters frames"""
-        self.first_row_frame = Frame(self.main_frame)
-        self.first_row_frame.pack(expand=YES, fill=BOTH)
-        
-        """Select Files Frame"""
-        self.file_frame = Frame(self.first_row_frame)
-        self.file_frame.pack(side=LEFT, expand=YES, fill=X)
-        Label(self.file_frame, text="Files").pack()
-        
-        for name in self.parameters.loc[parameters["type"]=="entry"].index.values:
-            block = Frame(self.file_frame)
-            block.pack(expand=YES, fill=BOTH)
-            self.entries[name] = Entry(block)
-            self.entries[name].pack(side=LEFT, expand=YES, fill=BOTH)
-            self.buttons[name] = Button(block, text="Open")
-            self.buttons[name].pack(side=LEFT, expand=NO, fill=X)
-                
-        self.entries["template"].insert(0, "<No Template>")
-        self.entries["template"].bind("<Return>", (lambda event: self.update_template_file(self.entries["template"].get())))
-        self.buttons["template"].config(command=(lambda: self.update_template_file(self._open_file())))
-        
-        self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
-        self.entries["output_file"].bind("<Return>", (lambda event: self.set_output_file(self.entries["output_file"].get())))
-        self.buttons["output_file"].config(text="Set", command=(lambda: self.set_output_file(self.entries["output_file"].get())))
 
+def get_help(paramaters):
+    output_info_keys = [key for key in output_info.keys()]
+    other_info = {"-info <multiple strings>": "\tSelect which info to output, all info by default\n\t"+str(output_info_keys),
+                  "PRIMER PAIRS HEADER": "tid;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength"}
+
+    print("QMPRIMERS HELP PAGE")
+    pd.options.display.max_colwidth = 100
+    print(paramaters.to_string())
+
+    for param in other_info:
+        print(param, ": ", other_info[param])
+    return
+
+def matching_cl(args):
+    parameters.loc["help"] = [False, "Display this list", "--help", ""]
         
-        """Parameters"""
-        self.param_frame = Frame(self.main_frame)
-        self.param_frame.pack(expand=YES, fill=X)
-        Label(self.param_frame, text="Parameters").pack()
-        
-        for name in self.parameters.loc[parameters["type"]!="entry"].index.values:
-            block = Frame(self.param_frame)
-            self.entries[name] = Entry(block, width=4)
-            self.entries[name].pack(side=LEFT)
-            Label(block, text=name).pack(side=LEFT)
-            if(self.parameters.loc[name, "type"] == "int"):
-                var = IntVar()
-                var.set(int(self.parameters.loc[name, "value"]))
-            elif(self.parameters.loc[name, "type"] == "float"):
-                var = DoubleVar()
-                var.set(self.parameters.loc[name, "value"])
-            self.entries[name].config(textvariable=var)
-            self.parameters.loc[name, "value"] = var
-            block.pack(side=LEFT, expand=YES, fill=BOTH)
-            
-        """Buttons"""
-        self.buttons_frame = Frame(self.main_frame)
-        self.buttons_frame.pack(expand=YES, fill=X)
-        
-        """Compute"""
-        self.button_c = Button(self.buttons_frame, text="Simulate", command=self.simulate_in_thread)
-        self.button_c.pack(side=TOP, expand=YES, fill=X)
-        
-        """Compute"""
-        self.button_c = Button(self.buttons_frame, text="Save raw", command=self.save)
-        self.button_c.pack(side=TOP, expand=YES, fill=X)
-        
-        return
+    flags = parameters["flag"].values
+   
+    i = 0
+    nargs = len(args)
     
-    def _open_file(self):
-        """
-        Open file from the filedialog
-        @return Tuple of strings
-        """
-        file_name = filedialog.askopenfilename(initialdir=self.current_directory, title = "Select Template file")
-        if(file_name): self.current_directory = os.path.dirname(file_name)
-        return file_name
+    last_option= None
     
-    def update_template_file(self, input_file):
-        """
-        Loads input genomes 
-        """
-        if(input_file): #is not None
-            self.entries["template"].delete(0, END)
-            self.entries["template"].insert(0, str(input_file))
-            self.parameters.loc["template", "value"] = input_file
-            self.template = load_template_only(self.parameters.loc["template", "value"])
-        return
-    
-    def set_output_file(self, output_file):
-        if(os.path.isabs(output_file)):
-            self.parameters.loc["output_file", "value"] = output_file
+    while i < nargs:
+        argv = args[i]
+        if(last_option==None):
+            if(argv not in flags):
+                if(argv=="-info"):
+                    last_option = "info"
+                    for key in output_info: output_info[key] = False
+                else:
+                    print("Parameter "+str(sys.argv[i])+" unknown")
+                    print("Use --help to display the manual")
+                    exit();
+            elif(argv[:2]=="--"):
+                index = parameters[parameters["flag"]==argv].index
+                parameters.loc[index, "value"] = True
+            elif(argv[0]=="-"):
+                last_option = parameters[parameters["flag"]==argv].index.values
+            i+=1
         else:
-            self.parameters.loc["output_file", "value"] = os.path.join(self.current_directory,output_file)
-            self.entries["output_file"].delete(0, END)
-            self.entries["output_file"].insert(0, self.parameters.loc["output_file", "value"])
-        print("Output file path updated")
-        return
+            if(last_option == "info" and argv in output_info):
+                output_info[argv] = True
+                i+=1
+            elif(last_option in parameters.index.values):
+                parameters.loc[last_option, "value"] = argv
+                last_option = None
+                i+=1
+            else:
+                last_option = None
     
-    def set_template(self, template):
-        #TODO use this func to pass template from matching to simulation
-        self.template = template
-        self.entries["template"].delete(0, END)
-        self.entries["template"].insert(0, str("TEMPLATE FROM LAST MATCHING"))
-        return
-    
-    def simulate_in_thread(self):
-         _thread.start_new_thread(self.simulate, ())
-         return
-    
-    def simulate(self):
-        sim = Simulation(self.template, self.parameters.loc["sample size", "value"].get())
-        self.raw_stats, self.cooked_stats = sim.simulate(self.parameters.loc["k", "value"].get(), self.parameters.loc["Beta", "value"].get(), self.parameters.loc["N", "value"].get())
-        return
-    
-    def save(self):
-        Simulation.store_raw_data(self.parameters.loc["output_file", "value"], self.raw_stats, self.cooked_stats)
-        return
-    
-    def pack(self):
-        self.main_frame.pack(expand=YES, fill=BOTH)
-        return
+    parameters.loc["gen", "value"] = (parameters.loc["gen", "value"]) 
+    parameters.loc["Nend miss.", "value"] = int(parameters.loc["Nend miss.", "value"]) 
+
+    if(parameters.loc["help", "value"]):
+        get_help(parameters)
+    else:
+        
+        if(parameters.loc["csv_template", "value"]):
+            template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = load_template(parameters)
+
+        elif(parameters.loc["gen", "value"]):
+            parameters.loc["gen", "value"] = (parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
+            template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = compute(parameters)
+            
+        i = 0 #TODO convert output_info to list
+        header = []
+        for key in output_info:
+            if(output_info[key]):
+                header.append(i)
+            i+=1
+
+        Nend = parameters.loc["Nend miss.", "value"]
+        if(Nend):
+            if(parameters.loc["csv_template", "value"]):
+                template = recalculate_Nend(template, primer_pairs, Nend, 0)
+            header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
+
+            
+        save_matching_info(parameters.loc["output_file", "value"], template, header, discarded, raw_stats, cooked_stats)
