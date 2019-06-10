@@ -7,8 +7,6 @@ Created on Thu Nov  8 15:30:29 2018
 @author: David Soldevila
 """
 
-from interface import *
-from common import *
 from tkinter import filedialog
 from tkinter import *
 from tkinter.font import Font
@@ -36,7 +34,6 @@ class GUI(Frame):
         self.main_frame = Frame.__init__(self, parent)
 
         """Other"""
-        self.parameters = parameters
         self.current_directory = os.getcwd()
         
         """Menu"""

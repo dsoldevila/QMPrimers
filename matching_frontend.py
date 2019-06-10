@@ -100,7 +100,7 @@ class GUI_matching():
                     block = Frame(self.other_frame)
                     block.pack(expand=YES)
                     Label(block, text=name).pack(side=RIGHT)
-                    other = StringVar()
+                    other = IntVar()
                     Entry(block, textvariable=other, width=2).pack(side=LEFT)
                     other.set(self.parameters.loc[name, "value"])
                     self.other_param[name] = other
