@@ -3,28 +3,53 @@ A tool to select the best primers to perform quantitative metabarcoding studies.
 
 **WARNING:** This program is still in development, so expect bugs and crashes. Its use is still not recommended!
 
-## Dependencies
+# Installation
+QMPrimers can e executed as a Python script or as a one-file executable.
 
+## As a Python script
+To run it as a Python script it is mandatory to use Python3.x, as well as to install the following dependencies.
+
+**Dependencies:**
 - [Biopython](https://biopython.org)
 - [Numpy](http://www.numpy.org)
 - [Pandas](https://pandas.pydata.org)
 
-## Wiki
-### First steps
-To execute the program in GUI mode, just type on a terminal:
+Once fullfilled the requirements, [execute the program](#as-a-python-script).
+
+## As an executable
+Download the program via one of the links below, dependiing on your platform:
+- insert link to Windows10 executable
+- insert link to Linux executable
+- insert link to MacOS executable
+
+Once downloaded the program, [execute it](#as-an-executable).
+
+# Wiki
+## First steps
+
+### As a Python script
+To execute the program in GUI mode, just type in a terminal:
 ```bash
 python3.X QMPrimers
 #where X depends on your python version
 ```
 
-To execute the program in command line mode, type on a terminal:
+To execute the program in command line mode, type in a terminal:
 ```bash
-python3.X QMPrimers --nogui <paramters....>
+python3.X QMPrimers <paramters....>
 ```
+### As an executable
+To execute the program double click the program file.
 
+To execute the program in command line mode, type in a terminal:
+```bash
+./QMPrimers <paramters....>
+```
+## How to use the program
 ### Matching
 Everything related to the Matching is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Matching).
 
-
+### Simulation
+Everything related to the Matching is explained here.
 
 
