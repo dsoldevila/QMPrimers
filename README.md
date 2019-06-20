@@ -14,7 +14,7 @@ To run it as a Python script it is mandatory to use Python3.x, as well as to ins
 - [Numpy](http://www.numpy.org)
 - [Pandas](https://pandas.pydata.org)
 
-Once fullfilled the requirements, [execute the program](#as-a-python-script).
+Once fullfilled the requirements, [execute the program](#run-as-a-python-script).
 
 ## As an executable
 Download the program via one of the links below, dependiing on your platform:
@@ -22,12 +22,12 @@ Download the program via one of the links below, dependiing on your platform:
 - insert link to Linux executable
 - insert link to MacOS executable
 
-Once downloaded the program, [execute it](#as-an-executable).
+Once downloaded the program, [execute it](#run-as-an-executable).
 
 # Wiki
 ## First steps
 
-### As a Python script
+### Run as a Python script
 To execute the program in GUI mode, just type in a terminal:
 ```bash
 python3.X QMPrimers
@@ -38,7 +38,7 @@ To execute the program in command line mode, type in a terminal:
 ```bash
 python3.X QMPrimers <paramters....>
 ```
-### As an executable
+### Run as an executable
 To execute the program double click the program file.
 
 To execute the program in command line mode, type in a terminal:
