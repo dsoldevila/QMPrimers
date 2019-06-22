@@ -70,7 +70,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
     len_gen = len(gen)
     if(primer.flen+search_limit>len_gen): #If primer pair plus max_amplicon is larger than the genomic sequence, check if with min_amplicon the same happens
         if(primer.flen+primer.rlen+primer.min_amplicon>len_gen): #If primer pair plus min_amplicon is larger than the genomic sequence, abort
-            print("Warning: Skipping gen "+gen.id+" primer pair "+str(primer.id))
+            logging.warning("Skipping gen "+gen.id+" primer pair "+str(primer.id))
             discarded.loc[discarded.shape[0]] = [primer.id, gen.id]
             alignment_processor.add_negative_2_stats(primer.id)
             return template, discarded
@@ -133,6 +133,9 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     
     template.to_csv(output_file+"_positive.csv", index_label="id")
     discarded.to_csv(output_file+"_negative.csv", index_label="id")
+    
+    t1 = 0
+    d1 = 0
     for gen_key in gen_record:
         print(gen_key, "{0:.2f}".format(i/size*100)+"%")
         i +=1
@@ -140,18 +143,20 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
         gen.seq = np.array(gen.seq)
         for pkey in primer_pairs:
             try:
-                t2 = template.shape[0]
+                t2 = t1
+                d2 = d1
                 template, discarded = compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer_pairs[pkey], gen, hanging_primers, template, discarded, alignment_processor)
                 t1 = template.shape[0]
+                d1 = discarded.shape[0]
                 template.loc[template.index[t2:t1]].to_csv(output_file+"_positive.csv", mode='a', index_label="id", header=None)
-                discarded.loc[discarded.index[t2:t1]].to_csv(output_file+"_negative.csv", mode='a', index_label="id", header=None)
+                discarded.loc[discarded.index[d2:d1]].to_csv(output_file+"_negative.csv", mode='a', index_label="id", header=None)
             except:
                 raise
-                print("Error: Skipping gen "+gen.id+" primer pair "+str(pkey))
+                logging.error("Error: Skipping gen "+gen.id+" primer pair "+str(pkey))
    
     raw_stats, cooked_stats = alignment_processor.get_stats()
     store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
-    print("Template, negative and statistics saved")
+    logging.info("Template, negative and statistics saved")
     
     
     template["primerPair"] = pd.Categorical(template["primerPair"], categories=primerPair_list, ordered=True)

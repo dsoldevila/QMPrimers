@@ -200,17 +200,19 @@ def restore_template():
     return
 
 def matching_test():
-    gen_record = ld.load_bio_files(["Data/mitochondrion.1.1.genomic.fna"])
-    gen_record = split(gen_record, 0.005)
+    gen_record = ld.load_bio_files(["Data/plastid.3.1.genomic.fna"])
+    #gen_record = split(gen_record, 0.005)
     #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    primer_pairs = {"6":primer_pairs["6"]}
-    template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, 0) 
+    primer_pairs = ld.load_csv_file("Data/PP_chl.csv")
+    #primer_pairs = {"6":primer_pairs["6"]}
+    
+    output = "Test_data/plant_test"
+    template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, output) 
     
     header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
                                      "mismFT_base", "R_pos"]
-    m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
-    i.save_matching_info("pp6_test", template, discarded, rs, cs, header=header)
+    #m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
+    i.save_matching_info(output, template, header, discarded, rs, cs)
     
     return
 
@@ -241,15 +243,6 @@ def simulate():
     sim = s.Simulation(template, sample_size)
     raw, cooked = sim.simulate(k, B, N)
     sim.store_raw_data("sim_test", raw, cooked, sample_size, k, B, N)
-    
-def check_matching():
-    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
-    gen = gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"]
-    print(gen[217:217+23])
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-    print(primer_pairs["10"].fcomplement)
-
-    return
 
 def get_nend_test():
     nend = 2
@@ -267,7 +260,7 @@ def get_nend_test():
 if(__name__=="__main__"):
     
     time1 = time.time()
-    check_matching()
+    matching_test()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     

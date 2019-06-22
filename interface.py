@@ -64,9 +64,9 @@ def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers)
     try:
         gen_record = ld.load_bio_files(gen_file, writable=check_integrity or check_uppercase, 
                                        check_uppercase=check_uppercase, file_format=None)
-        print("Genome record file loaded!")
+        logging.info("Genome record file loaded!")
     except:
-        print("Error at loading gen record")
+        logging.critical("Error at loading gen record")
     if(check_integrity): gen_record = ld.remove_bad_gens(gen_record)
     return gen_record
 
@@ -74,9 +74,9 @@ def load_primer_pairs(primer_pairs_file):
     primer_pairs = None
     try:
         primer_pairs = ld.load_csv_file(primer_pairs_file)
-        print("Primer pairs file loaded!")
+        logging.info("Primer pairs file loaded!")
     except:
-        print("Error at loading primer pairs file")
+        logging.critical("Error at loading primer pairs file")
         
     return primer_pairs
 
@@ -100,7 +100,7 @@ def load_template(parameters):
         return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
     except:
-        print("Error at restoring template")
+        logging.error("Unable to restore template")
         return pd.DataFrame(), pd.DataFrame(), gen_record, primer_pairs, pd.DataFrame(), pd.DataFrame()
 
 def load_template_only(template_file):
@@ -109,7 +109,7 @@ def load_template_only(template_file):
         template = ld.load_template(template_file)
         print("Template loaded!")
     except:
-        print("Error at loading template")
+        logging.error("Unable to load template")
     return template
 
 def get_Nend_match(template, nend, max_misses):

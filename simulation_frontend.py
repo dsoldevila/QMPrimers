@@ -199,10 +199,10 @@ def sim_cl(args):
             sim = Simulation(template, parameters.loc["sample size", "value"])
             raw_stats, cooked_stats = sim.simulate(parameters.loc["k", "value"], parameters.loc["Beta", "value"],  parameters.loc["N", "value"])
         except:
-            print("The simulation crashed, bad files maybe?")
+            logging.critical("The simulation crashed, bad files maybe?")
         try:
             Simulation.store_raw_data(parameters.loc["output_file", "value"], raw_stats, cooked_stats, parameters.loc["sample size", "value"],
                                       parameters.loc["k", "value"], parameters.loc["Beta", "value"],  parameters.loc["N", "value"])
         except:
-            print("Error at saving files")
+            logging.critical("Error at saving files")
     return

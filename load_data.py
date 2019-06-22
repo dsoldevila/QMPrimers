@@ -53,9 +53,9 @@ def load_csv_file(file, delimiter=";"):
                 if(check_primer_pair_integrity(primer_pair)):
                     primer_dict[row[pos["id"]]] = primer_pair
                 else:
-                    print("Error: Skipping primer pair "+primer_pair.id+", bad sequence")
+                    logging.warning("Skipping primer pair "+primer_pair.id+", bad sequence")
             else:
-                print("Wrong primer pair in line "+str(i))
+                logging.warning("Wrong primer pair in line "+str(i))
             
     return primer_dict
 
@@ -107,18 +107,18 @@ def remove_bad_gens(gen_record):
     for genkey in genkeys:
         gen = gen_record[genkey]
         if(gen.id == None or gen.id == bio_default["id"]): 
-             print("Warning: "+gen.id+"has no id")
+             logging.warning(gen.id+"has no id")
         if(gen.name == None or gen.name == bio_default["name"]):
-            print("Warning: "+gen.id+"has no name")
+            logging.warning(gen.id+"has no name")
         if(gen.description == None or gen.description == bio_default["description"]):
-            print("Warning: "+gen.id+"has no name")
+            logging.warning(gen.id+"has no name")
         for nucleotide in gen.seq:
             if nucleotide not in IUPAC_AMBIGUOUS_DNA:
-                print("Error: "+gen.id+" HAS BAD SEQUENCE!, trying to remove it...")
+                logging.warning(gen.id+" HAS BAD SEQUENCE!, trying to remove it...")
                 try:
                     gen_record.pop(genkey, None)
                 except:
-                    print("Warning: "+gen.id+" couldn't be removed, it will be skipped during match")
+                    logging.error("Couldn't be removed, it will be skipped during match")
                 break
             
     return gen_record

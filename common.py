@@ -7,7 +7,9 @@ Created on Fri Nov  9 15:34:23 2018
 """
 import numpy as np
 import pandas as pd
+import logging
 
+#Some global constant variables
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
 TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
                                      "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base"]
@@ -31,6 +33,7 @@ SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='uint8')
 MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns=list("ACGTWSMKRYBDHVNIZ"))
+
 
 class PrimerPair:
     def __init__(self, pair_id, fprimer, rprimer, min_amplicon, max_amplicon):
