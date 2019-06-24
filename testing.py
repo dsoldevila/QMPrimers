@@ -199,23 +199,6 @@ def restore_template():
     i.save_matching_info("Test_data/test2", templateR, discarded, rs, cs, header=TEMPLATE_HEADER)
     return
 
-def matching_test():
-    gen_record = ld.load_bio_files(["Data/plastid.3.1.genomic.fna"])
-    #gen_record = split(gen_record, 0.005)
-    #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
-    primer_pairs = ld.load_csv_file("Data/PP_chl.csv")
-    #primer_pairs = {"6":primer_pairs["6"]}
-    
-    output = "Test_data/plant_test"
-    template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, output) 
-    
-    header = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
-                                     "mismFT_base", "R_pos"]
-    #m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
-    i.save_matching_info(output, template, header, discarded, rs, cs)
-    
-    return
-
 def simulate_whitebox():
     template = pd.read_csv("/home/david/Git/QMPrimers/Test_data/test1.csv")
     full_sample = template["fastaid"].unique()
@@ -243,6 +226,22 @@ def simulate():
     sim = s.Simulation(template, sample_size)
     raw, cooked = sim.simulate(k, B, N)
     sim.store_raw_data("sim_test", raw, cooked, sample_size, k, B, N)
+    
+def matching_test():
+    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
+    #gen_record = split(gen_record, 0.005)
+    #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
+    primer_pairs = ld.load_csv_file("Data/PP.csv")
+    #primer_pairs = {"6":primer_pairs["6"]}
+    
+    output = "Test_data/test"
+    header = [i for i in range(len(TEMPLATE_HEADER))]
+    template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, output) 
+    
+    #m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
+    i.save_matching_info(output, template, header, discarded, rs, cs)
+    
+    return
 
 def get_nend_test():
     nend = 2

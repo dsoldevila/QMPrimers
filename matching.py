@@ -162,6 +162,11 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     template["primerPair"] = pd.Categorical(template["primerPair"], categories=primerPair_list, ordered=True)
     template.sort_values(['primerPair', 'fastaid'], inplace=True)
     template.reset_index(drop=True, inplace=True)
+    
+    discarded["primerPair"] = pd.Categorical(discarded["primerPair"], categories=primerPair_list, ordered=True)
+    discarded.sort_values(['primerPair', 'fastaid'], inplace=True)
+    discarded.reset_index(drop=True, inplace=True)
+    
     return template, discarded, raw_stats, cooked_stats
 
 """

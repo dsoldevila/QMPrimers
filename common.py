@@ -277,7 +277,7 @@ class Alignment:
           
         leng = len(self.gen)
         for m in self.mismR_loc_raw:
-            if(self.F_pos+m<leng):
+            if(self.R_pos+m<leng):
                 rm_type.append(self.gen.seq[self.R_pos+m]+self.primer_pair.rcomplement[m])
             else:
                 fm_type.append("Z"+self.primer_pair.rcomplement[m])
@@ -303,7 +303,7 @@ class Alignment:
         rprimer_complement = self.primer_pair.rcomplement
         
         for i in range(self.mismR):
-            gen_nucleotide = self.mismR_type[i]
+            gen_nucleotide = self.mismR_type[i][0]
             r_nucleotide = rprimer_complement[self.mismR_loc_raw[i]]
             
             if(gen_nucleotide in self.base_type and r_nucleotide in self.base_type):
