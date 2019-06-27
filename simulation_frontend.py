@@ -136,7 +136,6 @@ class GUI_simulate():
         return
     
     def simulate_in_thread(self):
-        set_verbosity(parameters.loc["verbose", "value"])
         _thread.start_new_thread(self.simulate, ())
         return
     

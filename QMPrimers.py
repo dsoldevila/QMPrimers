@@ -91,7 +91,6 @@ class GUI(Frame):
         
     
     def update_verbosity(self):
-        print("VERBOSE: ", self.is_verbose.get())
         set_verbosity(self.is_verbose.get())
         
     def finnish(self, parent):
