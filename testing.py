@@ -228,7 +228,9 @@ def simulate():
     sim.store_raw_data("sim_test", raw, cooked, sample_size, k, B, N)
     
 def matching_test():
-    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
+    init_logger()
+    set_verbosity(True)
+    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
     #gen_record = split(gen_record, 0.005)
     #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
     primer_pairs = ld.load_csv_file("Data/PP.csv")
@@ -240,7 +242,7 @@ def matching_test():
     
     #m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
     i.save_matching_info(output, template, header, discarded, rs, cs)
-    
+    close_logger()
     return
 
 def get_nend_test():

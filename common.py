@@ -8,6 +8,8 @@ Created on Fri Nov  9 15:34:23 2018
 import numpy as np
 import pandas as pd
 import logging
+import os
+import sys
 
 #Some global constant variables
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
@@ -343,3 +345,38 @@ class Alignment:
             info.extend([self.mismF_Nend, self.mismR_Nend])
         """
         return info
+
+#LOGGER
+root_handler = logging.getLogger()
+console_handler = None
+
+def init_logger():
+    global console_handler
+    logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), filemode='w', level=logging.INFO)
+    
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
+    root_handler.addHandler(console_handler)
+    return
+        
+def set_verbosity(verbosity):
+    
+    if verbosity == True:
+        root_handler.setLevel(logging.INFO)
+        console_handler.setLevel(logging.WARNING)
+    elif verbosity == 2: #True!=2, ugly but as long as it works...
+        root_handler.setLevel(logging.logging.DEBUG)
+        console_handler.setLevel(logging.DEBUG)
+    else:
+        root_handler.setLevel(logging.WARNING)
+        console_handler.setLevel(logging.ERROR)
+    return
+
+def close_logger():
+    try:
+        root_handler.removeHandler(console_handler)
+        console_handler.close() #trying because it will crash if init_logger has not bin called
+    except:
+        logging.error("Can't close console log")
+        
+    logging.shutdown()

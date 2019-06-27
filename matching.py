@@ -152,11 +152,11 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
                 discarded.loc[discarded.index[d2:d1]].to_csv(output_file+"_negative.csv", mode='a', index_label="id", header=None)
             except:
                 raise
-                logging.error("Error: Skipping gen "+gen.id+" primer pair "+str(pkey))
+                logging.error("Skipping gen "+gen.id+" primer pair "+str(pkey))
    
     raw_stats, cooked_stats = alignment_processor.get_stats()
     store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
-    logging.info("Template, negative and statistics saved")
+    print("Template, negative and statistics saved")
     
     
     template["primerPair"] = pd.Categorical(template["primerPair"], categories=primerPair_list, ordered=True)

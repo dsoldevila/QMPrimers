@@ -63,7 +63,7 @@ def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers)
     gen_record = None
     try:
         gen_record = ld.load_bio_files(gen_file, writable=check_integrity or check_uppercase, 
-                                       check_uppercase=check_uppercase, file_format=None)
+                                       check_uppercase=check_uppercase)
         logging.info("Genome record file loaded!")
     except:
         logging.critical("Error at loading gen record")

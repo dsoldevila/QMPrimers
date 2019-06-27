@@ -12,7 +12,7 @@ from tkinter import *
 from tkinter.font import Font
 import tkinter.ttk as ttk
 import os
-import sys
+#import sys
 import pandas as pd
 from simulation_frontend import *
 from matching_frontend import *
@@ -31,19 +31,21 @@ class TextRedirector(object):
 class GUI(Frame):
     def __init__(self, parent=Frame):
         
+        parent.protocol('WM_DELETE_WINDOW', (lambda: self.finnish(parent)))
         self.main_frame = Frame.__init__(self, parent)
-
+        
         """Other"""
         self.current_directory = os.getcwd()
         
-        """Menu"""
+        """Menu Bar demo"""
+        """
         self.main_menu = Menu(parent)
         parent.config(menu=self.main_menu)
         file = Menu(self.main_menu, tearoff=False)
         file.add_command(label="Option 1")
         file.add_command(label="Option 2...")
         self.main_menu.add_cascade(label="File", menu=file)
-
+        """
         
         """Tabs"""
         nb = ttk.Notebook(self.main_frame)
@@ -75,7 +77,12 @@ class GUI(Frame):
                             
         sys.stdout = TextRedirector(self.text, "stdout")
         #sys.stderr = TextRedirector(self.text, "stderr")
+
+        init_logger()
         
+    def finnish(self, parent):
+        close_logger()
+        parent.destroy()
     
 
 def get_help():
@@ -93,6 +100,7 @@ def get_help():
 
 if (__name__=="__main__"):
     if(len(sys.argv)>1 ):
+        init_logger()
         if(sys.argv[1]=="--sim"):
             sim_cl(sys.argv[2:])
         elif(sys.argv[1]=="--match"):
@@ -102,7 +110,7 @@ if (__name__=="__main__"):
             get_help()
         else:
             print("Unknown command ",sys.argv[2],". Use --help to display the manual.")
-            
+        close_logger() 
     else:
         saved_sys_stdout = sys.stdout
         saved_sys_stderr = sys.stderr

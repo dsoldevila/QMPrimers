@@ -59,7 +59,7 @@ def load_csv_file(file, delimiter=";"):
             
     return primer_dict
 
-def load_bio_files(files, file_format=None, writable=False, check_uppercase=False):
+def load_bio_files(files, writable=False, check_uppercase=False):
     """
     This function loads any file whose format is supported by Biopython.
     @return: Dictionary with genomic sequences
@@ -70,23 +70,16 @@ def load_bio_files(files, file_format=None, writable=False, check_uppercase=Fals
     if(type(files)==str):
         files = [files]
     if(path.isfile(files[0])):
-        if(file_format==None): #if format not specified, use extension
-            extension = path.splitext(files[0])[1]
-            file_format = extension[1:]
-            #TODO change this patch
-            if(file_format == "fna"): file_format = "fasta"
-            #TODO is the next line acceptable?
-        if(file_format in SeqIO._FormatToIterator): #if format supported by biopython
-            if(writable or len(files)>1): #if they need to be writable, store in memory
-                for file in files:
-                    seq_record.update(SeqIO.to_dict(SeqIO.parse(file, file_format)))
-            else: #create read_only database
-                if(isinstance(files, tuple)):
-                    files = files[0]
-                seq_record = SeqIO.index_db(":memory:", files, file_format) #TODO specify alphabet? It seems it's only used to catch methodology erros
-            if(check_uppercase):
-                for kseq in seq_record:
-                    seq_record[kseq] = seq_record[kseq].upper()
+        if(writable or len(files)>1): #if they need to be writable, store in memory
+            for file in files:
+                seq_record.update(SeqIO.to_dict(SeqIO.parse(file, "fasta")))
+        else: #create read_only database
+            if(isinstance(files, tuple)):
+                files = files[0]
+            seq_record = SeqIO.index_db(":memory:", files, "fasta") #TODO specify alphabet? It seems it's only used to catch methodology erros
+        if(check_uppercase):
+            for kseq in seq_record:
+                seq_record[kseq] = seq_record[kseq].upper()
     return seq_record
 
 def check_primer_pair_integrity(primer_pair):

@@ -29,7 +29,8 @@ parameters = [
         ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
         ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
         ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
-        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"]]                      
+        ["csv_template", None, "Precomputed missmatching template", "-i", "entry"],
+        ["verbose", False, "Outputs extra information", "--v", "param"]]                      
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
 
@@ -234,19 +235,21 @@ class GUI_matching():
         return
     
     def compute_in_thread(self):
+        for pkey in self.other_param:
+            self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
+       
+        set_verbosity(parameters.loc["verbose", "value"])
         _thread.start_new_thread(self.compute, ())
         return
     
     def compute(self):
-        for pkey in self.other_param:
-            self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
-       
         self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)        
         self.gui_simulate.set_template(self.template)        
        
         return
     
     def load_template_in_thread(self):
+        set_verbosity(parameters.loc["verbose", "value"])
         _thread.start_new_thread(self.load_template, ())
         return
     
@@ -336,9 +339,17 @@ def matching_cl(args):
                 i+=1
             else:
                 last_option = None
-    
+                
+    set_verbosity(parameters.loc["verbose", "value"])
     parameters.loc["gen", "value"] = (parameters.loc["gen", "value"]) 
     parameters.loc["Nend miss.", "value"] = int(parameters.loc["Nend miss.", "value"]) 
+    
+    """
+    if parameters.loc["verbose", "value"]
+        logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), level=logging.INFO)
+    else
+        logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), level=logging.WARNING)
+    """
 
     if(parameters.loc["help", "value"]):
         get_help(parameters)

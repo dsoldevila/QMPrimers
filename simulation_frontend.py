@@ -21,7 +21,8 @@ parameters = [
         ["Beta", 4, "", "-b", "int"],
         ["k", 0.5, "", "-k", "float"],
         ["N", 100, "Nº simulation steps", "-n", "int"],
-        ["output_file", os.path.join(os.getcwd(),"simout"), "Location of the output files, no extension", "-o", "entry"]]
+        ["output_file", os.path.join(os.getcwd(),"simout"), "Location of the output files, no extension", "-o", "entry"],
+        ["verbose", False, "Outputs extra information", "--v", "bool"]]
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
 class GUI_simulate():
@@ -82,6 +83,9 @@ class GUI_simulate():
             self.parameters.loc[name, "value"] = var
             block.pack(side=LEFT, expand=YES, fill=BOTH)
             
+        """Verbose"""
+        s
+            
         """Buttons"""
         self.buttons_frame = Frame(self.main_frame)
         self.buttons_frame.pack(expand=YES, fill=X)
@@ -134,8 +138,9 @@ class GUI_simulate():
         return
     
     def simulate_in_thread(self):
-         _thread.start_new_thread(self.simulate, ())
-         return
+        set_verbosity(parameters.loc["verbose", "value"])
+        _thread.start_new_thread(self.simulate, ())
+        return
     
     def simulate(self):
         sim = Simulation(self.template, self.parameters.loc["sample size", "value"].get())
@@ -191,6 +196,8 @@ def sim_cl(args):
             else:
                 last_option = None
                 
+    set_verbosity(parameters.loc["verbose", "value"])
+    
     if(parameters.loc["help", "value"]):
         get_help(parameters)
     else:
