@@ -63,22 +63,36 @@ class GUI(Frame):
         self.gui_simulate.pack()
         nb.add(page2, text="Simulation")
 
-        nb.pack(fill=BOTH, expand=YES)
-        
-        
-
+        nb.pack(fill=BOTH, expand=NO)
         
         """Terminal"""
         self.terminal_frame = Frame(self.main_frame)
-        self.terminal_frame.pack(side=BOTTOM, expand=YES, fill=X)
         self.text = Text(self.terminal_frame, wrap="word")
-        self.text.pack(fill=BOTH, expand=True)
+        self.text.pack(fill=BOTH, expand=YES)
         self.text.tag_configure("stderr", foreground="#b22222")
-                            
+                                
+        """STDOUT redirect"""
         sys.stdout = TextRedirector(self.text, "stdout")
         #sys.stderr = TextRedirector(self.text, "stderr")
 
+        """Verbose"""
+        self.extra_frame = Frame(self.main_frame)
+        self.is_verbose = BooleanVar()
+        Checkbutton(self.extra_frame, variable=self.is_verbose, text="verbose", command=self.update_verbosity).pack(expand=NO)
+        self.is_verbose.set(False)
         init_logger()
+        self.update_verbosity()
+    
+    
+        #Packing Terminal and Verbose
+        self.extra_frame.pack(side=BOTTOM, expand=NO, fill=X)
+        self.terminal_frame.pack(side=BOTTOM, expand=YES, fill=BOTH)
+
+        
+    
+    def update_verbosity(self):
+        print("VERBOSE: ", self.is_verbose.get())
+        set_verbosity(self.is_verbose.get())
         
     def finnish(self, parent):
         close_logger()
@@ -116,7 +130,7 @@ if (__name__=="__main__"):
         saved_sys_stderr = sys.stderr
         root = Tk()
         root.title("QMPrimers")
-        root.geometry('800x400')
+        root.geometry('900x400')
         main_window = GUI(root)
         root.mainloop()
         sys.stdout = saved_sys_stdout

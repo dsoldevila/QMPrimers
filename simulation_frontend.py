@@ -22,7 +22,7 @@ parameters = [
         ["k", 0.5, "", "-k", "float"],
         ["N", 100, "Nº simulation steps", "-n", "int"],
         ["output_file", os.path.join(os.getcwd(),"simout"), "Location of the output files, no extension", "-o", "entry"],
-        ["verbose", False, "Outputs extra information", "--v", "bool"]]
+        ["verbose", False, "Outputs extra information", "--v", "cmd"]]
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
 class GUI_simulate():
@@ -83,8 +83,6 @@ class GUI_simulate():
             self.parameters.loc[name, "value"] = var
             block.pack(side=LEFT, expand=YES, fill=BOTH)
             
-        """Verbose"""
-        s
             
         """Buttons"""
         self.buttons_frame = Frame(self.main_frame)
@@ -150,7 +148,8 @@ class GUI_simulate():
     
     def save(self):
         Simulation.store_raw_data(self.parameters.loc["output_file", "value"], self.raw_stats, self.cooked_stats, 
-                                  self.parameters.loc["sample size", "value"].get(), self.parameters.loc["Beta", "value"].get(), self.parameters.loc["N", "value"].get())
+                                  self.parameters.loc["sample size", "value"].get(), self.parameters.loc["k", "value"].get(),
+                                  self.parameters.loc["Beta", "value"].get(), self.parameters.loc["N", "value"].get())
         return
     
     def pack(self):

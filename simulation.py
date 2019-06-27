@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import math
 import re
+from common import*
 
 class Simulation():
     def __init__(self, template, sample_size):
@@ -52,7 +53,7 @@ class Simulation():
             full_sample = template["fastaid"].unique()
             
             if(full_sample.shape[0]<N or full_sample.shape[0] < self.sample_size):
-                logging.warning("Sample too small with primer pair ", str(pp), ". Skipping...")
+                logging.warning("Sample too small with primer pair "+str(pp)+". Skipping...")
                 
             else:
                 self.raw_stats[pp] = 0.0
@@ -60,7 +61,7 @@ class Simulation():
                 *math.factorial(full_sample.shape[0]-self.sample_size))
                 self.raw_stats.loc["ncombinations", pp] = n_combinations
                 if(N > 0.5*n_combinations):
-                    logging.warning("Only ", str(n_combinations), " possible combinations with primer pair ", str(pp))
+                    logging.warning("Only "+str(n_combinations)+" possible combinations with primer pair "+str(pp))
                     
                 for i in range(N):
                     self.step = i #needed by update_stats
