@@ -236,6 +236,7 @@ class GUI_matching():
         return
     
     def compute_in_thread(self):
+        #TODO pass queue explicitely better
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
             
@@ -270,41 +271,55 @@ class GUI_matching():
         self.main_frame.after(1000, self.get_matching_data)
         return
     
-    def load_template(self):
-        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = load_template(self.parameters)
-        self.gui_simulate.set_template(self.template)
-        return
-    
-    def store_results_in_thread(self):
-        #self.store_results()
-        _thread.start_new_thread(self.store_results, ())
-        return
-        
-    
-    def store_results(self):
+    def get_template_header(self):
         header = []
         i = 0 #TODO convert output_info to list
         for key in self.output_info:
             if(self.output_info[key].get()):
                 header.append(i)
             i+=1
+        return header
+    
+    def store_results_in_thread(self):
                    
         try:
             Nend = self.parameters.loc["Nend miss.", "value"] = self.other_param["Nend miss."].get()
         except: #Crash expected if tkinter variable is empty
             Nend = 0
+        
+        thread_queue = queue.Queue()
         if(Nend):
             if(self.previous_Nend!=Nend):
-                max_misses = int(self.parameters.loc["forward missmatches", "value"])+int(self.parameters.loc["reverse missmatches", "value"])
-                self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_match(self.template, Nend, max_misses)
                 self.previous_Nend = Nend
+                max_misses = int(self.parameters.loc["forward missmatches", "value"])+int(self.parameters.loc["reverse missmatches", "value"])
+                new_thread = threading.Thread(target=get_Nend_match, args=(self.template, Nend, max_misses), kwargs={'thread_q':thread_queue})
+                new_thread.start()
+                self.main_frame.after(1000, self.get_Nend_data, thread_queue)
+                #self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_match(self.template, Nend, max_misses)
         else:
             self.out_template = self.template
             self.out_raw_stats = self.raw_stats
             self.out_cooked_stats = self.cooked_stats
-            
-        save_matching_info(self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
+            new_thread = threading.Thread(target=save_matching_info, args=(self.parameters.loc["output_file", "value"], self.out_template,
+                                                                           self.get_template_header(), self.discarded, self.out_raw_stats, self.out_cooked_stats))
+            new_thread.start()
         return
+    
+    def get_Nend_data(self, thread_q):
+
+        if(thread_q.qsize() > 2):
+            self.out_template = thread_q.get(0)
+            self.out_raw_stats = thread_q.get(0)
+            self.out_cooked_stats = thread_q.get(0)
+            
+            new_thread = threading.Thread(target=save_matching_info, args=(self.parameters.loc["output_file", "value"], self.out_template, 
+                                                                           self.get_template_header(), self.discarded, self.out_raw_stats,
+                                                                           self.out_cooked_stats))
+            new_thread.start()
+        else:
+            self.main_frame.after(100, self.get_Nend_data, thread_q)
+        return
+
 
 def get_help(paramaters):
     output_info_keys = [key for key in output_info.keys()]

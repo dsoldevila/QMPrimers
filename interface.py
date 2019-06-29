@@ -136,8 +136,14 @@ def load_template_only(template_file):
         logging.error("Unable to load template")
     return template
 
-def get_Nend_match(template, nend, max_misses):
-    return m.get_Nend_template(template, nend, max_misses)
+def get_Nend_match(template, nend, max_misses, thread_q=None):
+    nend_template, raw_stats, cooked_stats =  m.get_Nend_template(template, nend, max_misses)
+    if(thread_q!=None):
+            thread_q.put(nend_template)
+            thread_q.put(raw_stats)
+            thread_q.put(cooked_stats)
+    
+    return nend_template, raw_stats, cooked_stats
         
 """
 Simulation stuff

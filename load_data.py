@@ -118,6 +118,13 @@ def remove_bad_gens(gen_record):
 
 def load_template(template_file):
     template = pd.read_csv(template_file, index_col=0)
+    size = template.shape[0]
+    
+    columns = [x for x in template.columns.values if ("loc" in x)]
+    for i in range(size):
+        for c in columns:
+            template.at[i, c] = ast.literal_eval(template.loc[i, c])
+    
     
     return template
 
