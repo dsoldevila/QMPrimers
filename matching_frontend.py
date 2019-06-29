@@ -12,7 +12,8 @@ from tkinter import filedialog
 from tkinter import *
 from tkinter.font import Font
 import os
-import _thread
+import threading
+import queue
 import pandas as pd
 
 output_info = {}
@@ -237,18 +238,36 @@ class GUI_matching():
     def compute_in_thread(self):
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
-       
-        _thread.start_new_thread(self.compute, ())
+            
+        self.thread_queue = queue.Queue()
+        self.new_thread = threading.Thread(target=compute, args=(self.parameters,), kwargs={'thread_q':self.thread_queue})
+        self.new_thread.start()
+        self.main_frame.after(1000, self.get_matching_data)
+
         return
     
-    def compute(self):
-        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)        
-        self.gui_simulate.set_template(self.template)        
-       
+    def get_matching_data(self):
+        '''
+        Check if there is something in the queue
+        '''
+        if(self.thread_queue.qsize() > 5):
+            self.template = self.thread_queue.get(0)
+            self.discarded = self.thread_queue.get(0)
+            self.raw_stats = self.thread_queue.get(0)
+            self.cooked_stats = self.thread_queue.get(0)
+            self.gen_record = self.thread_queue.get(0)
+            self.primer_pairs = self.thread_queue.get(0)
+            self.gui_simulate.set_template(self.template) 
+            print(self.template)
+        else:
+            self.main_frame.after(100, self.get_matching_data)
         return
     
     def load_template_in_thread(self):
-        _thread.start_new_thread(self.load_template, ())
+        self.thread_queue = queue.Queue()
+        self.new_thread = threading.Thread(target=load_template, args=(self.parameters,), kwargs={'thread_q':self.thread_queue})
+        self.new_thread.start()
+        self.main_frame.after(1000, self.get_matching_data)
         return
     
     def load_template(self):

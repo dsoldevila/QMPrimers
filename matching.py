@@ -12,6 +12,7 @@ from common import *
 import numpy as np
 import pandas as pd
 import load_data as ld
+import queue
 
 
 #TODO this func is currently unused, ~line 68
@@ -166,6 +167,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     discarded["primerPair"] = pd.Categorical(discarded["primerPair"], categories=primerPair_list, ordered=True)
     discarded.sort_values(['primerPair', 'fastaid'], inplace=True)
     discarded.reset_index(drop=True, inplace=True)
+         
     
     return template, discarded, raw_stats, cooked_stats
 
