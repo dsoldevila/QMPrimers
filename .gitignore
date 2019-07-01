@@ -5,3 +5,4 @@ output*
 *.fasta
 *~*
 Test_data/*
+log.txt

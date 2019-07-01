@@ -125,7 +125,6 @@ def load_template(template_file):
         for c in columns:
             template.at[i, c] = ast.literal_eval(template.loc[i, c])
     
-    
     return template
 
 def restore_template(template, gen_record, primer_pairs, max_misses):
