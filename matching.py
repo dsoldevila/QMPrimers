@@ -32,6 +32,7 @@ def append_zeros(gen_record, max_miss_f, max_miss_r):
         gen_record[gen_key].seq = Seq("Z"*max_miss_f+str(gen_record[gen_key].seq)+"Z"*max_miss_r)
     return gen_record
 
+
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
     """
     Computes the best matches between a genome and a primer.
@@ -109,8 +110,11 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
 
 def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, output_file, hanging_primers=False):
     """
-    Computes the best alignments between each genome and each primer
-    @returns: List of GenAlignment instances
+    @brief Computes the best alignments between each genome and each primer
+    @Returns template: pandas DataFrame containing the matching results
+    @Returns discarded: pandas DataFrame containing pairs of primer pairs and genome sequence that have not matched
+    @Returns raw_stats: pandas Dataframe containing a summary of the matching
+    @Returns cooked_stats: pandas Dataframe containing statictics the matching
     """
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)

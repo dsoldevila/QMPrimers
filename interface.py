@@ -23,6 +23,12 @@ Matching Stuff
 def compute(parameters, thread_q=None):
     """
     @Brief calls the matching algorithms for both GUI and command line modes
+    @Returns template: pandas DataFrame containing the matching results
+    @Returns discarded: pandas DataFrame containing pairs of primer pairs and genome sequence that have not matched
+    @Returns gen_record
+    @Returns primer_pairs
+    @Returns raw_stats: pandas Dataframe containing a summary of the matching
+    @Returns cooked_stats: pandas Dataframe containing statictics the matching
     """
     template = None
     gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
@@ -93,6 +99,9 @@ def load_primer_pairs(primer_pairs_file):
 Loading template stuff
 """
 def load_template(parameters, thread_q=None):
+    """
+    @brief Loads a template and restores it if it's not complete.
+    """
     
     gen_record = parameters.loc["gen", "value"]
     primer_pairs = parameters.loc["primer_pairs", "value"]
@@ -128,6 +137,9 @@ def load_template(parameters, thread_q=None):
         return pd.DataFrame(), pd.DataFrame(), gen_record, primer_pairs, pd.DataFrame(), pd.DataFrame()
 
 def load_template_only(template_file):
+    """
+    @brief Loads a template and nothing more
+    """
     template = pd.DataFrame();
     try:
         template = ld.load_template(template_file)

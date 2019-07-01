@@ -83,6 +83,9 @@ def load_bio_files(files, writable=False, check_uppercase=False):
     return seq_record
 
 def check_primer_pair_integrity(primer_pair):
+    """
+    @brief Checks that the sequences of the primers are valid
+    """
     for nuc in primer_pair.f:
         if(nuc not in IUPAC_AMBIGUOUS_DNA):
             return False

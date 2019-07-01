@@ -125,8 +125,7 @@ class Alignment:
     
     def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon):
         """
-        @brief Generates the cooked data from the raw data given by matching. This function should be deleted as
-        there is no reason to not use the function above (I should check it tho)
+        @brief Generates the cooked data from the raw data given by matching.
         """
         #TODO Is it possible to delete this func and use get instead?
         #TODO instead of making a complete output file, calculate only the paramaters needed by the user

@@ -335,6 +335,9 @@ def get_help(paramaters):
     return
 
 def matching_cl(args):
+    """
+    @brief Command line mode for the matching
+    """
     parameters.loc["help"] = [False, "Display this list", "--help", ""]
         
     flags = parameters["flag"].values
