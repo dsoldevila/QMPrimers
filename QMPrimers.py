@@ -38,7 +38,7 @@ class TextRedirector(object):
         self.widget.yview(END)
         
 class GUI(Frame):
-    def __init__(self, parent, queue):
+    def __init__(self, parent, match_mosi_queue, match_miso_queue):
         
         parent.protocol('WM_DELETE_WINDOW', (lambda: self.finnish(parent))) #overwrites the close button function
         Frame.__init__(self, parent)
@@ -64,7 +64,7 @@ class GUI(Frame):
         self.gui_simulate = GUI_simulate(page2)
         
         page1 = ttk.Frame(nb)
-        self.gui_matching = GUI_matching(page1, self.gui_simulate)
+        self.gui_matching = GUI_matching(page1, self.gui_simulate, match_mosi_queue, match_miso_queue)
         
         self.gui_matching.pack()
         nb.add(page1, text="Matching")
@@ -98,18 +98,20 @@ class GUI(Frame):
         self.extra_frame.pack(side=BOTTOM, expand=NO, fill=X)
         self.terminal_frame.pack(side=BOTTOM, expand=YES, fill=BOTH)
         
-        self.main_frame.after(100, self.update_terminal)
+        self.main_frame.after(1000, self.update_terminal)
 
 
     def update_terminal(self):
-        print("A")
-        try:
+        s = self.queue.qsize()
+        if(s>0):
+            items = ""
+            for i in range(s):
+                items+=self.queue.get()
             self.text.configure(state="normal")
-            self.text.insert("end", self.queue.get(), (self.tag,))
+            self.text.insert("end", items, ("stdout",))
             self.text.yview(END)
-        except: pass
             
-        self.main_frame.after(100, self.update_terminal)
+        self.main_frame.after(1000, self.update_terminal)
     
     def update_verbosity(self):
         set_verbosity(self.is_verbose.get())
@@ -151,12 +153,18 @@ if (__name__=="__main__"):
         
         # Create Queue and redirect sys.stdout to this queue
         queue = queue.Queue()
-        #sys.stdout = WriteStream(queue)
+        sys.stdout = WriteStream(queue)
+        
+        #create matching thread
+        match_miso_queue = queue.Queue()
+        match_mosi_queue = queue.Queue()
+        matching = matching_thread_wrapper(match_mosi_queue, match_miso_queue)
+        matching.run()
         
         root = Tk()
         root.title("QMPrimers")
         root.geometry('900x400')
-        main_window = GUI(root, queue)
+        main_window = GUI(root, match_mosi_queue, match_miso_queue)
         root.mainloop()
         sys.stdout = saved_sys_stdout
         sys.stderr = saved_sys_stderr

@@ -59,27 +59,39 @@ def load_csv_file(file, delimiter=";"):
             
     return primer_dict
 
-def load_bio_files(files, writable=False, check_uppercase=False):
+def load_bio_files(files, check_integrity, check_uppercase):
     """
     This function loads any file whose format is supported by Biopython.
     @return: Dictionary with genomic sequences
     """
+    writable = check_integrity or check_uppercase
     #TODO check all files, not only de first one
-    if(check_uppercase==True): writable=True #to modify seqrecord, make it writable is needed
     seq_record = {}
     if(type(files)==str):
         files = [files]
     if(path.isfile(files[0])):
-        if(writable or len(files)>1): #if they need to be writable, store in memory
-            for file in files:
-                seq_record.update(SeqIO.to_dict(SeqIO.parse(file, "fasta")))
-        else: #create read_only database
-            if(isinstance(files, tuple)):
-                files = files[0]
-            seq_record = SeqIO.index_db(":memory:", files, "fasta") #TODO specify alphabet? It seems it's only used to catch methodology erros
+        try:
+            if(writable or len(files)>1): #if they need to be writable, store in memory
+                for file in files:
+                    seq_record.update(SeqIO.to_dict(SeqIO.parse(file, "fasta")))
+            else: #create read_only database
+                if(isinstance(files, tuple)):
+                    files = files[0]
+                seq_record = SeqIO.index_db(":memory:", files, "fasta") #TODO specify alphabet? It seems it's only used to catch methodology erros
+        except:
+            logging.error("Genome sequences could not be loaded")
+            return seq_record
+
         if(check_uppercase):
-            for kseq in seq_record:
-                seq_record[kseq] = seq_record[kseq].upper()
+                for kseq in seq_record:
+                    try:
+                        seq_record[kseq] = seq_record[kseq].upper()
+                    except:
+                        logging.error(str(kseq)+" could not be uppercased")
+                
+        if(check_integrity): 
+            seq_record = remove_bad_gens(seq_record)
+
     return seq_record
 
 def check_primer_pair_integrity(primer_pair):

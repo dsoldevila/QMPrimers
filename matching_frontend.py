@@ -24,9 +24,9 @@ parameters = [
         ["gen", None, "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
         ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
         ["output_file", os.path.join(os.getcwd(),"output"), "Location of the output files, no extension", "-o", "entry"],
-        ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
-        ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
-        ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
+        ["forward mismatches", 5, "Maximum number of mismatches allowed on forward primer", "-fm", "param"],
+        ["reverse mismatches", 5, "Maximum number of mismatches allowed on reverse primer", "-rm", "param"], 
+        ["Nend miss.", 0, "mismatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
         ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
         ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
         ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
@@ -37,7 +37,7 @@ parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in pa
 
 
 class GUI_matching():
-    def __init__(self, parent, gui_simulate):
+    def __init__(self, parent, gui_simulate, mosi_queue, miso_queue):
         
         self.main_frame = Frame(parent)
 
@@ -47,6 +47,8 @@ class GUI_matching():
         self.parameters = parameters
         self.current_directory = os.getcwd()
         self.gui_simulate = gui_simulate
+        self.mosi_queue = mosi_queue
+        self.miso_queue = miso_queue
         
         """Frame containing Files and Other Parameters frames"""
         self.first_row_frame = Frame(self.main_frame)
@@ -236,13 +238,16 @@ class GUI_matching():
         return
     
     def compute_in_thread(self):
-        #TODO pass queue explicitely better
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
-            
-        self.thread_queue = queue.Queue()
-        self.new_thread = threading.Thread(target=compute, args=(self.parameters,), kwargs={'thread_q':self.thread_queue})
-        self.new_thread.start()
+        self.mosi_queue.put("match")
+        self.mosi_queue.put(self.parameters.loc["forward mismatches", "value"])
+        self.mosi_queue.put(self.parameters.loc["reverse mismatches", "value"])
+        self.mosi_queue.put(self.parameters.loc["primer_pairs", "value"])
+        self.mosi_queue.put(self.parameters.loc["gen", "value"])
+        self.mosi_queue.put(self.parameters.loc["output_file", "value"])
+        self.mosi_queue.put(self.parameters.loc["hanging primers", "value"])
+        
         self.main_frame.after(1000, self.get_matching_data)
 
         return
@@ -251,13 +256,13 @@ class GUI_matching():
         '''
         Check if there is something in the queue
         '''
-        if(self.thread_queue.qsize() > 5):
-            self.template = self.thread_queue.get(0)
-            self.discarded = self.thread_queue.get(0)
-            self.raw_stats = self.thread_queue.get(0)
-            self.cooked_stats = self.thread_queue.get(0)
-            self.gen_record = self.thread_queue.get(0)
-            self.primer_pairs = self.thread_queue.get(0)
+        if(self.miso_queue.qsize() > 5):
+            self.template = self.miso_queue.get(0)
+            self.discarded = self.miso_queue.get(0)
+            self.raw_stats = self.miso_queue.get(0)
+            self.cooked_stats = self.miso_queue.get(0)
+            self.gen_record = self.miso_queue.get(0)
+            self.primer_pairs = self.miso_queue.get(0)
             self.gui_simulate.set_template(self.template) 
         else:
             self.main_frame.after(100, self.get_matching_data)
@@ -290,7 +295,7 @@ class GUI_matching():
         if(Nend):
             if(self.previous_Nend!=Nend):
                 self.previous_Nend = Nend
-                max_misses = int(self.parameters.loc["forward missmatches", "value"])+int(self.parameters.loc["reverse missmatches", "value"])
+                max_misses = int(self.parameters.loc["forward mismatches", "value"])+int(self.parameters.loc["reverse mismatches", "value"])
                 new_thread = threading.Thread(target=get_Nend_match, args=(self.template, Nend, max_misses), kwargs={'thread_q':thread_queue})
                 new_thread.start()
                 self.main_frame.after(1000, self.get_Nend_data, thread_queue)

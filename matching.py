@@ -13,7 +13,137 @@ import numpy as np
 import pandas as pd
 import load_data as ld
 import queue
+import threading
 
+class matching_thread_wrapper(threading.Thread):
+    def __init__(self, mosi_queue, miso_queue):
+        """
+        @param mosi_queue: Master Out Slave In --> queue.Queue() from GUI to this thread
+        @param miso_queue: Master In Salve Out --> queue.Queue() from this thread to GUI
+        """
+        self.mosiq = mosi_queue
+        self.misoq = miso_queue
+        threading.Thread.__init__(self)
+        self._stop_event = threading.Event()
+        
+    def run(self):
+        """
+        State machine of the matching backend. It keeps waiting for parameters in the queue until a exit command is received
+        """
+        keep_runing = True
+        command = None
+        while(keep_running):
+            if(self.mosiq.qsize()>1):
+                command = self.mosiq.get(0)
+                if(command == "exit"):
+                    self.stop()
+                    self.misoq.put(self.stopped())
+                elif(command == "run"):
+                    self.match()
+                elif(command == "save"):
+                    self.save()
+                else:
+                    #uknown command
+                    with self.mosiq.mutex: self.mosiq.queue.clear()
+                    self.mosiq.put(False) #Send error to the master
+                    
+    def match(self):
+        try:
+            max_miss_f = self.mosiq.get()
+            max_miss_r = self.mosiq.get()
+            self.pp_file = self.mosiq.get()
+            self.gen_file = self.mosiq.get()
+            self.output_file = self.mosiq.get()
+            self.check_integrity = self.mosiq.get()
+            self.check_uppercase = self.mosiq.get()
+            hanging_primers = self.mosiq.get()
+            max_miss_f = self.mosiq.get()
+            self.misoq.put(True)
+        except:
+            logging.error("Matching could not retrieve input data")
+            self.misoq.put(False)
+            return
+        
+        
+        self.gen_record, self.primer_pairs = self.load_data()
+            
+        try:
+            self.template, self.discarded, self.raw_stats, self.cooked_stats = compute_gen_matching(max_miss_f, max_miss_r, 
+                                                              self.primer_pairs, self.gen_record, self.output_file, hanging_primers=False)
+            self.out_template = self.template
+            self.out_raw_stats = self.raw_stats
+            self.out.cooked_stats = self.cooked_stats
+        except:
+            logging.error("Matching crashed")
+            self.misoq.put(False)
+            return
+        
+        self.misoq.put(True)
+        self.misoq.put(self.template)
+        self.misoq.put(self.discarded)
+        self.misoq.put(self.raw_stats)
+        self.misoq.put(self.cooked_stats)
+        self.misoq.put(self.gen_record)
+        self.misoq.put(self.primer_pairs)
+            
+        return
+        
+    def load_data(self):
+        """
+        Matching should not care about the looad data options, but it is the siplest way to do it in order to not freeze the GUI with large files.
+        """
+        gen_record = ld.load_bio_files(self.gen_file, self.check_integrity, self.check_uppercase)
+        primer_pairs = ld.load_csv_file(self.primer_pairs_file)
+        
+        return gen_record, primer_pairs
+        
+    def save(self):
+        try:
+            self.output_file = self.mosiq.get()
+            header = self.mosiq.get()
+            nend = self.mosiq.get()
+        except:
+            logging.error("Saving could not retrieve input data")
+            return
+        
+        if(nend):
+            if(nend!=self.previous_nend):
+                self.match_nend()
+            store_matching_results(self.output_file, self.out_template, header)
+            store_stats(self.output_file, self.out_raw_stats, self.out_cooked_stats)
+        else:
+            store_matching_results(self.output_file, self.template, header)
+            store_stats(self.output_file, self.raw_stats, self.cooked_stats)
+            
+        store_discarded(self.output_file, self.discarded)
+        return
+        
+    def match_nend(self):
+        try:
+            nend = self.mosiq.get()
+            max_misses = self.mosiq.get()
+        except:
+            logging.error("Matching N-end could not retrieve input data")
+            return
+        
+        self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_template(self.template, nend, max_misses)
+        #self.misoq.put(self.out_template)
+        #self.misoq.put(self.out_raw_stats)
+        #self.misoq.put(self.out_cooked_stats)
+        return
+    
+    def get_data(self):
+        #put data into the miso queue
+        pass
+        
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+        
+                
+        
 
 #TODO this func is currently unused, ~line 68
 def is_valid(score, min_score):
@@ -185,22 +315,33 @@ def store_matching_results(output_file, template, header):
     @param gen_matching_list list of GenMatching instances
     @return None
     """
-    columns = template.columns.values
-    for i in range(len(header)):
-        header[i] = columns[header[i]]
-    template.to_csv(output_file, index_label="id", columns=header)
-    
+    try:
+        columns = template.columns.values
+        for i in range(len(header)):
+            header[i] = columns[header[i]]
+        template.to_csv(output_file, index_label="id", columns=header)
+        print("Positive results saved")
+    except:
+        logging.error("Could not save positive results")
     return
 
 def store_stats(output_file, raw_stats, cooked_stats):
-    with open(output_file,'w') as outfile:
-        raw_stats.to_string(outfile)
-        outfile.write("\n\n")
-        cooked_stats.to_string(outfile)
+    try:
+        with open(output_file,'w') as outfile:
+            raw_stats.to_string(outfile)
+            outfile.write("\n\n")
+            cooked_stats.to_string(outfile)
+            print("Statistics saved")
+    except:
+        logging.error("Could not save statistics")
     return
 
 def store_discarded(output_file, discarded):
-    discarded.to_csv(output_file, index_label="id")
+    try:
+        discarded.to_csv(output_file, index_label="id")
+        print("Negative results saved")
+    except:
+        logging.error("Could not save negative results")
     return
 
 
@@ -209,18 +350,22 @@ def get_Nend_template(template, nend, max_misses):
     @brief With the computed template, generate a template but with Nend mismatches
     @Return new template, raw stats, cooked_stats
     """
-    alignment = Alignment(max_misses);
-    
-    header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"amplicon", "F_pos", 
-              "mismFN"+str(nend)+"_loc", "mismFN"+str(nend)+"_type", "mismFN"+str(nend)+"_base", "R_pos", "mismRN"+str(nend)+"_loc",
-              "mismRN"+str(nend)+"_type", "mismRN"+str(nend)+"_base"]
-    
-    nend_template = pd.DataFrame(columns=header)
-    size = template.shape[0]
-    for i in range(template.shape[0]):
-        nend_template.loc[i] = alignment.get_Nend(*template.loc[i], nend)
-        print("Getting Nend "+"{0:.2f}".format(i/size*100)+"%")
-    raw_stats, cooked_stats = alignment.get_stats()
+    try:
+        alignment = Alignment(max_misses);
+        
+        header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"amplicon", "F_pos", 
+                  "mismFN"+str(nend)+"_loc", "mismFN"+str(nend)+"_type", "mismFN"+str(nend)+"_base", "R_pos", "mismRN"+str(nend)+"_loc",
+                  "mismRN"+str(nend)+"_type", "mismRN"+str(nend)+"_base"]
+        
+        nend_template = pd.DataFrame(columns=header)
+        size = template.shape[0]
+        for i in range(template.shape[0]):
+            nend_template.loc[i] = alignment.get_Nend(*template.loc[i], nend)
+            print("Getting Nend "+"{0:.2f}".format(i/size*100)+"%")
+        raw_stats, cooked_stats = alignment.get_stats()
+    except:
+        logging.error("Crash when trying to recover N-end template")
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     
     return nend_template, raw_stats, cooked_stats
     
