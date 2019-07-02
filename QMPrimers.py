@@ -16,7 +16,16 @@ import os
 import pandas as pd
 from simulation_frontend import *
 from matching_frontend import *
+import queue
 
+# The new Stream Object which replaces the default stream associated with sys.stdout
+# This object just puts data in a queue!
+class WriteStream(object):
+    def __init__(self,queue):
+        self.queue = queue
+
+    def write(self, text):
+        self.queue.put(text)
 
 class TextRedirector(object):
     def __init__(self, widget, tag="stdout"):
@@ -29,14 +38,15 @@ class TextRedirector(object):
         self.widget.yview(END)
         
 class GUI(Frame):
-    def __init__(self, parent=Frame):
+    def __init__(self, parent, queue):
         
-        parent.protocol('WM_DELETE_WINDOW', (lambda: self.finnish(parent)))
-        self.main_frame = Frame.__init__(self, parent)
+        parent.protocol('WM_DELETE_WINDOW', (lambda: self.finnish(parent))) #overwrites the close button function
+        Frame.__init__(self, parent)
+        self.main_frame = parent
         
         """Other"""
         self.current_directory = os.getcwd()
-        
+        self.queue = queue  
         """Menu Bar demo"""
         """
         self.main_menu = Menu(parent)
@@ -72,7 +82,7 @@ class GUI(Frame):
         self.text.tag_configure("stderr", foreground="#b22222")
                                 
         """STDOUT redirect"""
-        sys.stdout = TextRedirector(self.text, "stdout")
+        #sys.stdout = TextRedirector(self.text, "stdout")
         #sys.stderr = TextRedirector(self.text, "stderr")
 
         """Verbose"""
@@ -87,8 +97,19 @@ class GUI(Frame):
         #Packing Terminal and Verbose
         self.extra_frame.pack(side=BOTTOM, expand=NO, fill=X)
         self.terminal_frame.pack(side=BOTTOM, expand=YES, fill=BOTH)
-
         
+        self.main_frame.after(100, self.update_terminal)
+
+
+    def update_terminal(self):
+        print("A")
+        try:
+            self.text.configure(state="normal")
+            self.text.insert("end", self.queue.get(), (self.tag,))
+            self.text.yview(END)
+        except: pass
+            
+        self.main_frame.after(100, self.update_terminal)
     
     def update_verbosity(self):
         set_verbosity(self.is_verbose.get())
@@ -127,10 +148,15 @@ if (__name__=="__main__"):
     else:
         saved_sys_stdout = sys.stdout
         saved_sys_stderr = sys.stderr
+        
+        # Create Queue and redirect sys.stdout to this queue
+        queue = queue.Queue()
+        #sys.stdout = WriteStream(queue)
+        
         root = Tk()
         root.title("QMPrimers")
         root.geometry('900x400')
-        main_window = GUI(root)
+        main_window = GUI(root, queue)
         root.mainloop()
         sys.stdout = saved_sys_stdout
         sys.stderr = saved_sys_stderr

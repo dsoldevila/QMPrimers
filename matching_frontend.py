@@ -259,7 +259,6 @@ class GUI_matching():
             self.gen_record = self.thread_queue.get(0)
             self.primer_pairs = self.thread_queue.get(0)
             self.gui_simulate.set_template(self.template) 
-            print(self.template)
         else:
             self.main_frame.after(100, self.get_matching_data)
         return
