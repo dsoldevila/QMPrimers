@@ -377,12 +377,12 @@ def init_logger():
     return
         
 def set_verbosity(verbosity):
-    
+    verbosity = 2
     if verbosity == True:
         root_handler.setLevel(logging.INFO)
         console_handler.setLevel(logging.WARNING)
     elif verbosity == 2: #True!=2, ugly but as long as it works...
-        root_handler.setLevel(logging.logging.DEBUG)
+        root_handler.setLevel(logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)
     else:
         root_handler.setLevel(logging.WARNING)

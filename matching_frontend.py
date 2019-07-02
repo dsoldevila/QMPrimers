@@ -21,8 +21,8 @@ for key in TEMPLATE_HEADER:
     output_info[key] = True
 
 parameters = [
-        ["gen", None, "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
-        ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
+        ["gen", "Data/sbog_test.fasta", "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["primer_pairs", "Data/PP.csv", "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
         ["output_file", os.path.join(os.getcwd(),"output"), "Location of the output files, no extension", "-o", "entry"],
         ["forward mismatches", 5, "Maximum number of mismatches allowed on forward primer", "-fm", "param"],
         ["reverse mismatches", 5, "Maximum number of mismatches allowed on reverse primer", "-rm", "param"], 
@@ -246,6 +246,8 @@ class GUI_matching():
         self.mosi_queue.put(self.parameters.loc["primer_pairs", "value"])
         self.mosi_queue.put(self.parameters.loc["gen", "value"])
         self.mosi_queue.put(self.parameters.loc["output_file", "value"])
+        self.mosi_queue.put(self.parameters.loc["check_integrity", "value"])
+        self.mosi_queue.put(self.parameters.loc["check_uppercase", "value"])
         self.mosi_queue.put(self.parameters.loc["hanging primers", "value"])
         
         self.main_frame.after(1000, self.get_matching_data)
@@ -264,6 +266,7 @@ class GUI_matching():
             self.gen_record = self.miso_queue.get(0)
             self.primer_pairs = self.miso_queue.get(0)
             self.gui_simulate.set_template(self.template) 
+            print(self.raw_stats)
         else:
             self.main_frame.after(100, self.get_matching_data)
         return
@@ -323,6 +326,8 @@ class GUI_matching():
         else:
             self.main_frame.after(100, self.get_Nend_data, thread_q)
         return
+    def finnish(self):
+        self.mosi_queue.put("exit")
 
 
 def get_help(paramaters):

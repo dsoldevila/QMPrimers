@@ -14,6 +14,7 @@ import pandas as pd
 import load_data as ld
 import queue
 import threading
+import time
 
 class matching_thread_wrapper(threading.Thread):
     def __init__(self, mosi_queue, miso_queue):
@@ -30,24 +31,27 @@ class matching_thread_wrapper(threading.Thread):
         """
         State machine of the matching backend. It keeps waiting for parameters in the queue until a exit command is received
         """
-        keep_runing = True
-        command = None
+        keep_running = True
+        command = "none"
         while(keep_running):
-            if(self.mosiq.qsize()>1):
+            if(self.mosiq.qsize()>0):
                 command = self.mosiq.get(0)
                 if(command == "exit"):
-                    self.stop()
-                    self.misoq.put(self.stopped())
-                elif(command == "run"):
+                    keep_running = False
+                elif(command == "match"):
                     self.match()
                 elif(command == "save"):
                     self.save()
-                else:
-                    #uknown command
+                elif(command!="none"):
                     with self.mosiq.mutex: self.mosiq.queue.clear()
-                    self.mosiq.put(False) #Send error to the master
+                    self.misoq.put(False) #Send error to the master
+            logging.debug("Matching thread state: "+command)
+            time.sleep(1)
+        self.stop()
+        self.misoq.put(self.stopped())
                     
     def match(self):
+        logging.debug("Matching thread: Entered match state")
         try:
             max_miss_f = self.mosiq.get()
             max_miss_r = self.mosiq.get()
@@ -57,26 +61,28 @@ class matching_thread_wrapper(threading.Thread):
             self.check_integrity = self.mosiq.get()
             self.check_uppercase = self.mosiq.get()
             hanging_primers = self.mosiq.get()
-            max_miss_f = self.mosiq.get()
             self.misoq.put(True)
         except:
             logging.error("Matching could not retrieve input data")
             self.misoq.put(False)
             return
+        logging.debug("Matching thread: Matching paramaters read")
         
-        
+        logging.debug("Matching thread: Getting data")
         self.gen_record, self.primer_pairs = self.load_data()
             
+        logging.debug("Matching thread: Starting matching..")
         try:
             self.template, self.discarded, self.raw_stats, self.cooked_stats = compute_gen_matching(max_miss_f, max_miss_r, 
-                                                              self.primer_pairs, self.gen_record, self.output_file, hanging_primers=False)
+                                                              self.primer_pairs, self.gen_record, self.output_file, hanging_primers=hanging_primers)
             self.out_template = self.template
             self.out_raw_stats = self.raw_stats
-            self.out.cooked_stats = self.cooked_stats
+            self.out_cooked_stats = self.cooked_stats
         except:
-            logging.error("Matching crashed")
+            logging.error("Matching thread: Matching crashed")
             self.misoq.put(False)
             return
+        logging.debug("Matching thread: Matching done")
         
         self.misoq.put(True)
         self.misoq.put(self.template)
@@ -85,19 +91,23 @@ class matching_thread_wrapper(threading.Thread):
         self.misoq.put(self.cooked_stats)
         self.misoq.put(self.gen_record)
         self.misoq.put(self.primer_pairs)
+        logging.debug("Matching thread: Data written into queue")
             
+        
         return
         
     def load_data(self):
         """
         Matching should not care about the looad data options, but it is the siplest way to do it in order to not freeze the GUI with large files.
         """
+        logging.debug("Matching thread: Entered load_data function")
         gen_record = ld.load_bio_files(self.gen_file, self.check_integrity, self.check_uppercase)
-        primer_pairs = ld.load_csv_file(self.primer_pairs_file)
+        primer_pairs = ld.load_csv_file(self.pp_file)
         
         return gen_record, primer_pairs
         
     def save(self):
+        logging.debug("Matching thread: Entered save function")
         try:
             self.output_file = self.mosiq.get()
             header = self.mosiq.get()

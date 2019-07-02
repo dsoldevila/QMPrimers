@@ -16,6 +16,7 @@ import os
 import pandas as pd
 from simulation_frontend import *
 from matching_frontend import *
+import matching as m
 import queue
 
 # The new Stream Object which replaces the default stream associated with sys.stdout
@@ -38,7 +39,7 @@ class TextRedirector(object):
         self.widget.yview(END)
         
 class GUI(Frame):
-    def __init__(self, parent, match_mosi_queue, match_miso_queue):
+    def __init__(self, parent, sdtout_queue, match_mosi_queue, match_miso_queue):
         
         parent.protocol('WM_DELETE_WINDOW', (lambda: self.finnish(parent))) #overwrites the close button function
         Frame.__init__(self, parent)
@@ -46,7 +47,7 @@ class GUI(Frame):
         
         """Other"""
         self.current_directory = os.getcwd()
-        self.queue = queue  
+        self.queue = stdout_queue  
         """Menu Bar demo"""
         """
         self.main_menu = Menu(parent)
@@ -117,6 +118,7 @@ class GUI(Frame):
         set_verbosity(self.is_verbose.get())
         
     def finnish(self, parent):
+        self.gui_matching.finnish()
         close_logger()
         parent.destroy()
     
@@ -152,19 +154,20 @@ if (__name__=="__main__"):
         saved_sys_stderr = sys.stderr
         
         # Create Queue and redirect sys.stdout to this queue
-        queue = queue.Queue()
-        sys.stdout = WriteStream(queue)
+        stdout_queue = queue.Queue()
+        #sys.stdout = WriteStream(stdout_queue)
         
         #create matching thread
         match_miso_queue = queue.Queue()
         match_mosi_queue = queue.Queue()
-        matching = matching_thread_wrapper(match_mosi_queue, match_miso_queue)
-        matching.run()
+        matching = m.matching_thread_wrapper(match_mosi_queue, match_miso_queue)
+        matching.start()
         
         root = Tk()
         root.title("QMPrimers")
         root.geometry('900x400')
-        main_window = GUI(root, match_mosi_queue, match_miso_queue)
+        main_window = GUI(root, stdout_queue, match_mosi_queue, match_miso_queue)
         root.mainloop()
+        
         sys.stdout = saved_sys_stdout
         sys.stderr = saved_sys_stderr
