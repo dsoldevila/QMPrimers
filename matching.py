@@ -64,6 +64,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
     Returns the best alignments between a genome and a primer pair
     @returns: PrimerAlignment instance
     """
+    logging.debug("pp "+str(primer.id))
     
     max_amplicon = primer.max_amplicon
     search_limit = primer.rlen+max_amplicon
@@ -76,14 +77,17 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
             return template, discarded
         else: #else modify max_amplicon to keep the primer_pair within the limits
             max_amplicon = len_gen - (primer.flen + primer.rlen)
+            logging.debug("Cutting max amplicon from "+str(primer.max_amplicon)+" to "+str(max_amplicon))
     
     best_score = 0
     alignments = []
 
     forward_matchings = _compute_primer_matching(max_miss_f, primer.f.seq, primer.flen, gen.seq[0:-search_limit]) #compute forward primer best matches
     for fm in forward_matchings: #for each match with forward primer, compute reverse matchings
+        logging.debug("forward matching: "+str(fm))
         start = fm[2]+primer.min_amplicon #forward match start + len(forward) + min amplicon
         end = fm[2]+max_amplicon+primer.rlen #f match start + len(f) + max amplicon + len(r)
+        logging.debug("Reverse match search from "+str(start)+" to "+str(end))
         reverse_matchings = _compute_primer_matching(max_miss_r, primer.r.seq, primer.rlen, gen.seq[start:end])
         for rm in reverse_matchings: #get the best or bests matche(s) with this primer pair (alingments)
             score = fm[0] + rm[0]
@@ -94,13 +98,14 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
                 alignments.append((fm, rm))
                 
     if(alignments==[]):
+        logging.debug(" No alignment")
         discarded.loc[discarded.shape[0]] = [primer.id, gen.id]
         alignment_processor.add_negative_2_stats(primer.id)
     for al in alignments:
         fm = al[0]
         rm= al[1]
         amplicon = primer.min_amplicon+rm[1]
-        alignment_processor.get(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, rm[1]+amplicon+fm[2], rm[1]+amplicon+fm[2]-max_miss_f*hanging_primers,
+        alignment_processor.get(gen, primer, fm[1], fm[1]-max_miss_f*hanging_primers, amplicon+fm[2], amplicon+fm[2]-max_miss_f*hanging_primers,
                                 primer.flen-fm[0], primer.rlen-rm[0], amplicon) #TODO, creating a temp class overkill?
         template.loc[template.shape[0]] = alignment_processor.get_csv()
         

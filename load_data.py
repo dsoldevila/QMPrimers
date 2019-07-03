@@ -22,7 +22,7 @@ def load_csv_file(file, delimiter=";"):
     This function loads a "Primer" file.
     @returns: List of PrimerPair instances
     """
-    pos = {"id": 0, "forwardPrimer": 0, "reversePrimer": 0, "fPDNA": 0, "rPDNA": 0,"ampliconMinLength": 0, "ampiconMaxLength": 0}
+    pos = {"id": 0, "forwardPrimer": 0, "reversePrimer": 0, "fPDNA": 0, "rPDNA": 0,"ampliconMinLength": 0, "ampliconMaxLength": 0}
     header_len = len(pos)
     primer_dict = {}
     with open(file, newline='') as csvfile:
@@ -49,7 +49,8 @@ def load_csv_file(file, delimiter=";"):
                     rprimer = rprimer.reverse_complement()
                 rprimer.id = row[pos["reversePrimer"]]
                 
-                primer_pair = PrimerPair((row[pos["id"]]), fprimer, rprimer, int(row[pos["ampliconMinLength"]]), int(row[pos["ampliconMinLength"]]))
+                primer_pair = PrimerPair((row[pos["id"]]), fprimer, rprimer, int(row[pos["ampliconMinLength"]]), 
+                                         int(row[pos["ampliconMaxLength"]]))
                 if(check_primer_pair_integrity(primer_pair)):
                     primer_dict[row[pos["id"]]] = primer_pair
                 else:

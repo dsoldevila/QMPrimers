@@ -91,11 +91,14 @@ class Alignment:
         
         self.F_pos = int(fpos) #it seems Biopython seqrecord does not support numpy.int32
         self.real_fpos = int(real_fpos)
+        logging.debug("Forward pos: "+str(self.real_fpos))
         self.R_pos = int(rpos)
         self.real_rpos = int(real_rpos)
+        logging.debug("Reverse pos: "+str(self.real_rpos))
         self.mismF = fmisses
         self.mismR = rmisses
         self.amplicon = amplicon
+        logging.debug("amplicon: "+str(self.amplicon))
         
         
         self.mismF_loc_raw, self.mismF_loc, self.mismR_loc_raw, self.mismR_loc = self._get_missmatch_location()
@@ -262,7 +265,7 @@ class Alignment:
         rlen = self.primer_pair.rlen
         leng = len(self.gen)
         for i in range(rlen):
-            if(self.F_pos+i>=leng or MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.R_pos+i]]!=1):
+            if(self.R_pos+i>=leng or MATCH_TABLE.loc[self.primer_pair.r.seq[i], self.gen.seq[self.R_pos+i]]!=1):
                     rm_loc.append(i)
                     rm_loc_output.append(i+1)
                 
@@ -361,12 +364,12 @@ def init_logger():
     return
         
 def set_verbosity(verbosity):
-    
+    verbosity = 2
     if verbosity == True:
         root_handler.setLevel(logging.INFO)
         console_handler.setLevel(logging.WARNING)
     elif verbosity == 2: #True!=2, ugly but as long as it works...
-        root_handler.setLevel(logging.logging.DEBUG)
+        root_handler.setLevel(logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)
     else:
         root_handler.setLevel(logging.WARNING)

@@ -230,19 +230,21 @@ def simulate():
 def matching_test():
     init_logger()
     set_verbosity(True)
-    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
+    gen_record = ld.load_bio_files(["Data/plant_dna.fasta"])
     #gen_record = split(gen_record, 0.005)
     #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
-    primer_pairs = ld.load_csv_file("Data/PP.csv")
+    primer_pairs = ld.load_csv_file("Data/PP_chl_one.csv")
     #primer_pairs = {"6":primer_pairs["6"]}
     
-    output = "Test_data/test"
+    output = "Test_data/output"
     header = [i for i in range(len(TEMPLATE_HEADER))]
     template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, output) 
     
     #m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
-    i.save_matching_info(output, template, header, discarded, rs, cs)
+    i.save_matching_info("TEST", output, template, header, discarded, rs, cs)
     close_logger()
+    print(gen_record["NC_018766.1"][57613:57613+30])
+    print(''.join(primer_pairs["1"].r.seq))
     return
 
 def get_nend_test():
