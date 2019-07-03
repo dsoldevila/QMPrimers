@@ -61,10 +61,8 @@ class matching_thread_wrapper(threading.Thread):
             self.check_integrity = self.mosiq.get()
             self.check_uppercase = self.mosiq.get()
             hanging_primers = self.mosiq.get()
-            self.misoq.put(True)
         except:
             logging.error("Matching could not retrieve input data")
-            self.misoq.put(False)
             return
         logging.debug("Matching thread: Matching paramaters read")
         
@@ -80,11 +78,9 @@ class matching_thread_wrapper(threading.Thread):
             self.out_cooked_stats = self.cooked_stats
         except:
             logging.error("Matching thread: Matching crashed")
-            self.misoq.put(False)
             return
         logging.debug("Matching thread: Matching done")
         
-        self.misoq.put(True)
         self.misoq.put(self.template)
         self.misoq.put(self.discarded)
         self.misoq.put(self.raw_stats)

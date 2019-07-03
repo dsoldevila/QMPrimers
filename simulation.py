@@ -52,9 +52,13 @@ class Simulation():
             template = self.template.loc[self.template["primerPair"] == pp]
             full_sample = template["fastaid"].unique()
             
-            n_combinations = math.factorial(full_sample.shape[0])/(math.factorial(self.sample_size)
-            *math.factorial(full_sample.shape[0]-self.sample_size))
-            if(n_combinations<N*self.sample_size):
+            try:
+                n_combinations = math.factorial(full_sample.shape[0])/(math.factorial(self.sample_size)
+                *math.factorial(full_sample.shape[0]-self.sample_size))
+            except: #exception if full_sample < sample_size
+                n_combinations = 0
+                
+            if(n_combinations<N):
                 logging.warning("Sample too small with primer pair "+str(pp)+". Skipping...")
                 
             else:

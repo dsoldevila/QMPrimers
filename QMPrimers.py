@@ -155,7 +155,7 @@ if (__name__=="__main__"):
         
         # Create Queue and redirect sys.stdout to this queue
         stdout_queue = queue.Queue()
-        #sys.stdout = WriteStream(stdout_queue)
+        sys.stdout = WriteStream(stdout_queue)
         
         #create matching thread
         match_miso_queue = queue.Queue()
