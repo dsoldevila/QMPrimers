@@ -201,8 +201,8 @@ def sim_cl(args):
     else:
         try:
             template = load_template_only(parameters.loc["template","value"])
-            sim = Simulation(template, int(parameters.loc["sample size", "value"]))
-            raw_stats, cooked_stats = sim.simulate(float(parameters.loc["k", "value"]), int(parameters.loc["Beta", "value"]),  int(parameters.loc["N", "value"]))
+            sim = Simulation(template, parameters.loc["sample size", "value"])
+            raw_stats, cooked_stats = sim.simulate(parameters.loc["k", "value"], parameters.loc["Beta", "value"],  parameters.loc["N", "value"])
         except:
             logging.critical("The simulation crashed, bad files maybe?")
         try:

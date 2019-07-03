@@ -11,11 +11,8 @@ import logging
 import os
 import sys
 
-"""Some global constant variables"""
-#DNA aplhabet
+#Some global constant variables
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
-
-#The header of the template (a pandas table containing the results computed by matching.py)
 TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
                                      "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base"]
 
@@ -41,9 +38,6 @@ MATCH_TABLE = pd.DataFrame(SCORE_TABLE, index=list("ACGTWSMKRYBDHVNIZ"), columns
 
 
 class PrimerPair:
-    """
-    Contains the data of a particular primer pair.
-    """
     def __init__(self, pair_id, fprimer, rprimer, min_amplicon, max_amplicon):
         self.id = pair_id
         self.f = fprimer
@@ -61,15 +55,11 @@ class PrimerPair:
     
 class Alignment:
     """
-    Generates alignment info between a genomic sequence and a primer pair
+    Alignment info between a genomic sequence and a primer pair
     """
     base_type = {"A":"Pur", "C":"Pyr", "G":"Pur", "T":"Pyr", "R":"Pur", "Y":"Pyr", "Other": "Ind."}
 
     def __init__(self, max_misses):
-        """
-        Needs the maximum number of missmatches to generate the statistics table
-        @param max_misses: The sum of the maximum mismatches allowed on the forward and reverse primer
-        """
         columns = list(range(max_misses+1))
         columns.append("No")
         self.pp_stats = pd.DataFrame(columns=columns, dtype='uint8')
@@ -78,8 +68,6 @@ class Alignment:
     def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon):
     
         """
-        @brief Generates the cooked data from the raw data given by matching
-        
         self.gen = genomic sequence
         self.primer_pair = primer pair used for matching, instance of PrimerPair class
         self.F_pos = starting position of the forward primer in the genomic sequence, starting at 0
@@ -123,10 +111,6 @@ class Alignment:
         return
     
     def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon):
-        """
-        @brief Generates the cooked data from the raw data given by matching.
-        """
-        #TODO Is it possible to delete this func and use get instead?
         #TODO instead of making a complete output file, calculate only the paramaters needed by the user
         self.gen = gen
         self.fastaid = gen.id #TODO patch
@@ -369,18 +353,19 @@ console_handler = None
 def init_logger():
     global console_handler
     logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), filemode='w', level=logging.INFO)
+    
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
     root_handler.addHandler(console_handler)
     return
         
 def set_verbosity(verbosity):
-    verbosity = 2
+    
     if verbosity == True:
         root_handler.setLevel(logging.INFO)
         console_handler.setLevel(logging.WARNING)
     elif verbosity == 2: #True!=2, ugly but as long as it works...
-        root_handler.setLevel(logging.DEBUG)
+        root_handler.setLevel(logging.logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)
     else:
         root_handler.setLevel(logging.WARNING)

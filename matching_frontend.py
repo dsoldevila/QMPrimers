@@ -12,8 +12,7 @@ from tkinter import filedialog
 from tkinter import *
 from tkinter.font import Font
 import os
-import threading
-import queue
+import _thread
 import pandas as pd
 
 output_info = {}
@@ -21,12 +20,12 @@ for key in TEMPLATE_HEADER:
     output_info[key] = True
 
 parameters = [
-        ["gen", "Data/sbog_test.fasta", "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
-        ["primer_pairs", "Data/PP.csv", "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
+        ["gen", None, "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
         ["output_file", os.path.join(os.getcwd(),"output"), "Location of the output files, no extension", "-o", "entry"],
-        ["forward mismatches", 5, "Maximum number of mismatches allowed on forward primer", "-fm", "param"],
-        ["reverse mismatches", 5, "Maximum number of mismatches allowed on reverse primer", "-rm", "param"], 
-        ["Nend miss.", 0, "mismatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
+        ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
+        ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
+        ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
         ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
         ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
         ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
@@ -37,7 +36,7 @@ parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in pa
 
 
 class GUI_matching():
-    def __init__(self, parent, gui_simulate, mosi_queue, miso_queue):
+    def __init__(self, parent, gui_simulate):
         
         self.main_frame = Frame(parent)
 
@@ -47,8 +46,6 @@ class GUI_matching():
         self.parameters = parameters
         self.current_directory = os.getcwd()
         self.gui_simulate = gui_simulate
-        self.mosi_queue = mosi_queue
-        self.miso_queue = miso_queue
         
         """Frame containing Files and Other Parameters frames"""
         self.first_row_frame = Frame(self.main_frame)
@@ -240,95 +237,55 @@ class GUI_matching():
     def compute_in_thread(self):
         for pkey in self.other_param:
             self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
-        self.mosi_queue.put("match")
-        self.mosi_queue.put(self.parameters.loc["forward mismatches", "value"])
-        self.mosi_queue.put(self.parameters.loc["reverse mismatches", "value"])
-        self.mosi_queue.put(self.parameters.loc["primer_pairs", "value"])
-        self.mosi_queue.put(self.parameters.loc["gen", "value"])
-        self.mosi_queue.put(self.parameters.loc["output_file", "value"])
-        self.mosi_queue.put(self.parameters.loc["check_integrity", "value"])
-        self.mosi_queue.put(self.parameters.loc["check_uppercase", "value"])
-        self.mosi_queue.put(self.parameters.loc["hanging primers", "value"])
-        
-        self.main_frame.after(1000, self.get_matching_data)
-
+       
+        _thread.start_new_thread(self.compute, ())
         return
     
-    def get_matching_data(self):
-        '''
-        Check if there is something in the queue
-        '''
-        if(self.miso_queue.qsize() > 5):
-            self.template = self.miso_queue.get(0)
-            self.discarded = self.miso_queue.get(0)
-            self.raw_stats = self.miso_queue.get(0)
-            self.cooked_stats = self.miso_queue.get(0)
-            self.gen_record = self.miso_queue.get(0)
-            self.primer_pairs = self.miso_queue.get(0)
-            self.gui_simulate.set_template(self.template) 
-            print(self.raw_stats)
-        else:
-            self.main_frame.after(100, self.get_matching_data)
+    def compute(self):
+        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)        
+        self.gui_simulate.set_template(self.template)        
+       
         return
     
     def load_template_in_thread(self):
-        self.thread_queue = queue.Queue()
-        self.new_thread = threading.Thread(target=load_template, args=(self.parameters,), kwargs={'thread_q':self.thread_queue})
-        self.new_thread.start()
-        self.main_frame.after(1000, self.get_matching_data)
+        _thread.start_new_thread(self.load_template, ())
         return
     
-    def get_template_header(self):
+    def load_template(self):
+        self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = load_template(self.parameters)
+        self.gui_simulate.set_template(self.template)
+        return
+    
+    def store_results_in_thread(self):
+        #self.store_results()
+        _thread.start_new_thread(self.store_results, ())
+        return
+        
+    
+    def store_results(self):
         header = []
         i = 0 #TODO convert output_info to list
         for key in self.output_info:
             if(self.output_info[key].get()):
                 header.append(i)
             i+=1
-        return header
-    
-    def store_results_in_thread(self):
                    
         try:
             Nend = self.parameters.loc["Nend miss.", "value"] = self.other_param["Nend miss."].get()
         except: #Crash expected if tkinter variable is empty
             Nend = 0
-        
-        thread_queue = queue.Queue()
         if(Nend):
             if(self.previous_Nend!=Nend):
+                max_misses = int(self.parameters.loc["forward missmatches", "value"])+int(self.parameters.loc["reverse missmatches", "value"])
+                self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_match(self.template, Nend, max_misses)
                 self.previous_Nend = Nend
-                max_misses = int(self.parameters.loc["forward mismatches", "value"])+int(self.parameters.loc["reverse mismatches", "value"])
-                new_thread = threading.Thread(target=get_Nend_match, args=(self.template, Nend, max_misses), kwargs={'thread_q':thread_queue})
-                new_thread.start()
-                self.main_frame.after(1000, self.get_Nend_data, thread_queue)
-                #self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_match(self.template, Nend, max_misses)
         else:
             self.out_template = self.template
             self.out_raw_stats = self.raw_stats
             self.out_cooked_stats = self.cooked_stats
-            new_thread = threading.Thread(target=save_matching_info, args=(self.parameters.loc["output_file", "value"], self.out_template,
-                                                                           self.get_template_header(), self.discarded, self.out_raw_stats, self.out_cooked_stats))
-            new_thread.start()
-        return
-    
-    def get_Nend_data(self, thread_q):
-
-        if(thread_q.qsize() > 2):
-            self.out_template = thread_q.get(0)
-            self.out_raw_stats = thread_q.get(0)
-            self.out_cooked_stats = thread_q.get(0)
             
-            new_thread = threading.Thread(target=save_matching_info, args=(self.parameters.loc["output_file", "value"], self.out_template, 
-                                                                           self.get_template_header(), self.discarded, self.out_raw_stats,
-                                                                           self.out_cooked_stats))
-            new_thread.start()
-        else:
-            self.main_frame.after(100, self.get_Nend_data, thread_q)
+        save_matching_info(self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
         return
-    def finnish(self):
-        self.mosi_queue.put("exit")
-
 
 def get_help(paramaters):
     output_info_keys = [key for key in output_info.keys()]
@@ -344,9 +301,6 @@ def get_help(paramaters):
     return
 
 def matching_cl(args):
-    """
-    @brief Command line mode for the matching
-    """
     parameters.loc["help"] = [False, "Display this list", "--help", ""]
         
     flags = parameters["flag"].values

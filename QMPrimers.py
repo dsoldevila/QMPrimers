@@ -16,20 +16,7 @@ import os
 import pandas as pd
 from simulation_frontend import *
 from matching_frontend import *
-import matching as m
-import queue
 
-TERMINAL_REFRESH_RATE = 500 #miliseconds
-WINDOW_SIZE = "900x600"
-
-# The new Stream Object which replaces the default stream associated with sys.stdout
-# This object just puts data in a queue!
-class WriteStream(object):
-    def __init__(self,queue):
-        self.queue = queue
-
-    def write(self, text):
-        self.queue.put(text)
 
 class TextRedirector(object):
     def __init__(self, widget, tag="stdout"):
@@ -42,15 +29,14 @@ class TextRedirector(object):
         self.widget.yview(END)
         
 class GUI(Frame):
-    def __init__(self, parent, sdtout_queue, match_mosi_queue, match_miso_queue):
+    def __init__(self, parent=Frame):
         
-        parent.protocol('WM_DELETE_WINDOW', (lambda: self.finnish(parent))) #overwrites the close button function
-        Frame.__init__(self, parent)
-        self.main_frame = parent
+        parent.protocol('WM_DELETE_WINDOW', (lambda: self.finnish(parent)))
+        self.main_frame = Frame.__init__(self, parent)
         
         """Other"""
         self.current_directory = os.getcwd()
-        self.queue = stdout_queue  
+        
         """Menu Bar demo"""
         """
         self.main_menu = Menu(parent)
@@ -68,7 +54,7 @@ class GUI(Frame):
         self.gui_simulate = GUI_simulate(page2)
         
         page1 = ttk.Frame(nb)
-        self.gui_matching = GUI_matching(page1, self.gui_simulate, match_mosi_queue, match_miso_queue)
+        self.gui_matching = GUI_matching(page1, self.gui_simulate)
         
         self.gui_matching.pack()
         nb.add(page1, text="Matching")
@@ -86,7 +72,7 @@ class GUI(Frame):
         self.text.tag_configure("stderr", foreground="#b22222")
                                 
         """STDOUT redirect"""
-        #sys.stdout = TextRedirector(self.text, "stdout")
+        sys.stdout = TextRedirector(self.text, "stdout")
         #sys.stderr = TextRedirector(self.text, "stderr")
 
         """Verbose"""
@@ -94,35 +80,21 @@ class GUI(Frame):
         self.is_verbose = BooleanVar()
         Checkbutton(self.extra_frame, variable=self.is_verbose, text="verbose", command=self.update_verbosity).pack(expand=NO)
         self.is_verbose.set(False)
-        #init_logger()
+        init_logger()
         self.update_verbosity()
     
     
         #Packing Terminal and Verbose
         self.extra_frame.pack(side=BOTTOM, expand=NO, fill=X)
         self.terminal_frame.pack(side=BOTTOM, expand=YES, fill=BOTH)
+
         
-        self.text.after(TERMINAL_REFRESH_RATE , self.update_terminal)
-
-
-    def update_terminal(self):
-        s = self.queue.qsize()
-        if(s>0):
-            items = ""
-            for i in range(s):
-                items+=self.queue.get()
-            self.text.configure(state="normal")
-            self.text.insert("end", items, ("stdout",))
-            self.text.yview(END)
-            
-        self.text.after(TERMINAL_REFRESH_RATE , self.update_terminal)
     
     def update_verbosity(self):
         set_verbosity(self.is_verbose.get())
         
     def finnish(self, parent):
-        self.gui_matching.finnish()
-        #close_logger()
+        close_logger()
         parent.destroy()
     
 
@@ -151,26 +123,14 @@ if (__name__=="__main__"):
             get_help()
         else:
             print("Unknown command ",sys.argv[2],". Use --help to display the manual.")
+        close_logger() 
     else:
         saved_sys_stdout = sys.stdout
         saved_sys_stderr = sys.stderr
-        
-        # Create Queue and redirect sys.stdout to this queue
-        stdout_queue = queue.Queue()
-        sys.stdout = WriteStream(stdout_queue)
-        init_logger()
-        #create matching thread
-        match_miso_queue = queue.Queue()
-        match_mosi_queue = queue.Queue()
-        matching = m.matching_thread_wrapper(match_mosi_queue, match_miso_queue)
-        matching.start()
-        
         root = Tk()
         root.title("QMPrimers")
-        root.geometry(WINDOW_SIZE)
-        main_window = GUI(root, stdout_queue, match_mosi_queue, match_miso_queue)
+        root.geometry('900x400')
+        main_window = GUI(root)
         root.mainloop()
-        
         sys.stdout = saved_sys_stdout
         sys.stderr = saved_sys_stderr
-    close_logger() 

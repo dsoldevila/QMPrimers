@@ -59,45 +59,30 @@ def load_csv_file(file, delimiter=";"):
             
     return primer_dict
 
-def load_bio_files(files, check_integrity, check_uppercase):
+def load_bio_files(files, writable=False, check_uppercase=False):
     """
     This function loads any file whose format is supported by Biopython.
     @return: Dictionary with genomic sequences
     """
-    writable = check_integrity or check_uppercase
     #TODO check all files, not only de first one
+    if(check_uppercase==True): writable=True #to modify seqrecord, make it writable is needed
     seq_record = {}
     if(type(files)==str):
         files = [files]
     if(path.isfile(files[0])):
-        try:
-            if(writable or len(files)>1): #if they need to be writable, store in memory
-                for file in files:
-                    seq_record.update(SeqIO.to_dict(SeqIO.parse(file, "fasta")))
-            else: #create read_only database
-                if(isinstance(files, tuple)):
-                    files = files[0]
-                seq_record = SeqIO.index_db(":memory:", files, "fasta") #TODO specify alphabet? It seems it's only used to catch methodology erros
-        except:
-            logging.error("Genome sequences could not be loaded")
-            return seq_record
-
+        if(writable or len(files)>1): #if they need to be writable, store in memory
+            for file in files:
+                seq_record.update(SeqIO.to_dict(SeqIO.parse(file, "fasta")))
+        else: #create read_only database
+            if(isinstance(files, tuple)):
+                files = files[0]
+            seq_record = SeqIO.index_db(":memory:", files, "fasta") #TODO specify alphabet? It seems it's only used to catch methodology erros
         if(check_uppercase):
-                for kseq in seq_record:
-                    try:
-                        seq_record[kseq] = seq_record[kseq].upper()
-                    except:
-                        logging.error(str(kseq)+" could not be uppercased")
-                
-        if(check_integrity): 
-            seq_record = remove_bad_gens(seq_record)
-
+            for kseq in seq_record:
+                seq_record[kseq] = seq_record[kseq].upper()
     return seq_record
 
 def check_primer_pair_integrity(primer_pair):
-    """
-    @brief Checks that the sequences of the primers are valid
-    """
     for nuc in primer_pair.f:
         if(nuc not in IUPAC_AMBIGUOUS_DNA):
             return False
@@ -133,12 +118,6 @@ def remove_bad_gens(gen_record):
 
 def load_template(template_file):
     template = pd.read_csv(template_file, index_col=0)
-    size = template.shape[0]
-    
-    columns = [x for x in template.columns.values if ("loc" in x)]
-    for i in range(size):
-        for c in columns:
-            template.at[i, c] = ast.literal_eval(template.loc[i, c])
     
     return template
 

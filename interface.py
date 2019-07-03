@@ -7,8 +7,6 @@ Created on Sat Mar 30 13:31:13 2019
 @brief: This document was made to make the front end a little cleaner and to separate the front end from the backend, to not have to modify both
 command line mode and gui mode when making changes on the back end. Now that the project is almost complete, maybe this file has no sense anymore. 
 Especially if we take into account that the simulation backend bypasses this file.
-
-EDIT: Now handles the Queue to communicate the TKINTER GUI with the backend
 """
 
 import load_data as ld
@@ -20,15 +18,9 @@ import simulation as s
 """
 Matching Stuff
 """
-def compute(parameters, thread_q=None):
+def compute(parameters):
     """
     @Brief calls the matching algorithms for both GUI and command line modes
-    @Returns template: pandas DataFrame containing the matching results
-    @Returns discarded: pandas DataFrame containing pairs of primer pairs and genome sequence that have not matched
-    @Returns gen_record
-    @Returns primer_pairs
-    @Returns raw_stats: pandas Dataframe containing a summary of the matching
-    @Returns cooked_stats: pandas Dataframe containing statictics the matching
     """
     template = None
     gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
@@ -37,13 +29,6 @@ def compute(parameters, thread_q=None):
     if(gen_record!=None and primer_pairs!=None):
         template, discarded, raw_stats, cooked_stats = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]), 
                                           primer_pairs, gen_record, parameters.loc["output_file", "value"], hanging_primers=parameters.loc["hanging primers", "value"])
-        if(thread_q!=None): #TODO better queue this data in load_gen and load_primer_pairs respectively
-            thread_q.put(template)
-            thread_q.put(discarded)
-            thread_q.put(raw_stats)
-            thread_q.put(cooked_stats)
-            thread_q.put(gen_record)
-            thread_q.put(primer_pairs)
     return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
 def save_matching_info(output_file, template, header, discarded, raw_stats, cooked_stats):
@@ -98,10 +83,7 @@ def load_primer_pairs(primer_pairs_file):
 """
 Loading template stuff
 """
-def load_template(parameters, thread_q=None):
-    """
-    @brief Loads a template and restores it if it's not complete.
-    """
+def load_template(parameters):
     
     gen_record = parameters.loc["gen", "value"]
     primer_pairs = parameters.loc["primer_pairs", "value"]
@@ -115,31 +97,13 @@ def load_template(parameters, thread_q=None):
         max_misses = int(parameters.loc["forward missmatches", "value"]) + int(parameters.loc["reverse missmatches", "value"])
         template, discarded, raw_stats, cooked_stats = ld.restore_template(template, gen_record, primer_pairs, max_misses)
         print("Template file restored!")
-        
-        if(thread_q!=None):
-            thread_q.put(template)
-            thread_q.put(discarded)
-            thread_q.put(raw_stats)
-            thread_q.put(cooked_stats)
-            thread_q.put(gen_record)
-            thread_q.put(primer_pairs)
         return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
     except:
         logging.error("Unable to restore template")
-        if(thread_q!=None): #TODO Ugly code, if repeated twice
-            thread_q.put(pd.DataFrame())
-            thread_q.put(pd.DataFrame())
-            thread_q.put(pd.DataFrame())
-            thread_q.put(pd.DataFrame())
-            thread_q.put(gen_record)
-            thread_q.put(primer_pairs)
         return pd.DataFrame(), pd.DataFrame(), gen_record, primer_pairs, pd.DataFrame(), pd.DataFrame()
 
 def load_template_only(template_file):
-    """
-    @brief Loads a template and nothing more
-    """
     template = pd.DataFrame();
     try:
         template = ld.load_template(template_file)
@@ -148,14 +112,8 @@ def load_template_only(template_file):
         logging.error("Unable to load template")
     return template
 
-def get_Nend_match(template, nend, max_misses, thread_q=None):
-    nend_template, raw_stats, cooked_stats =  m.get_Nend_template(template, nend, max_misses)
-    if(thread_q!=None):
-            thread_q.put(nend_template)
-            thread_q.put(raw_stats)
-            thread_q.put(cooked_stats)
-    
-    return nend_template, raw_stats, cooked_stats
+def get_Nend_match(template, nend, max_misses):
+    return m.get_Nend_template(template, nend, max_misses)
         
 """
 Simulation stuff

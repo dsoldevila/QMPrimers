@@ -52,7 +52,4 @@ Everything related to the Matching is explained [here](https://github.com/dsolde
 ### Simulation
 Everything related to the Matching is explained here.
 
-### Implementation
-
-Everything related to the program implementation is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Implementation)
 
