@@ -22,7 +22,9 @@ parameters = [
         ["k", 0.5, "", "-k", "float"],
         ["N", 100, "Nº simulation steps", "-n", "int"],
         ["output_file", os.path.join(os.getcwd(),"simout"), "Location of the output files, no extension", "-o", "entry"],
+        ["Confidence Interval", 0.95, "", "-ci", "float"],
         ["verbose", False, "Outputs extra information", "--v", "cmd"]]
+
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
 class GUI_simulate():
@@ -31,7 +33,7 @@ class GUI_simulate():
         self.main_frame = Frame(parent)
         
         """Other"""
-        self.parameters = parameters
+        self.parameters = parameters[parameters["type"]!="cmd"]
         self.current_directory = os.getcwd()
         self.entries = {}
         self.buttons = {}
@@ -46,7 +48,7 @@ class GUI_simulate():
         self.file_frame.pack(side=LEFT, expand=YES, fill=X)
         Label(self.file_frame, text="Files").pack()
         
-        for name in self.parameters.loc[parameters["type"]=="entry"].index.values:
+        for name in self.parameters.loc[self.parameters["type"]=="entry"].index.values:
             block = Frame(self.file_frame)
             block.pack(expand=YES, fill=BOTH)
             self.entries[name] = Entry(block)
@@ -68,7 +70,7 @@ class GUI_simulate():
         self.param_frame.pack(expand=YES, fill=X)
         Label(self.param_frame, text="Parameters").pack()
         
-        for name in self.parameters.loc[parameters["type"]!="entry"].index.values:
+        for name in self.parameters.loc[self.parameters["type"]!="entry"].index.values:
             block = Frame(self.param_frame)
             self.entries[name] = Entry(block, width=4)
             self.entries[name].pack(side=LEFT)
@@ -142,12 +144,12 @@ class GUI_simulate():
     def simulate(self):
         sim = Simulation(self.template, self.parameters.loc["sample size", "value"].get())
         self.raw_stats, self.cooked_stats = sim.simulate(self.parameters.loc["k", "value"].get(), self.parameters.loc["Beta", "value"].get(), 
-                                                         self.parameters.loc["N", "value"].get())
+                                                         self.parameters.loc["N", "value"].get(), self.parameters.loc["Confidence Interval", "value"].get())
         return
     
     def save(self):
-        Simulation.store_raw_data(self.parameters.loc["output_file", "value"], self.raw_stats, self.cooked_stats, 
-                                  parameters.loc["template", "value"], self.parameters.loc["sample size", "value"].get(),
+        Simulation.store_data(self.parameters.loc["output_file", "value"], self.raw_stats, self.cooked_stats, 
+                                  self.parameters.loc["template", "value"], self.parameters.loc["sample size", "value"].get(),
                                   self.parameters.loc["k", "value"].get(), self.parameters.loc["Beta", "value"].get(), 
                                   self.parameters.loc["N", "value"].get())
         return
@@ -203,12 +205,13 @@ def sim_cl(args):
         try:
             template = load_template_only(parameters.loc["template","value"])
             sim = Simulation(template, int(parameters.loc["sample size", "value"]))
-            raw_stats, cooked_stats = sim.simulate(float(parameters.loc["k", "value"]), int(parameters.loc["Beta", "value"]),  int(parameters.loc["N", "value"]))
+            raw_stats, cooked_stats = sim.simulate(float(parameters.loc["k", "value"]), int(parameters.loc["Beta", "value"]),  
+                                                   int(parameters.loc["N", "value"]),  float(parameters.loc["Confidence Interval", "value"]))
         except:
             logging.critical("The simulation crashed, bad files maybe?")
             return
         try:
-            Simulation.store_raw_data(parameters.loc["output_file", "value"], raw_stats, cooked_stats, parameters.loc["sample size", "value"],
+            Simulation.store_data(parameters.loc["output_file", "value"], raw_stats, cooked_stats, parameters.loc["sample size", "value"],
                                       parameters.loc["template", "value"], parameters.loc["k", "value"], parameters.loc["Beta", "value"], 
                                       parameters.loc["N", "value"])
         except:

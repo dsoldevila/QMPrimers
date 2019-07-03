@@ -34,7 +34,7 @@ class Simulation():
         
         return
 
-    def simulate(self, k, B, N):
+    def simulate(self, k, B, N, ci):
         """
         @param k: Paramater used to calculte the concentration of each sample. Range(0,1).
         @param B: Amplification eficiency = B^(-missmatches)
@@ -76,7 +76,7 @@ class Simulation():
             print("{0:.2f}".format((count/pplen)*100)+"%")
                 
 
-        self.cooked_stats = self.cook_stats(0.95)
+        self.cooked_stats = self.cook_stats(ci)
         print("Simulation done!")
         return self.raw_stats, self.cooked_stats
 
@@ -120,18 +120,21 @@ class Simulation():
         return
     
     def cook_stats(self, ci):
-        cooked_stats = pd.DataFrame(index=self.raw_stats.columns, columns=["min", "max", "mean", "median", "ncombinations", "CI"])
+        cooked_stats = pd.DataFrame(index=self.raw_stats.columns, columns=["min", "max", "mean", "median", "ncombinations", "CI", "min_ci", "max_ci"])
         raw_stats = self.raw_stats.loc[self.raw_stats.index[:-1]]
         
+        #TODO better way to get data within CI?
         raw_stats = np.sort(raw_stats, axis=0)
+        cooked_stats["min"] = raw_stats[0,:]
+        cooked_stats["max"] = raw_stats[-1, :]
     
         low_interval = int(((1-ci)/2)*raw_stats.shape[0])
         high_interval = int((1-((1-ci)/2))*raw_stats.shape[0])
     
         raw_stats = raw_stats[low_interval:high_interval, :]
         
-        cooked_stats["min"] = raw_stats[0,:]
-        cooked_stats["max"] = raw_stats[-1, :]
+        cooked_stats["min_ci"] = raw_stats[0,:]
+        cooked_stats["max_ci"] = raw_stats[-1, :]
         cooked_stats["CI"] = ci
         cooked_stats["ncombinations"] = self.raw_stats.loc["ncombinations"]
         cooked_stats["mean"] = raw_stats.mean(axis=0)
@@ -140,9 +143,8 @@ class Simulation():
         return cooked_stats
     
     @staticmethod
-    def store_raw_data(output_file, raw_stats, cooked_stats, infile_name, sample_size, k, B, N):
-        parameters_used = "Template = "+infile_name+"     SampleSize = "+str(sample_size)+"     k = "+str(k)+"     Beta = "+str(B)
-        +"     N = "+str(N)+"\n"
+    def store_data(output_file, raw_stats, cooked_stats, infile_name, sample_size, k, B, N):
+        parameters_used = "Template = "+infile_name+"     SampleSize = "+str(sample_size)+"     k = "+str(k)+"     Beta = "+str(B)+"     N = "+str(N)+"\n"
         
         
         
