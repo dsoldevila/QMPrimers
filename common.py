@@ -10,7 +10,6 @@ import pandas as pd
 import logging
 import os
 import sys
-import ast
 
 """Some global constant variables"""
 #DNA aplhabet
@@ -370,7 +369,6 @@ console_handler = None
 def init_logger():
     global console_handler
     logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), filemode='w', level=logging.INFO)
-    
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
     root_handler.addHandler(console_handler)

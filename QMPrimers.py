@@ -19,6 +19,9 @@ from matching_frontend import *
 import matching as m
 import queue
 
+TERMINAL_REFRESH_RATE = 500 #miliseconds
+WINDOW_SIZE = "900x600"
+
 # The new Stream Object which replaces the default stream associated with sys.stdout
 # This object just puts data in a queue!
 class WriteStream(object):
@@ -91,7 +94,7 @@ class GUI(Frame):
         self.is_verbose = BooleanVar()
         Checkbutton(self.extra_frame, variable=self.is_verbose, text="verbose", command=self.update_verbosity).pack(expand=NO)
         self.is_verbose.set(False)
-        init_logger()
+        #init_logger()
         self.update_verbosity()
     
     
@@ -99,7 +102,7 @@ class GUI(Frame):
         self.extra_frame.pack(side=BOTTOM, expand=NO, fill=X)
         self.terminal_frame.pack(side=BOTTOM, expand=YES, fill=BOTH)
         
-        self.main_frame.after(1000, self.update_terminal)
+        self.text.after(TERMINAL_REFRESH_RATE , self.update_terminal)
 
 
     def update_terminal(self):
@@ -112,14 +115,14 @@ class GUI(Frame):
             self.text.insert("end", items, ("stdout",))
             self.text.yview(END)
             
-        self.main_frame.after(1000, self.update_terminal)
+        self.text.after(TERMINAL_REFRESH_RATE , self.update_terminal)
     
     def update_verbosity(self):
         set_verbosity(self.is_verbose.get())
         
     def finnish(self, parent):
         self.gui_matching.finnish()
-        close_logger()
+        #close_logger()
         parent.destroy()
     
 
@@ -148,7 +151,6 @@ if (__name__=="__main__"):
             get_help()
         else:
             print("Unknown command ",sys.argv[2],". Use --help to display the manual.")
-        close_logger() 
     else:
         saved_sys_stdout = sys.stdout
         saved_sys_stderr = sys.stderr
@@ -156,7 +158,7 @@ if (__name__=="__main__"):
         # Create Queue and redirect sys.stdout to this queue
         stdout_queue = queue.Queue()
         sys.stdout = WriteStream(stdout_queue)
-        
+        init_logger()
         #create matching thread
         match_miso_queue = queue.Queue()
         match_mosi_queue = queue.Queue()
@@ -165,9 +167,10 @@ if (__name__=="__main__"):
         
         root = Tk()
         root.title("QMPrimers")
-        root.geometry('900x400')
+        root.geometry(WINDOW_SIZE)
         main_window = GUI(root, stdout_queue, match_mosi_queue, match_miso_queue)
         root.mainloop()
         
         sys.stdout = saved_sys_stdout
         sys.stderr = saved_sys_stderr
+    close_logger() 
