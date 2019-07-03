@@ -23,12 +23,12 @@ class Simulation():
         
         try:
             self.primer_pairs = self.template["primerPair"].unique()
-            
             f_reg = re.compile("^mismF[T|N\d+]$")
             self.mismF = list(filter(f_reg.match, template.columns.values))[0]
             
             r_reg = re.compile("^mismR[T|N\d+]$")
             self.mismR = list(filter(r_reg.match, template.columns.values))[0]
+            np.random.seed(0) #TODO Delete this
         except:
             raise ValueError("Template not valid")
         
@@ -52,15 +52,19 @@ class Simulation():
             template = self.template.loc[self.template["primerPair"] == pp]
             full_sample = template["fastaid"].unique()
             
-            if(full_sample.shape[0]<N or full_sample.shape[0] < self.sample_size):
+            try:
+                n_combinations = math.factorial(full_sample.shape[0])/(math.factorial(self.sample_size)
+                *math.factorial(full_sample.shape[0]-self.sample_size))
+            except: #exception if full_sample < sample_size
+                n_combinations = 0
+                
+            if(n_combinations<N):
                 logging.warning("Sample too small with primer pair "+str(pp)+". Skipping...")
                 
             else:
                 self.raw_stats[pp] = 0.0
-                n_combinations = math.factorial(full_sample.shape[0])/(math.factorial(self.sample_size)
-                *math.factorial(full_sample.shape[0]-self.sample_size))
                 self.raw_stats.loc["ncombinations", pp] = n_combinations
-                if(N > 0.5*n_combinations):
+                if(N*self.sample_size > 0.5*n_combinations):
                     logging.warning("Only "+str(n_combinations)+" possible combinations with primer pair "+str(pp))
                     
                 for i in range(N):
@@ -136,14 +140,21 @@ class Simulation():
         return cooked_stats
     
     @staticmethod
-    def store_raw_data(output_file, raw_stats, cooked_stats, sample_size, k, B, N):
-        raw_stats.to_csv(output_file+".csv", index_label="Step")
+    def store_raw_data(output_file, raw_stats, cooked_stats, infile_name, sample_size, k, B, N):
+        parameters_used = "Template = "+infile_name+"     SampleSize = "+str(sample_size)+"     k = "+str(k)+"     Beta = "+str(B)
+        +"     N = "+str(N)+"\n"
         
-        parameters_used = "SampleSize = "+str(sample_size)+"\t\tk = "+str(k)+"\t\tBeta = "+str(B)+"\t\tN = "+str(N)+"\n"
+        
         
         with open(output_file+".txt",'w') as outfile:
             outfile.write(parameters_used)
+            outfile.write(str(datetime.datetime.now())+"\n")
             cooked_stats.to_string(outfile)
+            
+        with open(output_file+".csv",'w') as outfile:  
+            outfile.write(parameters_used)
+            outfile.write(str(datetime.datetime.now())+"\n")
+            raw_stats.to_csv(outfile, mode='a', index_label="Step")
             
         print("Saved!")
         return

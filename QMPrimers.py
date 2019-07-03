@@ -12,7 +12,6 @@ from tkinter import *
 from tkinter.font import Font
 import tkinter.ttk as ttk
 import os
-#import sys
 import pandas as pd
 from simulation_frontend import *
 from matching_frontend import *

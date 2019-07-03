@@ -10,6 +10,7 @@ import pandas as pd
 import logging
 import os
 import sys
+import datetime
 
 #Some global constant variables
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")

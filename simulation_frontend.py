@@ -147,8 +147,9 @@ class GUI_simulate():
     
     def save(self):
         Simulation.store_raw_data(self.parameters.loc["output_file", "value"], self.raw_stats, self.cooked_stats, 
-                                  self.parameters.loc["sample size", "value"].get(), self.parameters.loc["k", "value"].get(),
-                                  self.parameters.loc["Beta", "value"].get(), self.parameters.loc["N", "value"].get())
+                                  parameters.loc["template", "value"], self.parameters.loc["sample size", "value"].get(),
+                                  self.parameters.loc["k", "value"].get(), self.parameters.loc["Beta", "value"].get(), 
+                                  self.parameters.loc["N", "value"].get())
         return
     
     def pack(self):
@@ -201,13 +202,15 @@ def sim_cl(args):
     else:
         try:
             template = load_template_only(parameters.loc["template","value"])
-            sim = Simulation(template, parameters.loc["sample size", "value"])
-            raw_stats, cooked_stats = sim.simulate(parameters.loc["k", "value"], parameters.loc["Beta", "value"],  parameters.loc["N", "value"])
+            sim = Simulation(template, int(parameters.loc["sample size", "value"]))
+            raw_stats, cooked_stats = sim.simulate(float(parameters.loc["k", "value"]), int(parameters.loc["Beta", "value"]),  int(parameters.loc["N", "value"]))
         except:
             logging.critical("The simulation crashed, bad files maybe?")
+            return
         try:
             Simulation.store_raw_data(parameters.loc["output_file", "value"], raw_stats, cooked_stats, parameters.loc["sample size", "value"],
-                                      parameters.loc["k", "value"], parameters.loc["Beta", "value"],  parameters.loc["N", "value"])
+                                      parameters.loc["template", "value"], parameters.loc["k", "value"], parameters.loc["Beta", "value"], 
+                                      parameters.loc["N", "value"])
         except:
             logging.critical("Error at saving files")
     return

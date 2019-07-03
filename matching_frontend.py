@@ -284,7 +284,8 @@ class GUI_matching():
             self.out_raw_stats = self.raw_stats
             self.out_cooked_stats = self.cooked_stats
             
-        save_matching_info(self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
+        input_files = "Fasta = "+self.parameters.loc["gen", "value"]+"     Primer Pairs = "+self.parameters.loc["primer_pairs", "value"]
+        save_matching_info(input_files, self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
         return
 
 def get_help(paramaters):

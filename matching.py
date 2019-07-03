@@ -155,9 +155,9 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
                 logging.error("Skipping gen "+gen.id+" primer pair "+str(pkey))
    
     raw_stats, cooked_stats = alignment_processor.get_stats()
-    store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
-    print("Template, negative and statistics saved")
-    
+    #store_stats("Temp file", output_file+"_stats.txt", raw_stats, cooked_stats)
+    #print("Template, negative and statistics saved")
+    print("Matching done!")
     
     template["primerPair"] = pd.Categorical(template["primerPair"], categories=primerPair_list, ordered=True)
     template.sort_values(['primerPair', 'fastaid'], inplace=True)
@@ -173,7 +173,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
 OTHER FUNCTIONS
 """
 
-def store_matching_results(output_file, template, header):
+def store_matching_results(input_files, output_file, template, header):
     """
     Stores alignment results
     @param gen_matching_list list of GenMatching instances
@@ -182,19 +182,27 @@ def store_matching_results(output_file, template, header):
     columns = template.columns.values
     for i in range(len(header)):
         header[i] = columns[header[i]]
-    template.to_csv(output_file, index_label="id", columns=header)
+    with open(output_file,'w') as outfile:
+            outfile.write(input_files+"\n")
+            outfile.write(str(datetime.datetime.now())+"\n")
+            template.to_csv(outfile, index_label="id", columns=header)
     
     return
 
-def store_stats(output_file, raw_stats, cooked_stats):
+def store_stats(input_files, output_file, raw_stats, cooked_stats):
     with open(output_file,'w') as outfile:
+        outfile.write(input_files+"\n")
+        outfile.write(str(datetime.datetime.now())+"\n")
         raw_stats.to_string(outfile)
         outfile.write("\n\n")
         cooked_stats.to_string(outfile)
     return
 
-def store_discarded(output_file, discarded):
-    discarded.to_csv(output_file, index_label="id")
+def store_discarded(input_files, output_file, discarded):
+    with open(output_file,'w') as outfile:
+        outfile.write(input_files+"\n")
+        outfile.write(str(datetime.datetime.now())+"\n")
+        discarded.to_csv(outfile, index_label="id")
     return
 
 

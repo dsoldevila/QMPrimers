@@ -31,20 +31,20 @@ def compute(parameters):
                                           primer_pairs, gen_record, parameters.loc["output_file", "value"], hanging_primers=parameters.loc["hanging primers", "value"])
     return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
-def save_matching_info(output_file, template, header, discarded, raw_stats, cooked_stats):
+def save_matching_info(input_files, output_file, template, header, discarded, raw_stats, cooked_stats):
     
     #try:
-    m.store_matching_results(output_file+"_positive.csv", template, header)
+    m.store_matching_results(input_files, output_file+"_positive.csv", template, header)
     print("Template saved")
     
     if(not discarded.empty):
-        m.store_discarded(output_file+"_negative.csv", discarded)
+        m.store_discarded(input_files, output_file+"_negative.csv", discarded)
         print("Negatives saved")
     else:
         print("Negatives not saved")
         
     if(not raw_stats.empty and not cooked_stats.empty):
-        m.store_stats(output_file+"_stats.txt", raw_stats, cooked_stats)
+        m.store_stats(input_files, output_file+"_stats.txt", raw_stats, cooked_stats)
         print("Statistics saved")
     else:
         print("Statistics not saved")
