@@ -92,16 +92,16 @@ def load_template(parameters):
         gen_record = load_gen_record(gen_record , parameters.loc["check_integrity", "value"], 
                                      parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
         primer_pairs = load_primer_pairs(primer_pairs)
-    try:
-        template = ld.load_template(parameters.loc["csv_template", "value"])
-        max_misses = int(parameters.loc["forward missmatches", "value"]) + int(parameters.loc["reverse missmatches", "value"])
-        template, discarded, raw_stats, cooked_stats = ld.restore_template(template, gen_record, primer_pairs, max_misses)
-        print("Template file restored!")
-        return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
+    #try:
+    template = ld.load_template(parameters.loc["csv_template", "value"])
+    max_misses = int(parameters.loc["forward missmatches", "value"]) + int(parameters.loc["reverse missmatches", "value"])
+    template, discarded, raw_stats, cooked_stats = ld.restore_template(template, gen_record, primer_pairs, max_misses)
+    print("Template file restored!")
+    return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
-    except:
-        logging.error("Unable to restore template")
-        return pd.DataFrame(), pd.DataFrame(), gen_record, primer_pairs, pd.DataFrame(), pd.DataFrame()
+    #except:
+    logging.error("Unable to restore template")
+    return pd.DataFrame(), pd.DataFrame(), gen_record, primer_pairs, pd.DataFrame(), pd.DataFrame()
 
 def load_template_only(template_file):
     template = pd.DataFrame();

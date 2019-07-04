@@ -118,7 +118,19 @@ def remove_bad_gens(gen_record):
     return gen_record
 
 def load_template(template_file):
-    template = pd.read_csv(template_file, index_col=0)
+    substring = ""
+    count = -1
+    header_found = False
+    with open(template_file,'r') as infile: 
+        while(header_found==False):
+            substring = infile.readline().split(",")
+            for s in substring:
+                if(s in TEMPLATE_HEADER):
+                    header_found = True
+                    break;
+            count+=1
+        logging.debug("Template header found at line "+str(count))
+    template = pd.read_csv(template_file, index_col=0, skiprows=count)
     
     return template
 
@@ -128,19 +140,21 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
     """
     
     if(template.shape[1]==len(TEMPLATE_HEADER)): #the template is complete, no need to redo all the work
+        logging.debug("Loading complete template")
         column_is_list = []
         for col in template.columns.values:
-            if(type(template.loc[0, col])==str and template.loc[0, col]=="["): #if this column is containing a list
+            if(type(template.loc[0, col])==str and template.loc[0, col][0]=="["): #if this column is containing a list
                 column_is_list.append(col)
         
         size = template.shape[0]
         for i in range(size):
             for col in column_is_list:
-                template.loc[i, col] = ast.literal_eval(template.loc[i,col])
+                template.at[i, col] = ast.literal_eval(template.loc[i,col])
             print("Loading template "+"{0:.2f}".format(i/size*100)+"%")
-            
+        
         return template, pd.DataFrame(), pd.DataFrame(), pd.DataFrame()                     
     else:
+        logging.debug("Proceding to restore partial template")
         alignment = Alignment(max_misses)
         recovered_template = pd.DataFrame(columns=TEMPLATE_HEADER)
         discarded = pd.DataFrame() # TODO

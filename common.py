@@ -328,7 +328,6 @@ class Alignment:
         @param mismRT_loc location of reverse mismatches, starting at 1
         """
         mismF_loc = []
-        
         for i in mismFT_loc:
             if(i<=nend):
                 mismF_loc.append(i)

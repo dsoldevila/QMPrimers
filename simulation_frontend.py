@@ -38,6 +38,7 @@ class GUI_simulate():
         self.entries = {}
         self.buttons = {}
         self.template = None
+        self.is_simulating = False #Kind of mutex to not allow multiple simulations at once
         
         """Frame containing Files and Other Parameters frames"""
         self.first_row_frame = Frame(self.main_frame)
@@ -138,13 +139,16 @@ class GUI_simulate():
         return
     
     def simulate_in_thread(self):
-        _thread.start_new_thread(self.simulate, ())
+        if(self.is_simulating==False):
+            _thread.start_new_thread(self.simulate, ())
         return
     
     def simulate(self):
+        self.is_simulating = True
         sim = Simulation(self.template, self.parameters.loc["sample size", "value"].get())
         self.raw_stats, self.cooked_stats = sim.simulate(self.parameters.loc["k", "value"].get(), self.parameters.loc["Beta", "value"].get(), 
                                                          self.parameters.loc["N", "value"].get(), self.parameters.loc["Confidence Interval", "value"].get())
+        self.is_simulating = False
         return
     
     def save(self):

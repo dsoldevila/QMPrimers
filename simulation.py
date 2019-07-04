@@ -21,16 +21,16 @@ class Simulation():
         self.template = template
         self.sample_size = sample_size
         
-        try:
-            self.primer_pairs = self.template["primerPair"].unique()
-            f_reg = re.compile("^mismF[T|N\d+]$")
-            self.mismF = list(filter(f_reg.match, template.columns.values))[0]
-            
-            r_reg = re.compile("^mismR[T|N\d+]$")
-            self.mismR = list(filter(r_reg.match, template.columns.values))[0]
-            np.random.seed(0) #TODO Delete this
-        except:
-            raise ValueError("Template not valid")
+        #try:
+        self.primer_pairs = self.template["primerPair"].unique()
+        f_reg = re.compile("^mismF((N\d+)|T)$")
+        self.mismF = list(filter(f_reg.match, template.columns.values))[0]
+        
+        r_reg = re.compile("^mismR((N\d+)|T)$")
+        self.mismR = list(filter(r_reg.match, template.columns.values))[0]
+        #np.random.seed(0) #TODO For debugging purposes
+        #except:
+            #raise ValueError("Template not valid")
         
         return
 

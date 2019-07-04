@@ -217,15 +217,15 @@ def simulate_whitebox():
     print(tmp)
 
 def simulate():
-    template = pd.read_csv("Test_data/insects_positive.csv")
+    template = ld.load_template("output_positive.csv")
     sample_size = 10
     k = 0.3
     B = 4
-    N=30
+    N=10
     ci = 0.90
     sim = s.Simulation(template, sample_size)
     raw, cooked = sim.simulate(k, B, N, ci)
-    sim.store_data("sim_test", raw, cooked, "insects_positive.csv", sample_size, k, B, N)
+    sim.store_data("sim_test", raw, cooked, "output_positive.csv", sample_size, k, B, N)
     
 def matching_test():
     init_logger()
@@ -258,14 +258,40 @@ def get_nend_test():
     
     m.store_matching_results("Test_data/test_nend.csv", template2, header=header)
     return
+
+parameters = [
+        ["gen", "Data/sbog_test.fasta", "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["primer_pairs", "Data/PP.csv", "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
+        ["output_file", os.path.join(os.getcwd(),"test"), "Location of the output files, no extension", "-o", "entry"],
+        ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
+        ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
+        ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
+        ["hanging primers", False, "Primers allowed to match between [0-mf,len(genome)+mr] instead of just between genome's length", "--hanging", "param"],
+        ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
+        ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
+        ["csv_template", "output_positive.csv", "Precomputed missmatching template", "-i", "entry"],
+        ["verbose", False, "Outputs extra information", "--v", "cmd"]]                      
+parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
+
+def load_template_test():
+    template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = i.load_template(parameters)
+    print(template)
+    
+    nend=5
+    nend_template, raw_stats, cooked_stats = i.get_Nend_match(template, nend, 10)
+    
+    header = [x for x in range(len(TEMPLATE_HEADER))]
+    m.store_matching_results("test", "test.csv", template, header=header)
+    
+    
     
 
 if(__name__=="__main__"):
-    
+    init_logger()
     time1 = time.time()
-    #matching_test()
     simulate()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     
     #performance_test()
+    close_logger()

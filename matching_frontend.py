@@ -45,7 +45,8 @@ class GUI_matching():
         """Other"""
         self.parameters = parameters
         self.current_directory = os.getcwd()
-        self.gui_simulate = gui_simulate
+        self.gui_simulate = gui_simulate #pointer to GUI simulation to automatically pass the newest template
+        self.op_in_progress = False #Kind of mutex to not allow multiple operations at once
         
         """Frame containing Files and Other Parameters frames"""
         self.first_row_frame = Frame(self.main_frame)
@@ -223,6 +224,9 @@ class GUI_matching():
             self.button["csv_template"].config(text="Unset", command= self.unset_template_file)
             self.button_c.pack_forget()
             self.button_lt.pack(side=TOP, expand=YES, fill=X)
+            
+            self.parameters.loc["gen", "value"] = None
+            self.parameters.loc["primer_pairs", "value"] = None
         return
     
     def unset_template_file(self):
@@ -235,34 +239,48 @@ class GUI_matching():
         return
     
     def compute_in_thread(self):
-        for pkey in self.other_param:
-            self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
-       
-        _thread.start_new_thread(self.compute, ())
+        
+        if(self.op_in_progress==False):
+            for pkey in self.other_param:
+                self.parameters.loc[pkey, "value"] = self.other_param[pkey].get()
+           
+            _thread.start_new_thread(self.compute, ())
+        else:
+            print("An operation is already running")
+            
         return
     
     def compute(self):
+        self.op_in_progress=True
         self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)        
         self.gui_simulate.set_template(self.template)        
-       
+        self.op_in_progress=False
         return
     
     def load_template_in_thread(self):
-        _thread.start_new_thread(self.load_template, ())
+        if(self.op_in_progress==False):
+            _thread.start_new_thread(self.load_template, ())
+        else:
+            print("An operation is already running")
         return
     
     def load_template(self):
+        self.op_in_progress=True
         self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = load_template(self.parameters)
         self.gui_simulate.set_template(self.template)
+        self.op_in_progress=False
         return
     
     def store_results_in_thread(self):
-        #self.store_results()
-        _thread.start_new_thread(self.store_results, ())
+        if(self.op_in_progress==False):
+            _thread.start_new_thread(self.store_results, ())
+        else:
+            print("An operation is already running")
         return
         
     
     def store_results(self):
+        self.op_in_progress=True
         header = []
         i = 0 #TODO convert output_info to list
         for key in self.output_info:
@@ -283,9 +301,14 @@ class GUI_matching():
             self.out_template = self.template
             self.out_raw_stats = self.raw_stats
             self.out_cooked_stats = self.cooked_stats
+        
+        if(self.parameters.loc["gen", "value"]!=None): 
+            input_files = "Fasta = "+self.parameters.loc["gen", "value"]+"     Primer Pairs = "+self.parameters.loc["primer_pairs", "value"]
+        else:
+            input_files = "From Template: "+self.parameters.loc["csv_template", "value"]
             
-        input_files = "Fasta = "+self.parameters.loc["gen", "value"]+"     Primer Pairs = "+self.parameters.loc["primer_pairs", "value"]
         save_matching_info(input_files, self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
+        self.op_in_progress=False
         return
 
 def get_help(paramaters):
