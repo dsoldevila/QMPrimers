@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import datetime
+import re
 
 #Some global constant variables
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
@@ -349,6 +350,14 @@ class Alignment:
         """
         return info
 
+def get_missmatch_column_name(header, primer="f"):
+    if(primer=="f"):
+        f_reg = re.compile("^mismF((N\d+)|T)$")
+        return list(filter(f_reg.match, header))[0]
+    elif(primer=="r"):
+        f_reg = re.compile("^mismR((N\d+)|T)$")
+        return list(filter(f_reg.match, header))[0]
+    
 #LOGGER
 root_handler = logging.getLogger()
 console_handler = None
@@ -363,7 +372,7 @@ def init_logger():
     return
         
 def set_verbosity(verbosity):
-    verbosity = 2
+    #verbosity = 2
     if verbosity == True:
         root_handler.setLevel(logging.INFO)
         console_handler.setLevel(logging.WARNING)

@@ -18,11 +18,11 @@ import pandas as pd
 parameters = [
         ["template", None, "Precomputed missmatching template", "-i", "entry"],
         ["sample size", 10, "Nº genome samples per simulation step", "-s", "int"],
-        ["Beta", 4, "", "-b", "int"],
-        ["k", 0.5, "", "-k", "float"],
+        ["Beta", 4, "<No description currently>", "-b", "int"],
+        ["k", 0.5, "Geometric proportion parameter. Range(0,1)", "-k", "float"],
         ["N", 100, "Nº simulation steps", "-n", "int"],
         ["output_file", os.path.join(os.getcwd(),"simout"), "Location of the output files, no extension", "-o", "entry"],
-        ["Confidence Interval", 0.95, "", "-ci", "float"],
+        ["Confidence Interval", 0.95, "CI used to compute the statistics", "-ci", "float"],
         ["verbose", False, "Outputs extra information", "--v", "cmd"]]
 
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
@@ -77,15 +77,16 @@ class GUI_simulate():
             self.entries[name].pack(side=LEFT)
             Label(block, text=name).pack(side=LEFT)
             if(self.parameters.loc[name, "type"] == "int"):
+                logging.debug(str(name)+" loaded as int")
                 var = IntVar()
                 var.set(int(self.parameters.loc[name, "value"]))
             elif(self.parameters.loc[name, "type"] == "float"):
+                logging.debug(str(name)+" loaded as float")
                 var = DoubleVar()
                 var.set(self.parameters.loc[name, "value"])
             self.entries[name].config(textvariable=var)
-            self.parameters.loc[name, "value"] = var
+            self.parameters.at[name, "value"] = var
             block.pack(side=LEFT, expand=YES, fill=BOTH)
-            
             
         """Buttons"""
         self.buttons_frame = Frame(self.main_frame)
@@ -98,7 +99,6 @@ class GUI_simulate():
         """Compute"""
         self.button_c = Button(self.buttons_frame, text="Save raw", command=self.save)
         self.button_c.pack(side=TOP, expand=YES, fill=X)
-        
         return
     
     def _open_file(self):
@@ -117,7 +117,7 @@ class GUI_simulate():
         if(input_file): #is not None
             self.entries["template"].delete(0, END)
             self.entries["template"].insert(0, str(input_file))
-            self.parameters.loc["template", "value"] = input_file
+            self.parameters.at["template", "value"] = input_file
             self.template = load_template_only(self.parameters.loc["template", "value"])
         return
     
@@ -145,9 +145,16 @@ class GUI_simulate():
     
     def simulate(self):
         self.is_simulating = True
-        sim = Simulation(self.template, self.parameters.loc["sample size", "value"].get())
-        self.raw_stats, self.cooked_stats = sim.simulate(self.parameters.loc["k", "value"].get(), self.parameters.loc["Beta", "value"].get(), 
-                                                         self.parameters.loc["N", "value"].get(), self.parameters.loc["Confidence Interval", "value"].get())
+        sim = Simulation()
+        try:
+            self.raw_stats, self.cooked_stats = sim.simulate(self.template, int(self.parameters.loc["sample size", "value"].get()),
+                                                             self.parameters.loc["k", "value"].get(), 
+                                                             self.parameters.loc["Beta", "value"].get(), 
+                                                             self.parameters.loc["N", "value"].get(), 
+                                                             self.parameters.loc["Confidence Interval", "value"].get())
+        except(Exception) as e:
+            logging.error(e)
+        
         self.is_simulating = False
         return
     
@@ -206,18 +213,20 @@ def sim_cl(args):
     if(parameters.loc["help", "value"]):
         get_help(parameters)
     else:
-        try:
-            template = load_template_only(parameters.loc["template","value"])
-            sim = Simulation(template, int(parameters.loc["sample size", "value"]))
-            raw_stats, cooked_stats = sim.simulate(float(parameters.loc["k", "value"]), int(parameters.loc["Beta", "value"]),  
-                                                   int(parameters.loc["N", "value"]),  float(parameters.loc["Confidence Interval", "value"]))
-        except:
-            logging.critical("The simulation crashed, bad files maybe?")
+        template = load_template_only(parameters.loc["template","value"])
+        if(template.empty): return
+        
+        sim = Simulation()
+        
+        try: #wrap exception of type int("a")
+            raw_stats, cooked_stats = sim.simulate(template, int(parameters.loc["sample size", "value"]), float(parameters.loc["k", "value"]), 
+                                                   int(parameters.loc["Beta", "value"]), int(parameters.loc["N", "value"]),  
+                                                   float(parameters.loc["Confidence Interval", "value"]))
+        except(Exception) as e:
+            logging.error(e)
             return
-        try:
-            Simulation.store_data(parameters.loc["output_file", "value"], raw_stats, cooked_stats, parameters.loc["sample size", "value"],
-                                      parameters.loc["template", "value"], parameters.loc["k", "value"], parameters.loc["Beta", "value"], 
-                                      parameters.loc["N", "value"])
-        except:
-            logging.critical("Error at saving files")
+        
+        Simulation.store_data(parameters.loc["output_file", "value"], raw_stats, cooked_stats, 
+                              parameters.loc["template", "value"], parameters.loc["sample size", "value"],
+                              parameters.loc["k", "value"], parameters.loc["Beta", "value"], parameters.loc["N", "value"])
     return

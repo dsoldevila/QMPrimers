@@ -22,7 +22,12 @@ def compute(parameters):
     """
     @Brief calls the matching algorithms for both GUI and command line modes
     """
-    template = None
+    
+    template = pd.DataFrame()
+    discarded = pd.DataFrame()
+    raw_stats = pd.DataFrame()
+    cooked_stats = pd.DataFrame()
+    
     gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
                                  parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
     primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
@@ -35,17 +40,14 @@ def save_matching_info(input_files, output_file, template, header, discarded, ra
     
     #try:
     m.store_matching_results(input_files, output_file+"_positive.csv", template, header)
-    print("Template saved")
     
     if(not discarded.empty):
         m.store_discarded(input_files, output_file+"_negative.csv", discarded)
-        print("Negatives saved")
     else:
         print("Negatives not saved")
         
     if(not raw_stats.empty and not cooked_stats.empty):
         m.store_stats(input_files, output_file+"_stats.txt", raw_stats, cooked_stats)
-        print("Statistics saved")
     else:
         print("Statistics not saved")
     """       
@@ -92,36 +94,22 @@ def load_template(parameters):
         gen_record = load_gen_record(gen_record , parameters.loc["check_integrity", "value"], 
                                      parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
         primer_pairs = load_primer_pairs(primer_pairs)
-    #try:
-    template = ld.load_template(parameters.loc["csv_template", "value"])
-    max_misses = int(parameters.loc["forward missmatches", "value"]) + int(parameters.loc["reverse missmatches", "value"])
-    template, discarded, raw_stats, cooked_stats = ld.restore_template(template, gen_record, primer_pairs, max_misses)
-    print("Template file restored!")
-    return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
+    try:
+        template = ld.load_template(parameters.loc["csv_template", "value"])
+        max_misses = int(parameters.loc["forward missmatches", "value"]) + int(parameters.loc["reverse missmatches", "value"])
+        template, discarded, raw_stats, cooked_stats = ld.restore_template(template, gen_record, primer_pairs, max_misses)
+        print("Template file restored!")
+        return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
 
-    #except:
-    logging.error("Unable to restore template")
+    except:
+        logging.error("Unable to restore template")
     return pd.DataFrame(), pd.DataFrame(), gen_record, primer_pairs, pd.DataFrame(), pd.DataFrame()
 
 def load_template_only(template_file):
-    template = pd.DataFrame();
-    try:
-        template = ld.load_template(template_file)
-        print("Template loaded!")
-    except:
-        logging.error("Unable to load template")
-    return template
+    return ld.load_template(template_file)
 
-def get_Nend_match(template, nend, max_misses):
-    return m.get_Nend_template(template, nend, max_misses)
-        
-"""
-Simulation stuff
-"""
-"""
-def simulate(template, sample_size, k, B, N):
-    sim = s.Simulation(template, sample_size)
-    raw, cooked = sim.simulate(k, B, N)
-    return raw, cooked
-"""
+def get_Nend_match(template, nend):
+    return m.get_Nend_template(template, nend)
+
+
 

@@ -116,6 +116,14 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     Computes the best alignments between each genome and each primer
     @returns: List of GenAlignment instances
     """
+    try:
+        assert(max_miss_f>0), "Max forward misses must be greater than 0"
+        assert(max_miss_r>0), "Max reverse misses must be greater than 0"
+        #assert other params or let it crash?
+    except(Exception) as e:
+        logging.error(e)
+        return pd.DataFrame(), pd.DataFrame(),pd.DataFrame(), pd.DataFrame()
+    
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
     
@@ -184,39 +192,63 @@ def store_matching_results(input_files, output_file, template, header):
     @param gen_matching_list list of GenMatching instances
     @return None
     """
-    columns = template.columns.values
-    for i in range(len(header)):
-        header[i] = columns[header[i]]
-    with open(output_file,'w') as outfile:
-            outfile.write(input_files+"\n")
-            outfile.write(str(datetime.datetime.now())+"\n")
-            template.to_csv(outfile, index_label="id", columns=header)
+    try:
+        columns = template.columns.values
+        for i in range(len(header)):
+            header[i] = columns[header[i]]
+        with open(output_file,'w') as outfile:
+                outfile.write(input_files+"\n")
+                outfile.write(str(datetime.datetime.now())+"\n")
+                template.to_csv(outfile, index_label="id", columns=header)
+        print("Template saved!")
+    except(Exception) as e:
+        logging.error(e)
     
     return
 
 def store_stats(input_files, output_file, raw_stats, cooked_stats):
-    with open(output_file,'w') as outfile:
-        outfile.write(input_files+"\n")
-        outfile.write(str(datetime.datetime.now())+"\n")
-        raw_stats.to_string(outfile)
-        outfile.write("\n\n")
-        cooked_stats.to_string(outfile)
+    try:
+        with open(output_file,'w') as outfile:
+            outfile.write(input_files+"\n")
+            outfile.write(str(datetime.datetime.now())+"\n")
+            raw_stats.to_string(outfile)
+            outfile.write("\n\n")
+            cooked_stats.to_string(outfile)
+            print("Statistics saved")
+    except(Exception) as e:
+        logging.error(e)
     return
 
 def store_discarded(input_files, output_file, discarded):
-    with open(output_file,'w') as outfile:
-        outfile.write(input_files+"\n")
-        outfile.write(str(datetime.datetime.now())+"\n")
-        discarded.to_csv(outfile, index_label="id")
+    try:
+        with open(output_file,'w') as outfile:
+            outfile.write(input_files+"\n")
+            outfile.write(str(datetime.datetime.now())+"\n")
+            discarded.to_csv(outfile, index_label="id")
+            print("Negatives saved")
+    except(Exception) as e:
+        logging.error(e)
     return
 
 
-def get_Nend_template(template, nend, max_misses):
+def get_Nend_template(template, nend):
     """
     @brief With the computed template, generate a template but with Nend mismatches
     @Return new template, raw stats, cooked_stats
     """
-    alignment = Alignment(max_misses);
+    try:
+        assert(not template.empty), "Bad template"
+        assert(nend>0), "N-end must be greater than 0"
+    except(Exception) as e:
+        logging.error(e)
+        return
+    mismF = get_missmatch_column_name(template.columns.values, primer="f")
+    mismR = get_missmatch_column_name(template.columns.values, primer="r")
+    
+    mismF = template[mismF].max()
+    mismR = template[mismR].max()
+    
+    alignment = Alignment(mismF+mismR);
     
     header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"amplicon", "F_pos", 
               "mismFN"+str(nend)+"_loc", "mismFN"+str(nend)+"_type", "mismFN"+str(nend)+"_base", "R_pos", "mismRN"+str(nend)+"_loc",

@@ -20,9 +20,9 @@ for key in TEMPLATE_HEADER:
     output_info[key] = True
 
 parameters = [
-        ["gen", None, "Genome file dir, no support for multiple files in cl", "-gf", "entry"],
+        ["gen", None, "Genome file dir, use ',' to append multiple files", "-gf", "entry"],
         ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
-        ["output_file", os.path.join(os.getcwd(),"output"), "Location of the output files, no extension", "-o", "entry"],
+        ["output_file", os.path.join(os.getcwd(),"Test_data/output"), "Location of the output files, no extension", "-o", "entry"],
         ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
         ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
         ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],
@@ -205,11 +205,6 @@ class GUI_matching():
         print("Output file path updated")
         return
     
-    def set_Nend(self, Nend):
-        self.parameters.loc["Nend miss.", "value"] = int(Nend)
-        print("Nend setted to ", Nend)
-        return
-    
     def set_template_file(self, template_file):
         if(template_file):
             if(os.path.isabs(template_file)):
@@ -253,7 +248,8 @@ class GUI_matching():
     def compute(self):
         self.op_in_progress=True
         self.template, self.discarded, self.gen_record, self.primer_pairs, self.raw_stats, self.cooked_stats = compute(self.parameters)        
-        self.gui_simulate.set_template(self.template)        
+        if(not self.template.empty):
+            self.gui_simulate.set_template(self.template)        
         self.op_in_progress=False
         return
     
@@ -295,7 +291,7 @@ class GUI_matching():
         if(Nend):
             if(self.previous_Nend!=Nend):
                 max_misses = int(self.parameters.loc["forward missmatches", "value"])+int(self.parameters.loc["reverse missmatches", "value"])
-                self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_match(self.template, Nend, max_misses)
+                self.out_template, self.out_raw_stats, self.out_cooked_stats = get_Nend_match(self.template, Nend)
                 self.previous_Nend = Nend
         else:
             self.out_template = self.template
@@ -303,7 +299,7 @@ class GUI_matching():
             self.out_cooked_stats = self.cooked_stats
         
         if(self.parameters.loc["gen", "value"]!=None): 
-            input_files = "Fasta = "+self.parameters.loc["gen", "value"]+"     Primer Pairs = "+self.parameters.loc["primer_pairs", "value"]
+            input_files = "Fasta = "+str(self.parameters.loc["gen", "value"])+"     Primer Pairs = "+self.parameters.loc["primer_pairs", "value"]
         else:
             input_files = "From Template: "+self.parameters.loc["csv_template", "value"]
             
@@ -314,7 +310,7 @@ class GUI_matching():
 def get_help(paramaters):
     output_info_keys = [key for key in output_info.keys()]
     other_info = {"-info <multiple strings>": "\tSelect which info to output, all info by default\n\t"+str(output_info_keys),
-                  "PRIMER PAIRS HEADER": "tid;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength"}
+                  "PRIMER PAIRS HEADER": "id;forwardPrimer;fPDNA;reversePrimer;rPDNA;ampliconMinLength;ampiconMaxLength"}
 
     print("QMPRIMERS HELP PAGE")
     pd.options.display.max_colwidth = 100
@@ -342,7 +338,7 @@ def matching_cl(args):
                     last_option = "info"
                     for key in output_info: output_info[key] = False
                 else:
-                    print("Parameter "+str(sys.argv[i])+" unknown")
+                    print("Parameter "+str(argv)+" unknown")
                     print("Use --help to display the manual")
                     exit();
             elif(argv[:2]=="--"):
@@ -363,7 +359,10 @@ def matching_cl(args):
                 last_option = None
                 
     set_verbosity(parameters.loc["verbose", "value"])
-    parameters.loc["gen", "value"] = (parameters.loc["gen", "value"]) 
+    try:
+        parameters.loc["gen", "value"] = parameters.loc["gen", "value"].split(",")
+    except: pass
+
     parameters.loc["Nend miss.", "value"] = int(parameters.loc["Nend miss.", "value"]) 
 
     if(parameters.loc["help", "value"]):
@@ -372,23 +371,28 @@ def matching_cl(args):
         
         if(parameters.loc["csv_template", "value"]):
             template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = load_template(parameters)
-
+            
+            input_files = "From Template: "+parameters.loc["csv_template", "value"]
+            
         elif(parameters.loc["gen", "value"]):
-            parameters.loc["gen", "value"] = (parameters.loc["gen","value"],) #TODO multiple files not implemented in cl
             template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats = compute(parameters)
             
-        i = 0 #TODO convert output_info to list
-        header = []
-        for key in output_info:
-            if(output_info[key]):
-                header.append(i)
-            i+=1
-
-        Nend = parameters.loc["Nend miss.", "value"]
-        if(Nend):
-            if(parameters.loc["csv_template", "value"]):
-                template = recalculate_Nend(template, primer_pairs, Nend, 0)
-            header.extend(["mismFN"+str(Nend), "mismRN"+str(Nend)])
-
+            input_files = "Fasta = "+str(parameters.loc["gen", "value"])+"     Primer Pairs = "+str(parameters.loc["primer_pairs", "value"])
+        else:
+            return
+        
+        if(not template.empty or not cooked_stats.empty): #if prev ops have been succesful
             
-        save_matching_info(parameters.loc["output_file", "value"], template, header, discarded, raw_stats, cooked_stats)
+            i = 0 #TODO convert output_info to list
+            header = []
+            for key in output_info:
+                if(output_info[key]):
+                    header.append(i)
+                i+=1
+    
+            Nend = parameters.loc["Nend miss.", "value"]
+            if(Nend):
+                if(parameters.loc["csv_template", "value"]):
+                    template, raw_stats, cooked_stats = get_Nend_match(template, Nend)
+                
+            save_matching_info(input_files, parameters.loc["output_file", "value"], template, header, discarded, raw_stats, cooked_stats)

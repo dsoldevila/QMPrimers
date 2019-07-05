@@ -121,16 +121,21 @@ def load_template(template_file):
     substring = ""
     count = -1
     header_found = False
-    with open(template_file,'r') as infile: 
-        while(header_found==False):
-            substring = infile.readline().split(",")
-            for s in substring:
-                if(s in TEMPLATE_HEADER):
-                    header_found = True
-                    break;
-            count+=1
-        logging.debug("Template header found at line "+str(count))
-    template = pd.read_csv(template_file, index_col=0, skiprows=count)
+    template = pd.DataFrame()
+    
+    try:
+        with open(template_file,'r') as infile: 
+            while(header_found==False):
+                substring = infile.readline().split(",")
+                for s in substring:
+                    if(s in TEMPLATE_HEADER):
+                        header_found = True
+                        break;
+                count+=1
+            logging.debug("Template header found at line "+str(count))
+        template = pd.read_csv(template_file, index_col=0, skiprows=count)
+    except:
+        logging.error("Unable to load template")
     
     return template
 
@@ -140,7 +145,7 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
     """
     
     if(template.shape[1]==len(TEMPLATE_HEADER)): #the template is complete, no need to redo all the work
-        logging.debug("Loading complete template")
+        logging.debug("Loading complete template..")
         column_is_list = []
         for col in template.columns.values:
             if(type(template.loc[0, col])==str and template.loc[0, col][0]=="["): #if this column is containing a list
@@ -151,7 +156,6 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
             for col in column_is_list:
                 template.at[i, col] = ast.literal_eval(template.loc[i,col])
             print("Loading template "+"{0:.2f}".format(i/size*100)+"%")
-        
         return template, pd.DataFrame(), pd.DataFrame(), pd.DataFrame()                     
     else:
         logging.debug("Proceding to restore partial template")

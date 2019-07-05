@@ -13,33 +13,41 @@ import re
 from common import*
 
 class Simulation():
-    def __init__(self, template, sample_size):
-        """
-        @param template
-        @param sample_size: Number of genomes to take from the template.
-        """
-        self.template = template
-        self.sample_size = sample_size
-        
-        #try:
-        self.primer_pairs = self.template["primerPair"].unique()
-        f_reg = re.compile("^mismF((N\d+)|T)$")
-        self.mismF = list(filter(f_reg.match, template.columns.values))[0]
-        
-        r_reg = re.compile("^mismR((N\d+)|T)$")
-        self.mismR = list(filter(r_reg.match, template.columns.values))[0]
-        #np.random.seed(0) #TODO For debugging purposes
-        #except:
-            #raise ValueError("Template not valid")
-        
+    def __init__(self):
         return
+    
+    def get_mism(self, template):
+        self.template = template
+        try:
 
-    def simulate(self, k, B, N, ci):
+            self.mismF = get_missmatch_column_name(template.columns.values, primer="f")
+            self.mismR = get_missmatch_column_name(template.columns.values, primer="r")
+         
+            #np.random.seed(0) #TODO For debugging purposes
+        except:
+            raise Exception("Template not valid")
+        
+    def check_data(self, sample_size, k, B, N, ci):
+        assert(sample_size>0), "Sample Size must be greater than 0"
+        assert(k>0 and k<1), "K must be in the range (0,1)"
+        assert(B>0), "Beta must be greater than 0"
+        assert(N>0), "N must be greater than 0"
+        assert(ci>0 and ci<1), "Confidence interval must be in the range (0,1)"
+        
+    def simulate(self, template, sample_size, k, B, N, ci):
         """
         @param k: Paramater used to calculte the concentration of each sample. Range(0,1).
         @param B: Amplification eficiency = B^(-missmatches)
         @returns For each primer, the mean and median of the Pearson Coef. between the original and the final concentration
         """
+        #check input data:
+        try:
+            self.get_mism(template)
+            self.check_data(sample_size, k, B, N, ci)
+        except(Exception) as e:
+            logging.error(e)
+            return pd.DataFrame(), pd.DataFrame()
+        
         self.k = k
         self.B = B
         index = list(range(N))
@@ -120,6 +128,7 @@ class Simulation():
         return
     
     def cook_stats(self, ci):
+        if(ci>1.0): ci=1.0
         cooked_stats = pd.DataFrame(index=self.raw_stats.columns, columns=["min", "max", "mean", "median", "ncombinations", "CI", "min_ci", "max_ci"])
         raw_stats = self.raw_stats.loc[self.raw_stats.index[:-1]]
         
@@ -144,21 +153,31 @@ class Simulation():
     
     @staticmethod
     def store_data(output_file, raw_stats, cooked_stats, infile_name, sample_size, k, B, N):
-        parameters_used = "Template = "+infile_name+"     SampleSize = "+str(sample_size)+"     k = "+str(k)+"     Beta = "+str(B)+"     N = "+str(N)+"\n"
         
+        try:
+            parameters_used = "Template = "+infile_name+"     SampleSize = "+str(sample_size)+"     k = "+str(k)+"     Beta = "+str(B)+"     N = "+str(N)+"\n"
+        except:
+            logging.error("Could not save files, bad parameters")
+            return
         
-        
-        with open(output_file+".txt",'w') as outfile:
-            outfile.write(parameters_used)
-            outfile.write(str(datetime.datetime.now())+"\n")
-            cooked_stats.to_string(outfile)
+        try:
+            with open(output_file+".txt",'w') as outfile:
+                outfile.write(parameters_used)
+                outfile.write(str(datetime.datetime.now())+"\n")
+                cooked_stats.to_string(outfile)
+                print("Statistics saved")
+        except:
+            logging.error("Could not save statistics")
+                
+        try:
+            with open(output_file+".csv",'w') as outfile:  
+                outfile.write(parameters_used)
+                outfile.write(str(datetime.datetime.now())+"\n")
+                raw_stats.to_csv(outfile, mode='a', index_label="Step")
+            print("Raw data saved!")
+        except:
+            logging.error("Could not save raw data")
             
-        with open(output_file+".csv",'w') as outfile:  
-            outfile.write(parameters_used)
-            outfile.write(str(datetime.datetime.now())+"\n")
-            raw_stats.to_csv(outfile, mode='a', index_label="Step")
-            
-        print("Saved!")
         return
     
     def plot_results(self, cooked_stats):
