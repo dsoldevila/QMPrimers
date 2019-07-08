@@ -88,7 +88,7 @@ class Alignment:
         self.primer_pair = primer_pair
         self.primerPair = primer_pair.id #TODO patch
         self.primerF = primer_pair.f.id
-        self.primerR = primer_pair.f.id
+        self.primerR = primer_pair.r.id
         
         self.F_pos = int(fpos) #it seems Biopython seqrecord does not support numpy.int32
         self.real_fpos = int(real_fpos)
@@ -359,11 +359,13 @@ def get_missmatch_column_name(header, primer="f"):
         return list(filter(f_reg.match, header))[0]
     
 #LOGGER
-root_handler = logging.getLogger()
+root_handler = None
 console_handler = None
 
 def init_logger():
     global console_handler
+    global root_handler
+    root_handler = logging.getLogger()
     logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), filemode='w', level=logging.INFO)
     
     console_handler = logging.StreamHandler(sys.stdout)

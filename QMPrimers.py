@@ -101,7 +101,7 @@ def get_help():
     info = {"PARAMETERS" : "\t-------------",
             "--help": "\tDisplay this message",
             "--sim": "\tSimulation mode",
-            "--match": "\tMatchinf mode",
+            "--match": "\tMatching mode",
             "GUI mode": "To open the graphical mode, do not pass any parameter"}
 
     print("QMPRIMERS HELP PAGE");

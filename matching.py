@@ -133,7 +133,8 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
         pp.f.seq = np.array(pp.f)
         pp.r.seq = np.array(pp.r)
         primerPair_list.append(pkey)
-        
+    
+    print(primer_pairs["10"].r.id)
     size = len(gen_record)
     i = 0       
     template_header = TEMPLATE_HEADER
@@ -179,7 +180,6 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     discarded["primerPair"] = pd.Categorical(discarded["primerPair"], categories=primerPair_list, ordered=True)
     discarded.sort_values(['primerPair', 'fastaid'], inplace=True)
     discarded.reset_index(drop=True, inplace=True)
-    
     return template, discarded, raw_stats, cooked_stats
 
 """
