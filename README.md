@@ -57,4 +57,7 @@ Everything related to the Matching is explained [here](https://github.com/dsolde
 ### Simulation
 Everything related to the Matching is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Simulation).
 
+## Development
+For the ones that one to known what is going on under the hood, you can check this [page](https://github.com/dsoldevila/QMPrimers/wiki/Implementation)
+
 
