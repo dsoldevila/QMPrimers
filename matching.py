@@ -14,12 +14,6 @@ import pandas as pd
 import load_data as ld
 
 
-#TODO this func is currently unused, ~line 68
-def is_valid(score, min_score):
-    score = np.asarray(score)
-    min_score = np.asarray(min_score)
-    return np.where(score >= min_score, score, 0)
-
 def append_zeros(gen_record, max_miss_f, max_miss_r):
     """
     Adds zeros ('Z') at the beginning and end of the genome to allow the primer to pass the genome's limits

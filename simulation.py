@@ -22,6 +22,7 @@ class Simulation():
 
             self.mismF = get_missmatch_column_name(template.columns.values, primer="f")
             self.mismR = get_missmatch_column_name(template.columns.values, primer="r")
+            self.primer_pairs = self.template["primerPair"].unique()
          
             #np.random.seed(0) #TODO For debugging purposes
         except:
