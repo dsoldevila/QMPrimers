@@ -77,11 +77,9 @@ class GUI_simulate():
             self.entries[name].pack(side=LEFT)
             Label(block, text=name).pack(side=LEFT)
             if(self.parameters.loc[name, "type"] == "int"):
-                logging.debug(str(name)+" loaded as int")
                 var = IntVar()
                 var.set(int(self.parameters.loc[name, "value"]))
             elif(self.parameters.loc[name, "type"] == "float"):
-                logging.debug(str(name)+" loaded as float")
                 var = DoubleVar()
                 var.set(self.parameters.loc[name, "value"])
             self.entries[name].config(textvariable=var)

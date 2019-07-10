@@ -359,37 +359,49 @@ def get_missmatch_column_name(header, primer="f"):
         return list(filter(f_reg.match, header))[0]
     
 #LOGGER
-root_handler = None
+file_handler = None
 console_handler = None
 
 def init_logger():
     global console_handler
-    global root_handler
-    root_handler = logging.getLogger()
-    logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), filemode='w', level=logging.INFO)
+    global file_handler
+    
+    #root_handler = logging.getLogger()
+    #logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), filemode='w', level=logging.INFO)
+    
+    log = logging.getLogger()
+    
+    for hdlr in log.handlers[:]:  # remove all old handlers
+        log.removeHandler(hdlr)
+
+    file_handler = logging.FileHandler(os.path.join(os.getcwd(),"log.txt"), 'a')
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
-    root_handler.addHandler(console_handler)
+    
+    log.addHandler(console_handler)
+    log.addHandler(file_handler)
     return
         
 def set_verbosity(verbosity):
     #verbosity = 2
     if verbosity == True:
-        root_handler.setLevel(logging.INFO)
+        file_handler.setLevel(logging.INFO)
         console_handler.setLevel(logging.WARNING)
     elif verbosity == 2: #True!=2, ugly but as long as it works...
-        root_handler.setLevel(logging.DEBUG)
+        file_handler.setLevel(logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)
     else:
-        root_handler.setLevel(logging.WARNING)
+        file_handler.setLevel(logging.WARNING)
         console_handler.setLevel(logging.ERROR)
     return
 
 def close_logger():
     try:
-        root_handler.removeHandler(console_handler)
-        console_handler.close() #trying because it will crash if init_logger has not bin called
+        log = logging.getLogger()
+        for hdlr in log.handlers[:]:  # remove all old handlers
+            log.removeHandler(hdlr)
     except:
         logging.error("Can't close console log")
         

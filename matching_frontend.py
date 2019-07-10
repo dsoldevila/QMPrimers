@@ -39,7 +39,6 @@ class GUI_matching():
     def __init__(self, parent, gui_simulate):
         
         self.main_frame = Frame(parent)
-        logging.warning("Hello")
         #myFont = Font(family="Noto Sans", size=12, weight="bold")
         
         """Other"""
