@@ -134,7 +134,6 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
         pp.r.seq = np.array(pp.r)
         primerPair_list.append(pkey)
     
-    print(primer_pairs["10"].r.id)
     size = len(gen_record)
     i = 0       
     template_header = TEMPLATE_HEADER
