@@ -23,7 +23,7 @@ class Simulation():
             self.mismF = get_missmatch_column_name(template.columns.values, primer="f")
             self.mismR = get_missmatch_column_name(template.columns.values, primer="r")
             self.primer_pairs = self.template["primerPair"].unique()
-         
+            
             #np.random.seed(0) #TODO For debugging purposes
         except:
             raise Exception("Template not valid")
@@ -48,7 +48,7 @@ class Simulation():
         except(Exception) as e:
             logging.error(e)
             return pd.DataFrame(), pd.DataFrame()
-        
+
         self.k = k
         self.B = B
         index = list(range(N))
@@ -62,23 +62,24 @@ class Simulation():
             full_sample = template["fastaid"].unique()
             
             try:
-                n_combinations = math.factorial(full_sample.shape[0])/(math.factorial(self.sample_size)
-                *math.factorial(full_sample.shape[0]-self.sample_size))
+                n_combinations = math.factorial(full_sample.shape[0])/(math.factorial(sample_size)
+                *math.factorial(full_sample.shape[0]-sample_size))
             except: #exception if full_sample < sample_size
                 n_combinations = 0
+                logging.warning("math error")
                 
-            if(n_combinations<N):
-                logging.warning("Sample too small with primer pair "+str(pp)+". Skipping...")
+            if(n_combinations<sample_size):
+                logging.error("Sample size too small with primer pair "+str(pp)+". Skipping...")
                 
             else:
+                if(n_combinations<N):
+                    logging.warning("With primer pair "+str(pp)+" only "+str(n_combinations)+" possible combinations")
                 self.raw_stats[pp] = 0.0
                 self.raw_stats.loc["ncombinations", pp] = n_combinations
-                if(N*self.sample_size > 0.5*n_combinations):
-                    logging.warning("Only "+str(n_combinations)+" possible combinations with primer pair "+str(pp))
                     
                 for i in range(N):
                     self.step = i #needed by update_stats
-                    sample = self.get_random_sample(full_sample, self.sample_size, k)
+                    sample = self.get_random_sample(full_sample, sample_size, k)
                     amplified_sample = self.amplify(template, pp, sample, B)
                     self.update_stats(amplified_sample, pp)
             count+=1

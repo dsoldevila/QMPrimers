@@ -68,7 +68,7 @@ def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers)
                                        check_uppercase=check_uppercase)
         logging.info("Genome record file loaded!")
     except:
-        logging.critical("Error at loading gen record")
+        logging.error("At loading gen record")
     if(check_integrity): gen_record = ld.remove_bad_gens(gen_record)
     return gen_record
 
@@ -78,7 +78,7 @@ def load_primer_pairs(primer_pairs_file):
         primer_pairs = ld.load_csv_file(primer_pairs_file)
         logging.info("Primer pairs file loaded!")
     except:
-        logging.critical("Error at loading primer pairs file")
+        logging.error("At loading primer pairs file")
         
     return primer_pairs
 
