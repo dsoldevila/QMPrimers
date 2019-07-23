@@ -121,7 +121,7 @@ class GUI_simulate():
     
     def set_output_file(self, output_file):
         if(os.path.isabs(output_file)):
-            self.parameters.loc["output_file", "value"] = output_file
+            self.parameters.at["output_file", "value"] = output_file
         else:
             self.parameters.loc["output_file", "value"] = os.path.join(self.current_directory,output_file)
             self.entries["output_file"].delete(0, END)

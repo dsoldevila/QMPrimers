@@ -386,7 +386,7 @@ def init_logger():
     return
         
 def set_verbosity(verbosity):
-    verbosity = 2
+    #verbosity = 2
     if verbosity == True:
         file_handler.setLevel(logging.INFO)
         console_handler.setLevel(logging.WARNING)

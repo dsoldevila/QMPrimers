@@ -66,7 +66,7 @@ class Simulation():
                 *math.factorial(full_sample.shape[0]-sample_size))
             except: #exception if full_sample < sample_size
                 n_combinations = 0
-                logging.warning("math error")
+                pass
                 
             if(n_combinations<sample_size):
                 logging.error("Sample size too small with primer pair "+str(pp)+". Skipping...")
