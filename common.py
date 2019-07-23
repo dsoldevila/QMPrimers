@@ -370,6 +370,7 @@ def init_logger():
     #logging.basicConfig(filename=os.path.join(os.getcwd(),"log.txt"), filemode='w', level=logging.INFO)
     
     log = logging.getLogger()
+    log.setLevel(logging.DEBUG)
     
     for hdlr in log.handlers[:]:  # remove all old handlers
         log.removeHandler(hdlr)
@@ -385,7 +386,7 @@ def init_logger():
     return
         
 def set_verbosity(verbosity):
-    #verbosity = 2
+    verbosity = 2
     if verbosity == True:
         file_handler.setLevel(logging.INFO)
         console_handler.setLevel(logging.WARNING)

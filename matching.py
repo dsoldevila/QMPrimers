@@ -118,7 +118,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     except(Exception) as e:
         logging.error(e)
         return pd.DataFrame(), pd.DataFrame(),pd.DataFrame(), pd.DataFrame()
-    
+    logging.debug("Testing debug")
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
     
