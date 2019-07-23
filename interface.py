@@ -31,6 +31,7 @@ def compute(parameters):
     gen_record = load_gen_record(parameters.loc["gen", "value"], parameters.loc["check_integrity", "value"], 
                                  parameters.loc["check_uppercase", "value"], parameters.loc["hanging primers", "value"])
     primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
+    
     if(gen_record!=None and primer_pairs!=None):
         template, discarded, raw_stats, cooked_stats = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]), 
                                           primer_pairs, gen_record, parameters.loc["output_file", "value"], hanging_primers=parameters.loc["hanging primers", "value"])
@@ -38,7 +39,6 @@ def compute(parameters):
 
 def save_matching_info(input_files, output_file, template, header, discarded, raw_stats, cooked_stats):
     
-    #try:
     m.store_matching_results(input_files, output_file+"_positive.csv", template, header)
     
     if(not discarded.empty):
@@ -50,10 +50,6 @@ def save_matching_info(input_files, output_file, template, header, discarded, ra
         m.store_stats(input_files, output_file+"_stats.txt", raw_stats, cooked_stats)
     else:
         print("Statistics not saved")
-    """       
-    except:
-        print("Unable to save files")
-    """
     
     return
 

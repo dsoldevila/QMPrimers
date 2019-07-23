@@ -217,7 +217,7 @@ def simulate_whitebox():
     print(tmp)
 
 def simulate():
-    template_file = "Test_data/insects_positive.csv"
+    template_file = "test_output/insects_positive.csv"
     sample_size = 10
     k = 0.3
     B = 4
@@ -226,7 +226,7 @@ def simulate():
     template = i.load_template_only(template_file)
     sim = s.Simulation()
     raw, cooked = sim.simulate(template, sample_size, k, B, N, ci)
-    sim.store_data("sim_test", raw, cooked, template_file, sample_size, k, B, N)
+    sim.store_data("test_output/sim_test", raw, cooked, template_file, sample_size, k, B, N)
     
 def matching_test():
     init_logger()

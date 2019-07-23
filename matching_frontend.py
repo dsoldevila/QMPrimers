@@ -22,7 +22,7 @@ for key in TEMPLATE_HEADER:
 parameters = [
         ["gen", None, "Genome file dir, use ',' to append multiple files", "-gf", "entry"],
         ["primer_pairs", None, "Primer pairs file dir. A particular header must be used in the file", "-pf", "entry"],
-        ["output_file", os.path.join(os.getcwd(),"Test_data/output"), "Location of the output files, no extension", "-o", "entry"],
+        ["output_file", os.path.join(os.getcwd(),"output", "output"), "Location of the output files, no extension", "-o", "entry"],
         ["forward missmatches", 5, "Maximum number of missmatches allowed on forward primer", "-fm", "param"],
         ["reverse missmatches", 5, "Maximum number of missmatches allowed on reverse primer", "-rm", "param"], 
         ["Nend miss.", 0, "Missmatches in the last N positions on forward and in the first N pos. on reverse ", "-nend", "info"],

@@ -114,6 +114,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
         assert(max_miss_f>0), "Max forward misses must be greater than 0"
         assert(max_miss_r>0), "Max reverse misses must be greater than 0"
         #assert other params or let it crash?
+        os.makedirs(os.path.dirname(output_file), exist_ok=True) #make sure output file exists
     except(Exception) as e:
         logging.error(e)
         return pd.DataFrame(), pd.DataFrame(),pd.DataFrame(), pd.DataFrame()
@@ -187,12 +188,13 @@ def store_matching_results(input_files, output_file, template, header):
     """
     try:
         columns = template.columns.values
+        h = []
         for i in range(len(header)):
-            header[i] = columns[header[i]]
+            h.append(columns[header[i]])
         with open(output_file,'w') as outfile:
                 outfile.write(input_files+"\n")
                 outfile.write(str(datetime.datetime.now())+"\n")
-                template.to_csv(outfile, index_label="id", columns=header)
+                template.to_csv(outfile, index_label="id", columns=h)
         print("Template saved!")
     except(Exception) as e:
         logging.error(e)
