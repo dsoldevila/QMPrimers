@@ -71,6 +71,7 @@ def compute_primer_pair_best_alignment(max_miss_f, max_miss_r, primer, gen, hang
             return template, discarded
         else: #else modify max_amplicon to keep the primer_pair within the limits
             max_amplicon = len_gen - (primer.flen + primer.rlen)
+            search_limit = primer.rlen+max_amplicon
             logging.debug("Cutting max amplicon from "+str(primer.max_amplicon)+" to "+str(max_amplicon))
     
     best_score = 0

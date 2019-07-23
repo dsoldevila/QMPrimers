@@ -95,7 +95,7 @@ class GUI_simulate():
         self.button_c.pack(side=TOP, expand=YES, fill=X)
         
         """Compute"""
-        self.button_c = Button(self.buttons_frame, text="Save raw", command=self.save)
+        self.button_c = Button(self.buttons_frame, text="Save", command=self.save)
         self.button_c.pack(side=TOP, expand=YES, fill=X)
         return
     
