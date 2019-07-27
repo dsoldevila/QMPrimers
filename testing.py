@@ -231,24 +231,23 @@ def simulate():
 def matching_test():
     init_logger()
     set_verbosity(True)
-    gen_record = ld.load_bio_files(["Data/sbog_test.fasta"])
+    gen_record = ld.load_bio_files(["test_input/sbog_test.fasta"])
     #gen_record = split(gen_record, 0.005)
     #gen_record = {"AGB001-11_Salticus_scenicus_BOLD": gen_record["AGB001-11_Salticus_scenicus_BOLD"]};
     
     
-    primer_pairs = ld.load_csv_file("Data/PP.csv")
+    primer_pairs = ld.load_csv_file("test_input/PP.csv")
     #primer_pairs = {"6":primer_pairs["6"]}
     
     output = "Test_data/output"
     header = [i for i in range(len(TEMPLATE_HEADER))]
-    template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, output) 
+    #template, discarded, rs, cs = m.compute_gen_matching(5, 5, primer_pairs, gen_record, output) 
     
     #m.store_matching_results("Test_data/test1.csv", template, header=TEMPLATE_HEADER)
     #i.save_matching_info("TEST", output, template, header, discarded, rs, cs)
     close_logger()
-    print(gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"][550:550+30])
-    print(len(gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"]))
-    #print(''.join(primer_pairs["10"].r.seq.complement()))
+    print(gen_record["ACEA1016-14_Aphis_spiraecola_BOLD"][550:550+23])
+    print(''.join(primer_pairs["10"].r.seq))
     return
 
 def get_nend_test():
@@ -293,7 +292,8 @@ def load_template_test():
 if(__name__=="__main__"):
     init_logger()
     time1 = time.time()
-    simulate()
+    #simulate()
+    matching_test()
     elapsedTime = ((time.time()-time1))
     print(int(elapsedTime)/60)
     
