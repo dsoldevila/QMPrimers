@@ -143,8 +143,11 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
     """
     @brief
     """
+    tlen = template.shape[1]
     
-    if(template.shape[1]==len(TEMPLATE_HEADER)): #TODO: this code is a little spaghetti
+    logging.debug("Template header lenght: "+str(tlen))
+    
+    if(tlen==len(TEMPLATE_HEADER)): #TODO: this code is a little spaghetti
         logging.debug("Loading complete template..")
         column_is_list = []
         for col in template.columns.values:
@@ -180,7 +183,7 @@ def restore_template(template, gen_record, primer_pairs, max_misses):
             rpos = tmp.loc["R_pos"]
             fmisses = tmp.loc["mismFT"]
             rmisses = tmp.loc["mismRT"]
-            amplicon = tmp.loc["amplicon"]
+            amplicon = tmp.loc["ampliconLen"]
             alignment.complete_from_csv(gen, primer_pair, fpos, rpos, fmisses, rmisses, amplicon)
             recovered_template.loc[recovered_template.shape[0]] = alignment.get_csv()
             print("Restoring template "+"{0:.2f}".format(i/size*100)+"%")

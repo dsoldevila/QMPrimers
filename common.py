@@ -15,8 +15,8 @@ import re
 
 #Some global constant variables
 IUPAC_AMBIGUOUS_DNA = tuple("ACGTWSMKRYBDHVNIZ")
-TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","amplicon", "F_pos", "mismFT_loc", "mismFT_type", 
-                                     "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base"]
+TEMPLATE_HEADER = ["primerPair","fastaid","primerF","primerR","mismFT","mismRT","ampliconLen", "F_pos", "mismFT_loc", "mismFT_type", 
+                                     "mismFT_base", "R_pos", "mismRT_loc", "mismRT_type", "mismRT_base", "amplicon"]
 
 #This matrix tells the algorithm whether 2 nucleotides match or don't
 SCORE_TABLE = np.array([[1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
@@ -81,7 +81,7 @@ class Alignment:
         self.mismF_loc_raw = array of the missmatch locations of the forward primer
         self.mismR = number of missmatches on the reverse primer
         self.mismR_loc_raw = array of the missmatch locations of the reverse primer
-        self.amplicon = amplicon of the matching, number between the primer pair max and min amplicon.
+        self.amplicon_len = amplicon of the matching, number between the primer pair max and min amplicon.
         """
         self.gen = gen
         self.fastaid = gen.id #TODO patch
@@ -98,14 +98,15 @@ class Alignment:
         logging.debug("Reverse pos: "+str(self.real_rpos))
         self.mismF = fmisses
         self.mismR = rmisses
-        self.amplicon = amplicon
-        logging.debug("amplicon: "+str(self.amplicon))
+        self.amplicon_len = amplicon
+        logging.debug("amplicon: "+str(self.amplicon_len))
         
         
         self.mismF_loc_raw, self.mismF_loc, self.mismR_loc_raw, self.mismR_loc = self._get_missmatch_location()
         self.mismF_type, self.mismR_type = self._get_missmatch_type()
         
         self.mismF_base, self.mismR_base = self._get_missmatch_base_type()
+        self.amplicon = self.get_amplicon()
         
         try:
             self.pp_stats.loc[self.primerPair, fmisses+rmisses] += 1
@@ -115,7 +116,7 @@ class Alignment:
         
         return
     
-    def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon):
+    def complete_from_csv(self, gen, primer_pair, real_fpos, real_rpos, fmisses, rmisses, amplicon_len):
         #TODO instead of making a complete output file, calculate only the paramaters needed by the user
         self.gen = gen
         self.fastaid = gen.id #TODO patch
@@ -126,12 +127,11 @@ class Alignment:
         
         self.real_fpos = int(real_fpos)-1
         self.F_pos = int(real_fpos)-1
-        #TODO Crash expected if real_fpos is lower than 0, fix this
         self.real_rpos = int(real_rpos)-1
         self.R_pos = int(real_rpos)-1
         self.mismF = fmisses
         self.mismR = rmisses
-        self.amplicon = amplicon
+        self.amplicon_len = amplicon_len
         
         if(self.real_fpos == None):
             raise ValueError("Error: Froward's position NULL")
@@ -146,13 +146,14 @@ class Alignment:
         else:
             self.mismR = rmisses
             
-        if(self.amplicon == None):
+        if(self.amplicon_len == None):
             if(self.real_rpos == None):
                 raise ValueError("Error Couldn't determine Reverse's position")
             else:
-                self.amplicon = self.real_rpos - self.real_fpos
+                self.amplicon_len = self.real_rpos - self.real_fpos
         else:
-            self.amplicon = amplicon
+            self.amplicon_len = amplicon
+        self.amplicon = self.get_amplicon()
         
         self.mismF_loc_raw, self.mismF_loc, self.mismR_loc_raw, self.mismR_loc = self._get_missmatch_location()
         self.mismF_type, self.mismR_type = self._get_missmatch_type()        
@@ -165,8 +166,8 @@ class Alignment:
             self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
             
         return
-    def get_Nend(self, primerPair,fastaid,primerF,primerR,mismFT,mismRT,amplicon,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,
-                 mismRT_type,mismRT_base, nend):
+    def get_Nend(self, primerPair,fastaid,primerF,primerR,mismFT,mismRT,amplicon_len,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,
+                 mismRT_type,mismRT_base, amplicon, nend):
         """
         @brief Gets alignment and computes the alignment in Nend mode. There are more arguments than the required for convenience.
         """
@@ -180,6 +181,7 @@ class Alignment:
         self.real_fpos = F_pos-1 #TODO patch
         self.R_pos = R_pos-1
         self.real_rpos = R_pos-1 #TODO patch
+        self.amplicon_len = amplicon_len
         self.amplicon = amplicon
         
         
@@ -340,10 +342,15 @@ class Alignment:
             mismR_loc.append(i)
         return mismF_loc, mismR_loc    
     
+    def get_amplicon(self):
+        amplicon = self.gen[self.F_pos:self.F_pos+self.amplicon_len]
+        amplicon = "".join(amplicon)
+        return amplicon
+    
     def get_csv(self):
         info= [self.primerPair, self.fastaid, self.primerF, self.primerR, self.mismF, self.mismR, 
-               self.amplicon, self.real_fpos+1, self.mismF_loc, self.mismF_type, self.mismF_base, self.real_rpos+1, self.mismR_loc, 
-               self.mismR_type, self.mismR_base]
+               self.amplicon_len, self.real_fpos+1, self.mismF_loc, self.mismF_type, self.mismF_base, self.real_rpos+1, self.mismR_loc, 
+               self.mismR_type, self.mismR_base, self.amplicon]
         """
         if(self.Nend_misses):
             info.extend([self.mismF_Nend, self.mismR_Nend])

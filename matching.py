@@ -246,9 +246,10 @@ def get_Nend_template(template, nend):
     
     alignment = Alignment(mismF+mismR);
     
-    header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"amplicon", "F_pos", 
+    #TODO this dupplicates the TEMPLATE_HEADER. This header should be generated from TEMPLATE_HEADER.
+    header = ["primerPair","fastaid","primerF","primerR","mismFN"+str(nend),"mismRN"+str(nend),"ampliconLen", "F_pos", 
               "mismFN"+str(nend)+"_loc", "mismFN"+str(nend)+"_type", "mismFN"+str(nend)+"_base", "R_pos", "mismRN"+str(nend)+"_loc",
-              "mismRN"+str(nend)+"_type", "mismRN"+str(nend)+"_base"]
+              "mismRN"+str(nend)+"_type", "mismRN"+str(nend)+"_base", "amplicon"]
     
     nend_template = pd.DataFrame(columns=header)
     size = template.shape[0]
