@@ -110,18 +110,18 @@ def get_help():
         print(param, ": ", info[param])
     return
 
-if (__name__=="__main__"):
-    if(len(sys.argv)>1 ):
+def main(argv):
+    if(len(argv)>0 ):
         init_logger()
-        if(sys.argv[1]=="--sim"):
-            sim_cl(sys.argv[2:])
-        elif(sys.argv[1]=="--match"):
-            matching_cl(sys.argv[2:])
+        if(argv[0]=="--sim"):
+            sim_cl(argv[1:])
+        elif(argv[0]=="--match"):
+            matching_cl(argv[1:])
             
-        elif(sys.argv[1]=="--help"):
+        elif(argv[0]=="--help"):
             get_help()
         else:
-            print("Unknown command ",sys.argv[2],". Use --help to display the manual.")
+            print("Unknown command ",argv[0],". Use --help to display the manual.")
         close_logger() 
     else:
         saved_sys_stdout = sys.stdout
@@ -133,3 +133,7 @@ if (__name__=="__main__"):
         root.mainloop()
         sys.stdout = saved_sys_stdout
         sys.stderr = saved_sys_stderr
+    
+if (__name__=="__main__"):
+    main(sys.argv[1:])
+    
