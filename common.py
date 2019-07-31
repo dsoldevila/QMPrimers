@@ -64,6 +64,7 @@ class Alignment:
     def __init__(self, max_misses):
         columns = list(range(max_misses+1))
         columns.append("No")
+        columns.append("Total")
         self.pp_stats = pd.DataFrame(columns=columns, dtype='uint8')
         return
     
@@ -113,6 +114,8 @@ class Alignment:
         except:
             self.pp_stats.loc[self.primerPair] = 0
             self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
+        finally:
+            self.pp_stats.loc[self.primerPair, "Total"] += 1
         
         return
     
@@ -164,6 +167,8 @@ class Alignment:
         except:
             self.pp_stats.loc[self.primerPair] = 0
             self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
+        finally:
+            self.pp_stats.loc[self.primerPair, "Total"] += 1
             
         return
     def get_Nend(self, primerPair,fastaid,primerF,primerR,mismFT,mismRT,amplicon_len,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,
@@ -208,11 +213,13 @@ class Alignment:
         except:
             self.pp_stats.loc[primerPair] = 0
             self.pp_stats.loc[primerPair, "No"] = 1
+        finally:
+            self.pp_stats.loc[primerPair, "Total"] += 1
         return
     
     def get_stats(self):
         
-        columns = self.pp_stats.columns.values[:-1]
+        columns = self.pp_stats.columns.values[:-2]
         pp_stats = self.pp_stats[columns] #pop "No" columns to compute the stats
         
         
