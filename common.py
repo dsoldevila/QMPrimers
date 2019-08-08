@@ -225,7 +225,7 @@ class Alignment:
         
         tmp = pp_stats.multiply(columns)
         total = pp_stats.sum(axis=1)
-        total = total.loc[total!=0]
+        #total = total.loc[total!=0] #remove primers with 0 matches in cooked stats
         index = pp_stats.loc[total.index].index.values
         cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "median", "n_samples"])
         #find mean
@@ -254,6 +254,7 @@ class Alignment:
                 if(a>=total.loc[i]/2):
                     cooked_stats.loc[i, "median"] = j
                     break;
+        cooked_stats = cooked_stats.fillna('-') #replace NaN values with - (NaN values appear when computing stats of primers with no mathces)
         
         return self.pp_stats, cooked_stats
     

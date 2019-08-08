@@ -23,9 +23,9 @@ def check_template(template, val_template):
     template = ie.load_template_only(template)
     val_template = ie.load_template_only(val_template)
     
-    result = pd.merge(template, val_template, on=list(template.columns.values), how='left', indicator='Exist')
-    #df.drop('Rating', inplace=True, axis=1)
-    result['Correct'] = np.where(result.Exist == 'both', True, False)
+    result = pd.merge(template, val_template, on=list(template.columns.values), how='left', indicator='Correct')
+    del result["amplicon"] #amplicon too long
+    result['Correct'] = np.where(result.Correct == 'both', True, False)
     
     wrong_results = result[result['Correct']==False]
     
@@ -51,7 +51,9 @@ def matching_test():
         is_correct, wrong_results = check_template(output+"_corrupt.csv", output+"_positive.csv")
         match_output.append([m[0], m[1], is_correct, wrong_results])
     
-    print(match_output)
+    for m in match_output:
+        print(m[:-1])
+        print(m[-1].to_string())
     
 
 def check_sim():

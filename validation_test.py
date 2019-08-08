@@ -191,4 +191,4 @@ if(__name__=="__main__"):
     #simulation_test()
     
     
-    close_logger
+    close_logger()
