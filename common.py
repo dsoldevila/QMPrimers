@@ -63,9 +63,11 @@ class Alignment:
 
     def __init__(self, max_misses):
         columns = list(range(max_misses+1))
+        self.miss_range = columns.copy()
         columns.append("No")
         columns.append("Total")
-        self.pp_stats = pd.DataFrame(columns=columns, dtype='uint8')
+        self.amplicon_stats = {}
+        self.pp_stats = pd.DataFrame(columns=columns, dtype='uint32')
         return
     
     def get(self, gen, primer_pair, fpos, real_fpos, rpos, real_rpos, fmisses, rmisses, amplicon):
@@ -109,13 +111,7 @@ class Alignment:
         self.mismF_base, self.mismR_base = self._get_missmatch_base_type()
         self.amplicon = self.get_amplicon()
         
-        try:
-            self.pp_stats.loc[self.primerPair, fmisses+rmisses] += 1
-        except:
-            self.pp_stats.loc[self.primerPair] = 0
-            self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
-        finally:
-            self.pp_stats.loc[self.primerPair, "Total"] += 1
+        self.add_positive_2_stats()
         
         return
     
@@ -162,13 +158,7 @@ class Alignment:
         self.mismF_type, self.mismR_type = self._get_missmatch_type()        
         self.mismF_base, self.mismR_base = self._get_missmatch_base_type()
         
-        try:
-            self.pp_stats.loc[self.primerPair, fmisses+rmisses] += 1
-        except:
-            self.pp_stats.loc[self.primerPair] = 0
-            self.pp_stats.loc[self.primerPair, fmisses+rmisses] = 1
-        finally:
-            self.pp_stats.loc[self.primerPair, "Total"] += 1
+        self.add_positive_2_stats()
             
         return
     def get_Nend(self, primerPair,fastaid,primerF,primerR,mismFT,mismRT,amplicon_len,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,
@@ -198,14 +188,21 @@ class Alignment:
         self.mismF_base = mismFT_base[-(self.mismF+1): -1]
         self.mismR_base = mismRT_base[0: self.mismR]
         
-        #Stats
-        try:
-            self.pp_stats.loc[self.primerPair, self.mismF+self.mismR] += 1
-        except:
-            self.pp_stats.loc[self.primerPair] = 0
-            self.pp_stats.loc[self.primerPair, self.mismF+self.mismR] = 1
+        self.add_positive_2_stats()
             
         return self.get_csv()
+    
+    def add_positive_2_stats(self):
+        try:
+            self.pp_stats.at[self.primerPair, self.mismF+self.mismR] += 1
+            self.amplicon_stats[self.primerPair].append(self.amplicon_len)
+        except:
+            self.pp_stats.loc[self.primerPair] = 0
+            self.pp_stats.at[self.primerPair, self.mismF+self.mismR] = 1
+            self.amplicon_stats[self.primerPair] = [self.amplicon_len]
+        finally:
+            self.pp_stats.at[self.primerPair, "Total"] += 1
+        
     
     def add_negative_2_stats(self, primerPair):
         try:
@@ -219,15 +216,16 @@ class Alignment:
     
     def get_stats(self):
         
-        columns = self.pp_stats.columns.values[:-2]
-        pp_stats = self.pp_stats[columns] #pop "No" columns to compute the stats
+        columns = self.miss_range
+        pp_stats = self.pp_stats[columns] #pop "No", "Total", "ampliconLen" columns to compute the stats
         
         
         tmp = pp_stats.multiply(columns)
         total = pp_stats.sum(axis=1)
         #total = total.loc[total!=0] #remove primers with 0 matches in cooked stats
         index = pp_stats.loc[total.index].index.values
-        cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "median", "n_samples"])
+        cooked_stats = pd.DataFrame(index=index, columns=["min", "max", "mean", "median", "n_samples", 
+                                                          "amplicon_min", "amplicon_max", "amplicon_median"])
         #find mean
         cooked_stats["mean"] = tmp.sum(axis=1).div(total)
         
@@ -254,6 +252,15 @@ class Alignment:
                 if(a>=total.loc[i]/2):
                     cooked_stats.loc[i, "median"] = j
                     break;
+                    
+        #amplicon stats
+        for pp in self.amplicon_stats:
+            self.amplicon_stats[pp].sort()
+            cooked_stats.at[pp, "amplicon_min"] = self.amplicon_stats[pp][0]
+            cooked_stats.at[pp, "amplicon_max"] = self.amplicon_stats[pp][-1]
+            pos = int(len(self.amplicon_stats[pp])/2)
+            cooked_stats.at[pp, "amplicon_median"] = self.amplicon_stats[pp][pos]
+            
         cooked_stats = cooked_stats.fillna('-') #replace NaN values with - (NaN values appear when computing stats of primers with no mathces)
         
         return self.pp_stats, cooked_stats
