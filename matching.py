@@ -7,6 +7,7 @@ Created on Mon Dec 24 17:02:08 2018
 """
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from Bio.Align import MultipleSeqAlignment
 from common import *
 
 import numpy as np
@@ -259,6 +260,50 @@ def get_Nend_template(template, nend):
     raw_stats, cooked_stats = alignment.get_stats()
     
     return nend_template, raw_stats, cooked_stats
+
+
+def debug_matching(gen, primer_pair, mf, mr, output_file, hanging_primers=False):
+    """
+    This function computes and displays a single alignment. Used for debugging purposes
+    """
+    try:
+        assert(len(gen)==1), "Multiple gen sequences detected"
+        assert(len(primer_pair)==1), "Multiple primer pairs detected"
+    except(Exception) as e:
+        logging.error(e)
+        return
+    
+    template, discarded, raw_stats, cooked_stats = compute_gen_matching(mf, mr, primer_pair, gen, output_file, hanging_primers=hanging_primers)
+    
+    if(template.empty):
+        logging.warning("No result")
+        return
+    
+    match_result = template.loc[0]
+    pp = primer_pair[next(iter(primer_pair))]
+    gen = gen[next(iter(gen))]
+    
+    rem_len = len(gen)-(match_result.at['F_pos']+pp.flen+match_result.at['ampliconLen']+pp.rlen)
+    
+    pp.f.seq = Seq(''.join(pp.f.seq))
+    pp.r.seq = Seq(''.join(pp.r.seq))
+    
+    pp_aligned = '-'*match_result.at['F_pos']+pp.f.seq+'-'*match_result.at['ampliconLen']+pp.r.seq+'-'*rem_len
+    pp_aligned=SeqRecord(pp_aligned)
+    pp_aligned.id = pp.id
+    align = MultipleSeqAlignment([gen, pp_aligned])
+    
+    print(align.format("clustal"))
+    
+    try:
+        with open(output_file+".txt",'w') as outfile:
+            outfile.write(align.format("clustal"))
+            print("Debug saved")
+    except(Exception) as e:
+        logging.error(e)
+        
+    return
+        
     
 
 if(__name__=="__main__"):

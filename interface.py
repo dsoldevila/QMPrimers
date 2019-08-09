@@ -13,6 +13,7 @@ import load_data as ld
 import matching as m
 from common import *
 import simulation as s
+import pandas as pd
 
 
 """
@@ -33,10 +34,16 @@ def compute(parameters):
     primer_pairs = load_primer_pairs(parameters.loc["primer_pairs", "value"])
     
     if(gen_record!=None and primer_pairs!=None):
-        template, discarded, raw_stats, cooked_stats = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]), 
+        if(not parameters.at["debug mode", "value"]):
+            template, discarded, raw_stats, cooked_stats = m.compute_gen_matching(int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]), 
                                           primer_pairs, gen_record, parameters.loc["output_file", "value"], hanging_primers=parameters.loc["hanging primers", "value"])
+        else:
+            m.debug_matching(gen_record, primer_pairs, int(parameters.loc["forward missmatches", "value"]), int(parameters.loc["reverse missmatches", "value"]),
+                             parameters.loc["output_file", "value"], hanging_primers=parameters.loc["hanging primers", "value"])
+            
     return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
-
+    
+    
 def save_matching_info(input_files, output_file, template, header, discarded, raw_stats, cooked_stats):
     
     m.store_matching_results(input_files, output_file+"_positive.csv", template, header)

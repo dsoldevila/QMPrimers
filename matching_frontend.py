@@ -30,6 +30,7 @@ parameters = [
         ["check_integrity", False, "Checks integrity of gen files, integrity of primer file is always checked", "--checki", "param"],
         ["check_uppercase", False, "Checks that all gens are in upper case, lower case gens will trigger an integrity file", "--checku", "param"],
         ["csv_template", None, "Precomputed missmatching template", "-i", "entry"],
+        ["debug mode", False, "Prints the full alignment. For single alignments only", "--debug", "param"],
         ["verbose", False, "Outputs extra information", "--v", "cmd"]]                      
 parameters = pd.DataFrame([x[1:] for x in parameters], index = [x[0] for x in parameters], columns=["value", "description", "flag", "type"])
 
