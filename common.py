@@ -193,15 +193,19 @@ class Alignment:
         return self.get_csv()
     
     def add_positive_2_stats(self):
+        pp_stats = self.pp_stats
+        primer = self.primerPair
+        m = self.mismF
         try:
-            self.pp_stats.at[self.primerPair, self.mismF+self.mismR] += 1
+            self.pp_stats.loc[self.primerPair, self.mismF+self.mismR] += 1
             self.amplicon_stats[self.primerPair].append(self.amplicon_len)
         except:
             self.pp_stats.loc[self.primerPair] = 0
-            self.pp_stats.at[self.primerPair, self.mismF+self.mismR] = 1
-            self.amplicon_stats[self.primerPair] = [self.amplicon_len]
+            self.pp_stats.loc[self.primerPair, self.mismF+self.mismR] = 1
+            self.amplicon_stats[self.primerPair] = [self.amplicon_len] 
         finally:
-            self.pp_stats.at[self.primerPair, "Total"] += 1
+            self.pp_stats.loc[self.primerPair, "Total"] += 1
+        return
         
     
     def add_negative_2_stats(self, primerPair):
@@ -210,6 +214,7 @@ class Alignment:
         except:
             self.pp_stats.loc[primerPair] = 0
             self.pp_stats.loc[primerPair, "No"] = 1
+            self.amplicon_stats[primerPair] = [] #init amplicon table
         finally:
             self.pp_stats.loc[primerPair, "Total"] += 1
         return
@@ -255,11 +260,12 @@ class Alignment:
                     
         #amplicon stats
         for pp in self.amplicon_stats:
-            self.amplicon_stats[pp].sort()
-            cooked_stats.at[pp, "amplicon_min"] = self.amplicon_stats[pp][0]
-            cooked_stats.at[pp, "amplicon_max"] = self.amplicon_stats[pp][-1]
-            pos = int(len(self.amplicon_stats[pp])/2)
-            cooked_stats.at[pp, "amplicon_median"] = self.amplicon_stats[pp][pos]
+            if(len(self.amplicon_stats[pp])>0):
+                self.amplicon_stats[pp].sort()
+                cooked_stats.at[pp, "amplicon_min"] = self.amplicon_stats[pp][0]
+                cooked_stats.at[pp, "amplicon_max"] = self.amplicon_stats[pp][-1]
+                pos = int(len(self.amplicon_stats[pp])/2)
+                cooked_stats.at[pp, "amplicon_median"] = self.amplicon_stats[pp][pos]
             
         cooked_stats = cooked_stats.fillna('-') #replace NaN values with - (NaN values appear when computing stats of primers with no mathces)
         

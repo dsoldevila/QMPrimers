@@ -1,5 +1,7 @@
 __pycache__
-*mito*
+test_input/mito*
+*.fna
+test_input/genbank*
 output
 *~*
 log.txt
