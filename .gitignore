@@ -1,9 +1,5 @@
 __pycache__
-Data/mitochondrion*
+*mito*
 output
-*.fasta
 *~*
-test_input
-test_output
-test_validated
 log.txt
