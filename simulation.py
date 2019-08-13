@@ -85,9 +85,9 @@ class Simulation():
             count+=1
             print("{0:.2f}".format((count/pplen)*100)+"%")
                 
-
         self.cooked_stats = self.cook_stats(ci)
         print("Simulation done!")
+        self.raw_stats = self.raw_stats.drop("ncombinations")
         return self.raw_stats, self.cooked_stats
 
     def get_random_sample(self, full_sample, sample_size, k):
@@ -133,17 +133,15 @@ class Simulation():
         if(ci>1.0): ci=1.0
         cooked_stats = pd.DataFrame(index=self.raw_stats.columns, columns=["min", "max", "mean", "median", "ncombinations", "CI", "min_ci", "max_ci"])
         raw_stats = self.raw_stats.loc[self.raw_stats.index[:-1]]
-        
         #TODO better way to get data within CI?
         raw_stats = np.sort(raw_stats, axis=0)
         cooked_stats["min"] = raw_stats[0,:]
         cooked_stats["max"] = raw_stats[-1, :]
-    
-        low_interval = int(((1-ci)/2)*raw_stats.shape[0])
-        high_interval = int((1-((1-ci)/2))*raw_stats.shape[0])
-    
-        raw_stats = raw_stats[low_interval:high_interval, :]
         
+        low_interval = int(((1-ci)/2)*raw_stats.shape[0])
+        high_interval = int((1-((1-ci)/2))*raw_stats.shape[0])+1
+        raw_stats = raw_stats[low_interval:high_interval, :]
+
         cooked_stats["min_ci"] = raw_stats[0,:]
         cooked_stats["max_ci"] = raw_stats[-1, :]
         cooked_stats["CI"] = ci
@@ -157,7 +155,7 @@ class Simulation():
     def store_data(output_file, raw_stats, cooked_stats, infile_name, sample_size, k, B, N):
         
         try:
-            parameters_used = "Template = "+infile_name+"     SampleSize = "+str(sample_size)+"     k = "+str(k)+"     Beta = "+str(B)+"     N = "+str(N)+"\n"
+            parameters_used = "Template = "+infile_name+"     S = "+str(sample_size)+"     k = "+str(k)+"     Beta = "+str(B)+"     N = "+str(N)+"\n"
         except:
             logging.error("Could not save files, bad parameters")
             return

@@ -17,7 +17,7 @@ import pandas as pd
 
 parameters = [
         ["template", None, "Precomputed missmatching template", "-i", "entry"],
-        ["sample size", 10, "Nº genome samples per simulation step", "-s", "int"],
+        ["S", 10, "Nº genome samples per simulation step", "-s", "int"],
         ["Beta", 4, "<No description currently>", "-b", "int"],
         ["k", 0.5, "Geometric proportion parameter. Range(0,1)", "-k", "float"],
         ["N", 100, "Nº simulation steps", "-n", "int"],
@@ -145,7 +145,7 @@ class GUI_simulate():
         self.is_simulating = True
         sim = Simulation()
         try:
-            self.raw_stats, self.cooked_stats = sim.simulate(self.template, int(self.parameters.loc["sample size", "value"].get()),
+            self.raw_stats, self.cooked_stats = sim.simulate(self.template, int(self.parameters.loc["S", "value"].get()),
                                                              self.parameters.loc["k", "value"].get(), 
                                                              self.parameters.loc["Beta", "value"].get(), 
                                                              self.parameters.loc["N", "value"].get(), 
@@ -158,7 +158,7 @@ class GUI_simulate():
     
     def save(self):
         Simulation.store_data(self.parameters.loc["output_file", "value"], self.raw_stats, self.cooked_stats, 
-                                  self.parameters.loc["template", "value"], self.parameters.loc["sample size", "value"].get(),
+                                  self.parameters.loc["template", "value"], self.parameters.loc["S", "value"].get(),
                                   self.parameters.loc["k", "value"].get(), self.parameters.loc["Beta", "value"].get(), 
                                   self.parameters.loc["N", "value"].get())
         return
@@ -217,14 +217,13 @@ def sim_cl(args):
         sim = Simulation()
         
         try: #wrap exception of type int("a")
-            raw_stats, cooked_stats = sim.simulate(template, int(parameters.loc["sample size", "value"]), float(parameters.loc["k", "value"]), 
+            raw_stats, cooked_stats = sim.simulate(template, int(parameters.loc["S", "value"]), float(parameters.loc["k", "value"]), 
                                                    int(parameters.loc["Beta", "value"]), int(parameters.loc["N", "value"]),  
                                                    float(parameters.loc["Confidence Interval", "value"]))
         except(Exception) as e:
             logging.error(e)
             return
-        
         Simulation.store_data(parameters.loc["output_file", "value"], raw_stats, cooked_stats, 
-                              parameters.loc["template", "value"], parameters.loc["sample size", "value"],
+                              parameters.loc["template", "value"], parameters.loc["S", "value"],
                               parameters.loc["k", "value"], parameters.loc["Beta", "value"], parameters.loc["N", "value"])
     return
