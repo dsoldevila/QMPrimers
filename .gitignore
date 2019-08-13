@@ -1,11 +1,11 @@
 #find -size +2M -not -path "./.git/*"
-test_input/mitogenomes_insects.fasta
 test_input/insects/refseq_Orthoptera.fasta
 test_input/insects/refseq_Lepidoptera.fasta
+test_input/insects/Large/mitogenomes_insects.fasta
+test_input/insects/Large/diptera_mitochondrion.fasta
+test_input/insects/Large/lepidoptera_mitochondrion.fasta
 test_input/plants/refseq_Pinales.fasta
 test_input/plants/refseq_Polypodiales.fasta
-test_input/diptera_mitochondrion.fasta
-test_input/lepidoptera_mitochondrion.fasta
 test_output/mito_genomic_nend10_positive.csv
 test_output/mito_genomic_positive.csv
 log.txt

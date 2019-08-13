@@ -1,0 +1,3 @@
+--match,-gf,test_input/fungi/ITS_refseq_basidiomycota.fasta,-pf,test_input/fungi/PP_fungi_its_few.csv,-o,test_output/fungi,-fm,5,-rm,5,--v
+--match,-gf,test_input/plants/plant_dna.fasta,-pf,test_input/plants/PP_chl.csv,-o,test_output/plant,-fm,5,-rm,5,--v
+--match,-gf,test_input/insects/diptera_barcode.fasta,-pf,test_input/insects/pp_insects.csv,-o,test_output/diptera,-fm,5,-rm,5,--v

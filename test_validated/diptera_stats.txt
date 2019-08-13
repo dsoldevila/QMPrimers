@@ -1,5 +1,6 @@
 Fasta = ['test_input/insects/diptera_barcode.fasta']     Primer Pairs = test_input/insects/pp_insects.csv
-2019-08-13 12:30:21.842039
+forward missmatches = 5	reverse missmatches = 5	hanging primers = False	Nend = 0
+2019-08-13 16:30:37.793785
       0  1  2  3  4  5  6  7  8  9  10   No  Total
 1     0  0  0  0  0  0  0  0  0  0   0  491    491
 2     0  0  0  0  0  0  0  0  0  0   0  491    491

@@ -1,0 +1,6 @@
+Fasta = ['test_input/plants/plant_dna.fasta']     Primer Pairs = test_input/plants/PP_chl.csv
+forward missmatches = 5	reverse missmatches = 5	hanging primers = False	Nend = 0
+2019-08-13 16:29:48.055470
+id,primerPair,fastaid
+0,4,NC_018766.1
+1,5,NC_018766.1

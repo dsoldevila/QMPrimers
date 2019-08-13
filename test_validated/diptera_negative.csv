@@ -1,5 +1,6 @@
 Fasta = ['test_input/insects/diptera_barcode.fasta']     Primer Pairs = test_input/insects/pp_insects.csv
-2019-08-13 12:30:21.828722
+forward missmatches = 5	reverse missmatches = 5	hanging primers = False	Nend = 0
+2019-08-13 16:30:37.780453
 id,primerPair,fastaid
 0,1,ASILO024-17_Hispanomydas_hispanicus_BOLD
 1,1,CNCDB1042-11_Diptera_BOLD

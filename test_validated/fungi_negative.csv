@@ -1,5 +1,6 @@
-Fasta = ['test_input/ITS_refseq_basidiomycota.fasta']     Primer Pairs = test_input/PP_fungi_its_few.csv
-2019-08-12 22:37:52.438788
+Fasta = ['test_input/fungi/ITS_refseq_basidiomycota.fasta']     Primer Pairs = test_input/fungi/PP_fungi_its_few.csv
+forward missmatches = 5	reverse missmatches = 5	hanging primers = False	Nend = 0
+2019-08-13 16:29:47.336670
 id,primerPair,fastaid
 0,1,NR_073208.1
 1,1,NR_073209.1

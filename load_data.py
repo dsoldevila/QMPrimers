@@ -136,7 +136,6 @@ def load_template(template_file):
         template = pd.read_csv(template_file, index_col=0, skiprows=count)
     except:
         logging.error("Unable to load template")
-    
     return template
 
 def restore_template(template, gen_record, primer_pairs, max_misses):
