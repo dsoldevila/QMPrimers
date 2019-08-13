@@ -23,17 +23,21 @@ outd = os.path.join(rootd, "test_output")
 vald = os.path.join(rootd, "test_validated")
 
 
-def check_template(template, val_template):
-    template = ie.load_template_only(template)
-    val_template = ie.load_template_only(val_template)
+def check_match_result(template_file, val_template_file):
+    template = ie.load_template_only(template_file+"_positive.csv")
+    negative = pd.read_csv(template_file+"_negative.csv", index_col=0, skiprows=3)
+    val_template = ie.load_template_only(val_template_file+"_positive.csv")
+    val_negative = ie.load_template_only(val_template_file+"_negative.csv")
+    template_check = pd.merge(template, val_template, on=list(template.columns.values), how='left', indicator='Correct')
+    del template_check["amplicon"] #amplicon too long
+    template_check['Correct'] = np.where(template_check.Correct == 'both', True, False)
     
-    result = pd.merge(template, val_template, on=list(template.columns.values), how='left', indicator='Correct')
-    del result["amplicon"] #amplicon too long
-    result['Correct'] = np.where(result.Correct == 'both', True, False)
+    negative_check = pd.merge(negative, val_negative, on=list(negative.columns.values), how='left', indicator='Correct')
+    negative_check['Correct'] = np.where(negative_check.Correct == 'both', True, False)
     
-    
-    wrong_results = result[result['Correct']==False]
-    return wrong_results.empty, wrong_results
+    bad_template_entries = template_check[template_check['Correct']==False]
+    bad_negative_entries = negative_check[negative_check['Correct']==False]
+    return bad_template_entries.empty, bad_template_entries, bad_negative_entries.empty, bad_negative_entries
 
     
 def get_tests_input(infile):
@@ -50,20 +54,24 @@ def sim_test(test):
 def matching_test(test):
     val_positive = os.path.basename(test[6])
     val_positive = os.path.join(vald, val_positive)
-    correct, wrong_results = check_template(test[6]+"_positive.csv", val_positive+"_positive.csv")
-    if not correct:
+    tcorrect, template, ncorrect, negative = check_match_result(test[6], val_positive)
+    if not tcorrect or not ncorrect:
         with open(os.path.join(outd, "test.log"),'a') as outfile:
             outfile.write(str(test)+"\n")
-            outfile.write(wrong_results.to_string()+"\n")
+            if not tcorrect:
+                outfile.write(template.to_string()+"\n")
+            if not ncorrect:
+                outfile.write(negative.to_string()+"\n")
+    
+    
 
-    return correct
+    return tcorrect and ncorrect
 
 def perform_test(test):
     if True:
-        matching_test(test)
+        return matching_test(test)
     else:
-        sim_test(test)
-    return
+        return sim_test(test)
     
 
 if(__name__=="__main__"):
@@ -78,11 +86,11 @@ if(__name__=="__main__"):
         print("TEST ", i)
         print(tests[i])
         qm.main(tests[i])
-        """
+
         if(perform_test(tests[i])):
             print("TEST ", i," SUCCESS")
         else:
             print("TEST ", i," FAIL")
             print("TEST FAILED :(")
             break
-        """
+        

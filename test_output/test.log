@@ -1,0 +1,4 @@
+['--match', '-gf', 'test_input/insects/sbog_test.fasta', '-pf', 'test_input/insects/PP.csv', '-o', 'test_output/sbog_test', '-fm', '5', '-rm', '5', '--v']
+['--match', '-gf', 'test_input/insects/sbog_test.fasta', '-pf', 'test_input/insects/PP.csv', '-o', 'test_output/sbog_test', '-fm', '5', '-rm', '5', '--v']
+   primerPair                           fastaid  Correct
+2           1  ACEA565-14_Aphis_craccivora_BOLD    False
