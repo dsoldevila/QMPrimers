@@ -288,6 +288,12 @@ def debug_matching(gen, primer_pair, mf, mr, output_file, hanging_primers=False)
     
     fpos = match_result.at['F_pos'] -1
     
+    if(fpos < 0):
+        gen = '-'*(-fpos)+gen
+        fpos = 0
+    
+    len_primer = fpos+pp.flen+match_result.at['ampliconLen']+pp.rlen
+    
     rem_len = len(gen)-(fpos+pp.flen+match_result.at['ampliconLen']+pp.rlen)
     
     pp.f.seq = Seq(''.join(pp.f.seq))
@@ -308,19 +314,4 @@ def debug_matching(gen, primer_pair, mf, mr, output_file, hanging_primers=False)
         logging.error(e)
         
     return
-        
-    
-
-if(__name__=="__main__"):
-    
-    gen_record = ld.load_bio_files(["Data/species_bold_own_genbank.fasta"])
-    primer_pairs = ld.load_csv_file("Data/P&PP.csv")
-
-
-    import time 
-    time1 = time.time()
-    result = compute_gen_matching(5, 5, primer_pairs, gen_record)
-    elapsedTime = ((time.time()-time1))
-    print(int(elapsedTime))
-
     

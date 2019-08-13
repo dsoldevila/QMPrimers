@@ -1,46 +1,49 @@
 CLUSTAL X (1.81) multiple sequence alignment
 
 
-NR_119439.1                         TCTTGTCATTTAGAGGAAGTAAAAGTCGTAACAAGGTTTCCGTAGGTGAA
+NR_119439.1                         ------TCTTGTCATTTAGAGGAAGTAAAAGTCGTAACAAGGTTTCCGTA
 1                                   CTTGGTCATTTAGAGGAAGTAA----------------------------
 
-NR_119439.1                         CCTGCGGAAGGATCATTAACGAATATAAATCGGAAAGCTGTCGCTGGCCC
+NR_119439.1                         GGTGAACCTGCGGAAGGATCATTAACGAATATAAATCGGAAAGCTGTCGC
 1                                   --------------------------------------------------
 
-NR_119439.1                         TCTGGGCATGTGCACGCTGACCGTGTTTCATAAATTTCTCACCTGTGAAC
+NR_119439.1                         TGGCCCTCTGGGCATGTGCACGCTGACCGTGTTTCATAAATTTCTCACCT
 1                                   --------------------------------------------------
 
-NR_119439.1                         CTAATGTAGGATGCCTCTCCTCCGGGAGGGGGGACCTATGTCTTCATATA
+NR_119439.1                         GTGAACCTAATGTAGGATGCCTCTCCTCCGGGAGGGGGGACCTATGTCTT
 1                                   --------------------------------------------------
 
-NR_119439.1                         CATCTCCGTGTAGAAAGTCTTAGAATGTTTACTATCATAGAGTCGCGACT
+NR_119439.1                         CATATACATCTCCGTGTAGAAAGTCTTAGAATGTTTACTATCATAGAGTC
 1                                   --------------------------------------------------
 
-NR_119439.1                         TCTAGGAGACGCGAATCTGTGAGATAAAAGTTATTACAACTTTCAGCAAT
+NR_119439.1                         GCGACTTCTAGGAGACGCGAATCTGTGAGATAAAAGTTATTACAACTTTC
 1                                   --------------------------------------------------
 
-NR_119439.1                         GGATCTCTTGGCTCTCGCATCGATGAAGAACGCAGCGAAAAGCGATATGT
+NR_119439.1                         AGCAATGGATCTCTTGGCTCTCGCATCGATGAAGAACGCAGCGAAAAGCG
 1                                   ----------------GCATCGATGAAGAACGCAGC--------------
 
-NR_119439.1                         AATGTGAATTGCAGATCTACAGTGAATCATCGAATCTTTGAACGCACCTT
+NR_119439.1                         ATATGTAATGTGAATTGCAGATCTACAGTGAATCATCGAATCTTTGAACG
 1                                   --------------------------------------------------
 
-NR_119439.1                         GCGCTCCTCGGTGTTCCGAGGAGCATGCCTGTTTGAGTGTCAGTAAATTC
+NR_119439.1                         CACCTTGCGCTCCTCGGTGTTCCGAGGAGCATGCCTGTTTGAGTGTCAGT
 1                                   --------------------------------------------------
 
-NR_119439.1                         TCAACCCCTCTTGATTGAGGGAGTTTGGATAGTGGGGGTTGCCGGAGACT
+NR_119439.1                         AAATTCTCAACCCCTCTTGATTGAGGGAGTTTGGATAGTGGGGGTTGCCG
 1                                   --------------------------------------------------
 
-NR_119439.1                         TAGGACTCGGGCTCTCCTGAAATGCATCGGCTTGCGGTCGACTTTCGACT
+NR_119439.1                         GAGACTTAGGACTCGGGCTCTCCTGAAATGCATCGGCTTGCGGTCGACTT
 1                                   --------------------------------------------------
 
-NR_119439.1                         ATGCGCGACAAGGCTTTCGGCGTGATAATGATCGCCGTTCGCTGAAGTGC
+NR_119439.1                         TCGACTATGCGCGACAAGGCTTTCGGCGTGATAATGATCGCCGTTCGCTG
 1                                   --------------------------------------------------
 
-NR_119439.1                         ATGAATGAAGGTTTTGCGCCTCTAATATGTCGACTCTTATTATCTCTTCG
+NR_119439.1                         AAGTGCATGAATGAAGGTTTTGCGCCTCTAATATGTCGACTCTTATTATC
 1                                   --------------------------------------------------
 
-NR_119439.1                         GAGAGAAAAGGTCTTCTTTATTGACTTTTGACCTCAAATCAGGTAGG
-1                                   -----------------------------------------------
+NR_119439.1                         TCTTCGGAGAGAAAAGGTCTTCTTTATTGACTTTTGACCTCAAATCAGGT
+1                                   --------------------------------------------------
+
+NR_119439.1                         AGG
+1                                   ---
 
 
