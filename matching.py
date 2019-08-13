@@ -182,7 +182,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
 OTHER FUNCTIONS
 """
 
-def store_matching_results(input_files, output_file, template, header):
+def store_matching_results(input_files, parameters, output_file, template, header):
     """
     Stores alignment results
     @param gen_matching_list list of GenMatching instances
@@ -195,6 +195,7 @@ def store_matching_results(input_files, output_file, template, header):
             h.append(columns[header[i]])
         with open(output_file,'w') as outfile:
                 outfile.write(input_files+"\n")
+                outfile.write(parameters+"\n")
                 outfile.write(str(datetime.datetime.now())+"\n")
                 template.to_csv(outfile, index_label="id", columns=h)
         print("Template saved!")
@@ -203,10 +204,11 @@ def store_matching_results(input_files, output_file, template, header):
     
     return
 
-def store_stats(input_files, output_file, raw_stats, cooked_stats):
+def store_stats(input_files, parameters, output_file, raw_stats, cooked_stats):
     try:
         with open(output_file,'w') as outfile:
             outfile.write(input_files+"\n")
+            outfile.write(parameters+"\n")
             outfile.write(str(datetime.datetime.now())+"\n")
             raw_stats.to_string(outfile)
             outfile.write("\n\n")
@@ -216,10 +218,11 @@ def store_stats(input_files, output_file, raw_stats, cooked_stats):
         logging.error(e)
     return
 
-def store_discarded(input_files, output_file, discarded):
+def store_discarded(input_files, parameters, output_file, discarded):
     try:
         with open(output_file,'w') as outfile:
             outfile.write(input_files+"\n")
+            outfile.write(parameters+"\n")
             outfile.write(str(datetime.datetime.now())+"\n")
             discarded.to_csv(outfile, index_label="id")
             print("Negatives saved")

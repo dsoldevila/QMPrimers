@@ -110,7 +110,6 @@ class Simulation():
         
         for i in sample.index.values:
             row = pp_matches.loc[pp_matches["fastaid"]==sample.loc[i, "fastaid"]]
-            #TODO use N end missmatches if mode=2
             m = row[self.mismF].values[0] + row[self.mismR].values[0] #TODO make it more clean(?)
             amp_eff = 1/(B**m)
             a += amp_eff*sample.loc[i, "oprop"]

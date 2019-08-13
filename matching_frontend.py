@@ -302,8 +302,11 @@ class GUI_matching():
             input_files = "Fasta = "+str(self.parameters.loc["gen", "value"])+"     Primer Pairs = "+self.parameters.loc["primer_pairs", "value"]
         else:
             input_files = "From Template: "+self.parameters.loc["csv_template", "value"]
+        matching_parameters = "forward missmatches = "+str(parameters.loc["forward missmatches", "value"])+"\treverse missmatches = "\
+        +str(parameters.loc["reverse missmatches", "value"])+"\thanging primers = "+str(parameters.loc["hanging primers", "value"])\
+                    +"\tNend = "+str(parameters.loc["Nend miss.", "value"])
             
-        save_matching_info(input_files, self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
+        save_matching_info(input_files, matching_parameters, self.parameters.loc["output_file", "value"], self.out_template, header, self.discarded, self.out_raw_stats, self.out_cooked_stats)
         self.op_in_progress=False
         return
 
@@ -381,6 +384,10 @@ def matching_cl(args):
         else:
             return
         
+        matching_parameters = "forward missmatches = "+str(parameters.loc["forward missmatches", "value"])+"\treverse missmatches = "\
+        +str(parameters.loc["reverse missmatches", "value"])+"\thanging primers = "+str(parameters.loc["hanging primers", "value"])\
+                    +"\tNend = "+str(parameters.loc["Nend miss.", "value"])
+        
         if(not template.empty or not cooked_stats.empty): #if prev ops have been succesful
             
             i = 0 #TODO convert output_info to list
@@ -395,4 +402,4 @@ def matching_cl(args):
                 if(parameters.loc["csv_template", "value"]):
                     template, raw_stats, cooked_stats = get_Nend_match(template, Nend)
                 
-            save_matching_info(input_files, parameters.loc["output_file", "value"], template, header, discarded, raw_stats, cooked_stats)
+            save_matching_info(input_files, matching_parameters, parameters.loc["output_file", "value"], template, header, discarded, raw_stats, cooked_stats)

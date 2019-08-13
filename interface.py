@@ -44,17 +44,17 @@ def compute(parameters):
     return template, discarded, gen_record, primer_pairs, raw_stats, cooked_stats
     
     
-def save_matching_info(input_files, output_file, template, header, discarded, raw_stats, cooked_stats):
+def save_matching_info(input_files, parameters, output_file, template, header, discarded, raw_stats, cooked_stats):
     
-    m.store_matching_results(input_files, output_file+"_positive.csv", template, header)
+    m.store_matching_results(input_files, parameters, output_file+"_positive.csv", template, header)
     
     if(not discarded.empty):
-        m.store_discarded(input_files, output_file+"_negative.csv", discarded)
+        m.store_discarded(input_files, parameters, output_file+"_negative.csv", discarded)
     else:
         print("Negatives not saved")
         
     if(not raw_stats.empty and not cooked_stats.empty):
-        m.store_stats(input_files, output_file+"_stats.txt", raw_stats, cooked_stats)
+        m.store_stats(input_files, parameters, output_file+"_stats.txt", raw_stats, cooked_stats)
     else:
         print("Statistics not saved")
     
