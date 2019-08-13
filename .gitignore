@@ -1,5 +1,5 @@
 __pycache__
-test_input/mito*
+test_input/*mito*
 *.fna
 test_input/genbank*
 output

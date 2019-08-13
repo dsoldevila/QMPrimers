@@ -283,12 +283,14 @@ def debug_matching(gen, primer_pair, mf, mr, output_file, hanging_primers=False)
     pp = primer_pair[next(iter(primer_pair))]
     gen = gen[next(iter(gen))]
     
-    rem_len = len(gen)-(match_result.at['F_pos']+pp.flen+match_result.at['ampliconLen']+pp.rlen)
+    fpos = match_result.at['F_pos'] -1
+    
+    rem_len = len(gen)-(fpos+pp.flen+match_result.at['ampliconLen']+pp.rlen)
     
     pp.f.seq = Seq(''.join(pp.f.seq))
     pp.r.seq = Seq(''.join(pp.r.seq))
     
-    pp_aligned = '-'*match_result.at['F_pos']+pp.f.seq+'-'*match_result.at['ampliconLen']+pp.r.seq+'-'*rem_len
+    pp_aligned = '-'*fpos+pp.f.seq+'-'*match_result.at['ampliconLen']+pp.r.seq+'-'*rem_len
     pp_aligned=SeqRecord(pp_aligned)
     pp_aligned.id = pp.id
     align = MultipleSeqAlignment([gen, pp_aligned])
