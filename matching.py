@@ -13,6 +13,7 @@ from common import *
 import numpy as np
 import pandas as pd
 import load_data as ld
+import copy
 
 
 def append_zeros(gen_record, max_miss_f, max_miss_r):
@@ -24,7 +25,6 @@ def append_zeros(gen_record, max_miss_f, max_miss_r):
     """
     for gen_key in gen_record:
         gen_record[gen_key].seq = Seq("Z"*max_miss_f+str(gen_record[gen_key].seq)+"Z"*max_miss_r)
-        print(gen_record[gen_key].seq)
     return gen_record
 
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
@@ -278,7 +278,13 @@ def debug_matching(gen, primer_pair, mf, mr, output_file, hanging_primers=False)
         logging.error(e)
         return
     
-    template, discarded, raw_stats, cooked_stats = compute_gen_matching(mf, mr, primer_pair, gen, output_file, hanging_primers=hanging_primers)
+    try:
+        g = copy.deepcopy(gen)
+    except:
+        g = gen
+        pass
+    
+    template, discarded, raw_stats, cooked_stats = compute_gen_matching(mf, mr, primer_pair, g, output_file, hanging_primers=hanging_primers)
     
     if(template.empty):
         logging.warning("No result")
@@ -289,7 +295,6 @@ def debug_matching(gen, primer_pair, mf, mr, output_file, hanging_primers=False)
     gen = gen[next(iter(gen))]
     
     fpos = match_result.at['F_pos'] -1
-    
     if(fpos < 0):
         gen = '-'*(-fpos)+gen
         fpos = 0

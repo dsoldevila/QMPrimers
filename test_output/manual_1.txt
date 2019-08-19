@@ -1,0 +1,46 @@
+CLUSTAL X (1.81) multiple sequence alignment
+
+
+FBARB1034-15_Araneae_BOLD           GAGTTTATACTTTTTATTTGGAGTTTGATCTGCTATAGTTGGGACAGCTA
+5                                   AACWTTATATTTTATTTTTGG-----------------------------
+
+FBARB1034-15_Araneae_BOLD           TAAGTGTTTTAATTCGAGTTGAATTAGGTCAATCAGGGAGATTTTTAGGA
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           GATGATCAATTATATAATGTTATTGTCACAGCTCATGCTTTTGTTATAAT
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           TTTTTTTATAGTGATACCTATTCTAATTGGGGGCTTTGGGAATTGATTAG
+5                                   ----------------------------GGAGGATTTGGWAATTGATTAG
+
+FBARB1034-15_Araneae_BOLD           TCCCCTTAATATTAGGTGCCCCTGATATAGCATTTCCTCGAATAAATAAT
+5                                   TW------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           TTGAGATTTTGGTTATTACCACCTTCTTTATTTATATTATTTATCTCGTC
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           CATAGTAGATGTTGGAGTTGGAGCAGGATGAACTGTTTACCCCCCTCTTG
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           CCTCTTTAGAGGGGCATTCAGGTAGTTCAGTTGATTTTGCTATTTTTTCT
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           TTACACTTAGCTGGGGCTTCTTCTATTATAGGGGCGATTAATTTTATTTC
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           TACTATTATTAATATACGTATAAGAGGAGTAACTATGGAAAAAGTTCCAC
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           TTTTTGTTTGATCAGTTCTTATTACAGCAGTTCTTCTTTTACTATCTTTA
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           CCTGTTTTAGCTGGTGCTATTACTATGCTATTGACAGATCGAAATTTTAA
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           TACATCTTTTTTTGACCCTTCAGGTGGAGGAGACCCTGTTTTATTTCAAC
+5                                   --------------------------------------------------
+
+FBARB1034-15_Araneae_BOLD           ATTTATTT
+5                                   --------
+
+

@@ -28,3 +28,29 @@ NOT VALIDATED
 NOT VALIDATED 
 ['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v']
 NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_2.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_2', '--hanging', '-fm', '5', '-rm', '5', '--v']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_1.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_1', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 
+['--match', '-gf', 'test_input/manual/manual_2.fasta', '-pf', 'test_input/manual/manual_1_clp.csv', '-o', 'test_output/manual_2', '--hanging', '-fm', '5', '-rm', '5', '--v', '--debug']
+NOT VALIDATED 

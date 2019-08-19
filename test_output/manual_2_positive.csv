@@ -1,5 +1,2 @@
-Fasta = ['test_input/manual/manual_2.fasta']     Primer Pairs = test_input/manual/manual_1_clp.csv
-forward missmatches = 5	reverse missmatches = 5	hanging primers = True	Nend = 0
-2019-08-19 11:44:21.383331
 id,primerPair,fastaid,primerF,primerR,mismFT,mismRT,ampliconLen,F_pos,mismFT_loc,mismFT_type,mismFT_base,R_pos,mismRT_loc,mismRT_type,mismRT_base,amplicon
 0,5,FBARB1034-15_Araneae_BOLD,ZBJ-ArtF1c,ZBJ-ArtR2c,5,4,157,0,"[21, 19, 12, 8, 6]","['ZT', 'GG', 'CA', 'TT', 'AA']","['Ind.', 'Pur-Pur', 'Pyr-Pur', 'Pyr-Pyr', 'Pur-Pur']",178,"[3, 6, 12, 24]","['GT', 'CT', 'GW', 'CW']","['Pur-Pyr', 'Pyr-Pyr', 'Ind.', 'Ind.']",ZAGTTTATACTTTTTATTTGGAGTTTGATCTGCTATAGTTGGGACAGCTATAAGTGTTTTAATTCGAGTTGAATTAGGTCAATCAGGGAGATTTTTAGGAGATGATCAATTATATAATGTTATTGTCACAGCTCATGCTTTTGTTATAATTTTTTTT
