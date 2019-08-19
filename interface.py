@@ -67,7 +67,7 @@ Loading input stuff
 def load_gen_record(gen_file, check_integrity, check_uppercase, hanging_primers):
     gen_record = None
     try:
-        gen_record = ld.load_bio_files(gen_file, writable=check_integrity or check_uppercase, 
+        gen_record = ld.load_bio_files(gen_file, writable=check_integrity or check_uppercase or hanging_primers, 
                                        check_uppercase=check_uppercase)
         logging.info("Genome record file loaded!")
     except:

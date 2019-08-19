@@ -1,0 +1,8 @@
+Fasta = ['test_input/manual/manual_2.fasta']     Primer Pairs = test_input/manual/manual_1_clp.csv
+forward missmatches = 5	reverse missmatches = 5	hanging primers = True	Nend = 0
+2019-08-19 11:44:21.386614
+   0  1  2  3  4  5  6  7  8  9  10  No  Total
+5  0  0  0  0  0  0  0  0  0  1   0   0      1
+
+   min  max  mean  median  n_samples  amplicon_min  amplicon_max  amplicon_median
+5    9    9   9.0       9          1           157           157              157

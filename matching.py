@@ -24,6 +24,7 @@ def append_zeros(gen_record, max_miss_f, max_miss_r):
     """
     for gen_key in gen_record:
         gen_record[gen_key].seq = Seq("Z"*max_miss_f+str(gen_record[gen_key].seq)+"Z"*max_miss_r)
+        print(gen_record[gen_key].seq)
     return gen_record
 
 def _compute_primer_matching(max_misses, primer, len_primer, gen):
@@ -121,6 +122,7 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
         logging.error(e)
         return pd.DataFrame(), pd.DataFrame(),pd.DataFrame(), pd.DataFrame()
     logging.debug("Testing debug")
+    
     if(hanging_primers):
         gen_record = append_zeros(gen_record, max_miss_f, max_miss_r)
     

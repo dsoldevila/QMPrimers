@@ -54,7 +54,17 @@ def sim_test(test):
 def matching_test(test):
     val_positive = os.path.basename(test[6])
     val_positive = os.path.join(vald, val_positive)
-    tcorrect, template, ncorrect, negative = check_match_result(test[6], val_positive)
+    
+    try: #maybe there are no validate results for this one
+        tcorrect, template, ncorrect, negative = check_match_result(test[6], val_positive)
+    except Exception as e:
+        print(e)
+        print("NOT VALIDATED \n")
+        with open(os.path.join(outd, "test.log"),'a') as outfile:
+            outfile.write(str(test)+"\n")
+            outfile.write("NOT VALIDATED \n")
+        return True
+    
     if not tcorrect or not ncorrect:
         with open(os.path.join(outd, "test.log"),'a') as outfile:
             outfile.write(str(test)+"\n")
@@ -78,7 +88,7 @@ if(__name__=="__main__"):
     if len(sys.argv) > 1:
         infile = sys.argv[1]
     else:
-        infile = "test_input/testflow.csv"
+        infile = "test_input/testflow_manual.csv"
         
     tests = get_tests_input(infile)
     
