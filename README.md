@@ -67,6 +67,8 @@ Everything related to the Matching is explained [here](https://github.com/dsolde
 Everything related to the Simulation is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Simulation).
 
 ## Development
-For the ones that one to known what is going on under the hood, you can check this [page](https://github.com/dsoldevila/QMPrimers/wiki/Implementation)
+Feel free to colaborate and to send me a message for any doubts. If you have never contributed to any respository, I recommend to take a look on this [website](https://www.firsttimersonly.com/)
+
+To know what is going on under the hood, you can check this yet-unfinished [page](https://github.com/dsoldevila/QMPrimers/wiki/Implementation)
 
 
