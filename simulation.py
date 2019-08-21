@@ -130,19 +130,19 @@ class Simulation():
     
     def cook_stats(self, ci):
         if(ci>1.0): ci=1.0
-        cooked_stats = pd.DataFrame(index=self.raw_stats.columns, columns=["min", "max", "mean", "median", "ncombinations", "CI", "min_ci", "max_ci"])
+        cooked_stats = pd.DataFrame(index=self.raw_stats.columns, columns=["min_total", "max_total",  "min", "max", "mean", "median", "ncombinations", "CI"])
         raw_stats = self.raw_stats.loc[self.raw_stats.index[:-1]]
         #TODO better way to get data within CI?
         raw_stats = np.sort(raw_stats, axis=0)
-        cooked_stats["min"] = raw_stats[0,:]
-        cooked_stats["max"] = raw_stats[-1, :]
+        cooked_stats["min_total"] = raw_stats[0,:]
+        cooked_stats["max_total"] = raw_stats[-1, :]
         
         low_interval = int(((1-ci)/2)*raw_stats.shape[0])
         high_interval = int((1-((1-ci)/2))*raw_stats.shape[0])+1
         raw_stats = raw_stats[low_interval:high_interval, :]
 
-        cooked_stats["min_ci"] = raw_stats[0,:]
-        cooked_stats["max_ci"] = raw_stats[-1, :]
+        cooked_stats["min"] = raw_stats[0,:]
+        cooked_stats["max"] = raw_stats[-1, :]
         cooked_stats["CI"] = ci
         cooked_stats["ncombinations"] = self.raw_stats.loc["ncombinations"]
         cooked_stats["mean"] = raw_stats.mean(axis=0)

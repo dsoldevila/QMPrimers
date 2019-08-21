@@ -1,0 +1,4 @@
+Template = test_output/fungi_positive.csv     S = 10     k = 0.5     Beta = 4     N = 100
+2019-08-21 11:24:07.510162
+   min_total  max_total       min  max     mean    median  ncombinations    CI
+1   0.315328        1.0  0.327757  1.0  0.94885  0.999975   1.278055e+11  0.95
