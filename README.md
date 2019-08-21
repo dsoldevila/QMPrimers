@@ -44,20 +44,20 @@ Once downloaded the program, [execute it](#run-as-an-executable).
 ### Run as a Python script
 - To execute the program in GUI mode, just type in a terminal:
 ```bash
-python3.X QMPrimers
-#where X depends on your python version
+python QMPrimers.py
+#or python3 or python3.x, where X depends on your python version
 ```
 
 - To execute the program in command line mode, type in a terminal:
 ```bash
-python3.X QMPrimers <paramters....>
+python QMPrimers.py <paramters....>
 ```
 ### Run as an executable
 - To execute the program (in GUI mode) double click the program file.
 
 - To execute the program in command line mode, type in a terminal:
 ```bash
-./QMPrimers <paramters....>
+./QMPrimers --help
 ```
 ## How to use the program
 ### Matching
