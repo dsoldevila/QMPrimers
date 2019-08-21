@@ -16,8 +16,6 @@ S, k, beta, and N are given by the user.
 
 The results are summarized in two files. (1) raw results containing a table with the correlation coefficient for each sample and each primer pair; (2) a summary containing the basic statistics of the simulation for each primer pair.
 
-\* Actually it is the other way around: for every primer pair, n steps of the simulation are performed. 
-
 **WARNING:** This program is still in development, so expect bugs and crashes. Its use is still not recommended!
 
 # Installation
