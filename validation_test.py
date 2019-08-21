@@ -88,7 +88,7 @@ if(__name__=="__main__"):
     if len(sys.argv) > 1:
         infile = sys.argv[1]
     else:
-        infile = "test_input/testflow_manual.csv"
+        infile = "test_input/testflow.csv"
         
     tests = get_tests_input(infile)
     

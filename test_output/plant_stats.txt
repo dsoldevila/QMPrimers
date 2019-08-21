@@ -1,0 +1,18 @@
+Fasta = ['test_input/plants/plant_dna.fasta']     Primer Pairs = test_input/plants/PP_chl.csv
+forward missmatches = 5	reverse missmatches = 5	hanging primers = False	Nend = 0
+2019-08-21 11:28:25.069283
+   0  1  2  3  4  5  6  7  8  9  10  No  Total
+1  1  0  0  0  0  0  0  0  0  0   0   0      1
+2  0  1  0  0  0  0  0  0  0  0   0   0      1
+3  1  0  0  0  0  0  0  0  0  0   0   0      1
+4  0  0  0  0  0  0  0  0  0  0   0   1      1
+5  0  0  0  0  0  0  0  0  0  0   0   1      1
+6  1  0  0  0  0  0  0  0  0  0   0   0      1
+
+  min max mean  median  n_samples amplicon_min amplicon_max amplicon_median
+1   0   0    0       0          1          553          553             553
+2   1   1    1       1          1          454          454             454
+3   0   0    0       0          1           52           52              52
+4   -   -    -       0          0            -            -               -
+5   -   -    -       0          0            -            -               -
+6   0   0    0       0          1           76           76              76

@@ -1,6 +1,6 @@
 Fasta = ['test_input/insects/sbog_test.fasta']     Primer Pairs = test_input/insects/PP.csv
 forward missmatches = 5	reverse missmatches = 5	hanging primers = False	Nend = 0
-2019-08-13 16:57:45.837769
+2019-08-21 11:27:28.452023
 id,primerPair,fastaid
 0,1,ACEA1016-14_Aphis_spiraecola_BOLD
 1,1,ACEA342-14_Aphis_nerii_BOLD
