@@ -32,7 +32,7 @@ Once fullfilled the requirements, [execute the program](#run-as-a-python-script)
 
 ## As an executable
 Download the program via one of the links below, dependiing on your platform:
-- insert link to Windows10 executable
+- [Windows 10](https://github.com/dsoldevila/QMPrimers/releases/download/v0.9.0-beta/QMPrimers.exe)
 - insert link to Linux executable
 - insert link to MacOS executable
 
