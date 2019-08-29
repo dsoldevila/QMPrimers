@@ -67,21 +67,23 @@ def load_bio_files(files, writable=False, check_uppercase=False):
     """
     #TODO check all files, not only de first one
     if(check_uppercase==True): writable=True #to modify seqrecord, make it writable is needed
-    seq_record = {}
+    gen_record = {}
     if(type(files)==str):
         files = [files]
     if(path.isfile(files[0])):
         if(writable or len(files)>1): #if they need to be writable, store in memory
             for file in files:
-                seq_record.update(SeqIO.to_dict(SeqIO.parse(file, "fasta")))
+                gen_record.update(SeqIO.to_dict(SeqIO.parse(file, "fasta")))
         else: #create read_only database
             if(isinstance(files, tuple)):
                 files = files[0]
-            seq_record = SeqIO.index_db(":memory:", files, "fasta") #TODO specify alphabet? It seems it's only used to catch methodology erros
+            gen_record = SeqIO.index_db(":memory:", files, "fasta") #TODO specify alphabet? It seems it's only used to catch methodology erros
         if(check_uppercase):
-            for kseq in seq_record:
-                seq_record[kseq] = seq_record[kseq].upper()
-    return seq_record
+            for kseq in gen_record:
+                gen_record[kseq] = gen_record[kseq].upper()
+    if(gen_record=={}):
+        raise ValueError("Empty gen record")
+    return gen_record
 
 def check_primer_pair_integrity(primer_pair):
     for nuc in primer_pair.f:

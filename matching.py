@@ -169,7 +169,9 @@ def compute_gen_matching(max_miss_f, max_miss_r, primer_pairs, gen_record, outpu
     raw_stats, cooked_stats = alignment_processor.get_stats()
     #store_stats("Temp file", output_file+"_stats.txt", raw_stats, cooked_stats)
     #print("Template, negative and statistics saved")
-    print("Matching done!")
+    
+    if(not template.empty or not discarded.empty):
+        print("Matching done!")
     
     template["primerPair"] = pd.Categorical(template["primerPair"], categories=primerPair_list, ordered=True)
     template.sort_values(['primerPair', 'fastaid'], inplace=True)
