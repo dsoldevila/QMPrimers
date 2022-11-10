@@ -61,10 +61,10 @@ python QMPrimers.py <paramters....>
 ```
 ## How to use the program
 ### Matching
-Everything related to the Matching is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Matching).
+Everything related to the Matching is explained [here](https://github.com/masenar/QMPrimers/wiki/Matching).
 
 ### Simulation
-Everything related to the Simulation is explained [here](https://github.com/dsoldevila/QMPrimers/wiki/Simulation).
+Everything related to the Simulation is explained [here](https://github.com/masenar/QMPrimers/wiki/Simulation).
 
 ## Development
 Feel free to colaborate and to send me a message for any doubts. If you have never contributed to any respository, I recommend to take a look on this [website](https://www.firsttimersonly.com/)
